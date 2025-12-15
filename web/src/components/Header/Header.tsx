@@ -1,3 +1,4 @@
+import Navbar from "../Navbar/Navbar";
 import styles from "./Header.module.css";
 
 export interface HeaderProps {
@@ -16,9 +17,9 @@ const Header = ({ loggedIn }: HeaderProps) => {
           ></img>
         </a>
         {loggedIn ? (
-          <nav>
+          <Navbar>
             {/* NavBar of the app as a component - visible only when the user is logged in*/}
-          </nav>
+          </Navbar>
         ) : null}
         {/* Profile compoennt as a dropdown list using which the user can view profile and log in/out*/}
       </div>

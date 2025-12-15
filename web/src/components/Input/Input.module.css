@@ -1,0 +1,40 @@
+.inputWrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    padding: 0px 14px 0px 0px;
+    border: 1px solid var(--white-100);
+    border-radius: 8px;
+    background-color: var(--white-50);
+    overflow: hidden;
+}
+
+.inputWrapper:focus-within{
+    outline: 2px solid var(--gray-200);
+}
+
+.input {
+    border: none;
+    width: 100%;
+    padding: 10px 14px;
+    background-color: var(--white-secondary);
+    color: black;
+}
+
+.input:focus{
+    border: none;
+    outline: none;
+}   
+
+.input:focus-visible{
+    border: none;
+    outline: none;
+}
+
+.formNote {
+    margin: 0px;
+    color: var(--gray-200);
+    font-size: 14px;
+    line-height: 20px;
+    min-height: 20px;
+}

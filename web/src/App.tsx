@@ -12,8 +12,8 @@ function App() {
   return (
     <>
       <Header loggedIn={loggedIn}></Header>
-      {/*Insides of Content section can be replaced by different components depending on the route*/}
       <Content>
+        {/*Insides of Content section can be replaced by different components depending on the route*/}
         <LoginPage></LoginPage>
       </Content>
       <Footer></Footer>
