@@ -1,0 +1,29 @@
+import styles from "./Header.module.css";
+
+export interface HeaderProps {
+  loggedIn: boolean;
+}
+
+const Header = ({ loggedIn }: HeaderProps) => {
+  return (
+    <header className={styles.header}>
+      <div className={styles.headerContent}>
+        <a href="/" className={styles.homeLink}>
+          <img
+            src="/src/assets/icons/carly-logo.png"
+            alt="Carly Logo"
+            className={styles.logo}
+          ></img>
+        </a>
+        {loggedIn ? (
+          <nav>
+            {/* NavBar of the app as a component - visible only when the user is logged in*/}
+          </nav>
+        ) : null}
+        {/* Profile compoennt as a dropdown list using which the user can view profile and log in/out*/}
+      </div>
+    </header>
+  );
+};
+
+export default Header;

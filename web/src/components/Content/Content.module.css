@@ -1,0 +1,15 @@
+.content{
+    display: flex;
+    padding: 60px 30px;
+
+    border:none;
+    flex-direction: column;
+    align-items: center;  
+    justify-content: center;  
+    width: 100%;
+    border-radius: 20px;
+    min-height: 800px;
+    height: 70vh;
+    background-color: white;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+}
