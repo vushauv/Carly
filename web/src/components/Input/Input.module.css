@@ -1,40 +1,37 @@
 .inputWrapper {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    padding: 0px 14px 0px 0px;
-    border: 1px solid var(--white-100);
-    border-radius: 8px;
-    background-color: var(--white-50);
-    overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  padding: 0 0.875rem 0 0;/* 14px */
+  border: 1px solid var(--white-100);/* keep px */
+  border-radius: 0.5rem;/* 8px */
+
+  background-color: var(--white-50);
+  overflow: hidden;
 }
 
-.inputWrapper:focus-within{
-    outline: 2px solid var(--gray-200);
+.inputWrapper:focus-within {
+  outline: 2px solid var(--gray-200); /* keep px */
 }
 
 .input {
-    border: none;
-    width: 100%;
-    padding: 10px 14px;
-    background-color: var(--white-secondary);
-    color: black;
+  border: none;
+  width: 100%;
+  padding: 0.625rem 0.875rem; /* 10px 14px */
+  background-color: var(--white-secondary);
+  color: black;
 }
 
-.input:focus{
-    border: none;
-    outline: none;
-}   
-
-.input:focus-visible{
-    border: none;
-    outline: none;
+.input:focus,
+.input:focus-visible {
+  border: none;
+  outline: none;
 }
 
 .formNote {
-    margin: 0px;
-    color: var(--gray-200);
-    font-size: 14px;
-    line-height: 20px;
-    min-height: 20px;
+  margin: 0px;
+  color: var(--gray-200);
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem; /* 20px */
+  min-height: 1.25rem;  /* 20px */
 }

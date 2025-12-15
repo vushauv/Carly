@@ -46,16 +46,20 @@ function Input({
           src="/src/assets/icons/info-icon.svg"
           alt="Hint"
           onClick={() => setHintVisibility((state) => !state)}
+          onMouseDown={(e) => e.preventDefault()}
+          //On mouseDown prevents the input to lose focus when the hint button is clicked
         ></img>
       </div>
-      <p
-        className={cn(styles.formNote, {
-          [styles.error]: error,
-        })}
-        id="input-desc"
-      >
-        {!hintVisibility ? null : error ? errorMessage : hint}
-      </p>
+      {hintVisibility ? (
+        <p
+          className={cn(styles.formNote, {
+            [styles.error]: error,
+          })}
+          id="input-desc"
+        >
+          {error ? errorMessage : hint}
+        </p>
+      ) : null}
     </div>
   );
 }
