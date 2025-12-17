@@ -3,6 +3,6 @@
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 0.5rem;
   max-width: 100%;
 }

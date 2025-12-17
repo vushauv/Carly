@@ -12,7 +12,7 @@ const NavbarButton = ({ children, isActive, className, ...props }: NavbarButtonP
         <button
             className={cn(
                 styles.button,
-                (isActive ? ` ${styles.active}` : ""),
+                {[styles.active]: isActive},
                 className
             )}
             disabled={isActive}
