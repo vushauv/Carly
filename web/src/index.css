@@ -2,11 +2,15 @@
   --font: "Noto Sans", sans-serif;
   --yellow-main: #F2C94C;
   --yellow-secondary: #edbd2e;
+
+  --slate-main: #475569;
+  --slate-secondary: #334155;
   --white: white;
 
   /*The higher the number after the color - the darker the shade is*/
   --white-50: #fafafa;
   --white-100: #e5e5e5;
+  --white-150:#eae9e7;
 
   --gray-200: rgb(51, 51, 51);
   --theme-color: linear-gradient(

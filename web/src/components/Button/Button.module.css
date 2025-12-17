@@ -16,7 +16,21 @@
     transition: background-color 0.5s ease;
 }
 
-.button:hover{
+.primary{
+    background-color: var(--yellow-main);
+}
+
+.secondary{
+    background-color: var(--slate-main);
+    color: var(--white);
+}
+
+.secondary:hover{
+    background-color: var(--slate-secondary);
+    color: var(--white);
+}
+
+.primary:hover{
     background-color: var(--yellow-secondary);
     transition: background-color 0.5s ease;
 }
