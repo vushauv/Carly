@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./LoginPage.module.css";
 import Button from "../Button/Button";
 import Input from "../Input/Input";
@@ -6,6 +6,31 @@ import Input from "../Input/Input";
 const LoginPage = () => {
   const [error, setError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>("Error Area");
+  const [hasRequestedCode, setHasRequestedCode] = useState<boolean>(false); //this will tell us if it should be "send" or "resend" code
+  const [cooldown, setCooldown] = useState<number>(0);
+
+  useEffect(() => { //this will be executed when cooldown created and then each second
+    if (cooldown <= 0) return; 
+    const interval = setInterval(() => { //each interval will actually just run for one second (so not each second) because then cooldown will be updated and useEffect will be triggered again (cleanup previous interval and create a new one)
+      setCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldown]);
+
+  const startCooldown = () => setCooldown(60);
+
+  const handleSendCode = () => {
+    //handle the actual code sending logic here
+    if (!hasRequestedCode) {
+      setHasRequestedCode(true);
+    }
+    startCooldown();
+  };
+
+  const isCooldownActive = cooldown > 0;
+
+
+
   return (
     <section className={styles.sectionWrapper}>
       <div className={styles.pageHeading}>
@@ -35,7 +60,17 @@ const LoginPage = () => {
               isRequired={true}
             ></Input>
           </div>
-          <Button>Send Code</Button>
+          <div className={styles.sendCodeWrapper}>
+            <Button 
+              onClick={handleSendCode}
+              disabled={hasRequestedCode && isCooldownActive}
+            >
+              {!hasRequestedCode
+                ? "Send Code"
+                : "Resend Code"}
+              </Button>
+              {isCooldownActive ? (<span className={styles.cooldownText}> in {cooldown}s</span>) : null}
+          </div>
           <div className={styles.inputField}>
             <label htmlFor="code">Code:</label>
             <Input

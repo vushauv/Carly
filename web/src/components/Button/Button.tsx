@@ -6,8 +6,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: string;
 }
 
-const Button = ({ children, className }: ButtonProps) => {
-  return <button className={cn(styles.button, className)}>{children}</button>;
+const Button = ({ children, className, ...props}: ButtonProps) => { //...props to pass any other button attributes like onClick, disabled, etc.
+  return <button className={cn(styles.button, className)} {...props}>{children}</button>;
 };
 
 export default Button;
