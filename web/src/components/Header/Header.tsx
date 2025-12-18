@@ -22,6 +22,7 @@ const Header = ({ loggedIn }: HeaderProps) => {
           </Navbar>
         ) : null}
         {/* Profile compoennt as a dropdown list using which the user can view profile and log in/out*/}
+        <div className={styles.emptyDiv}/> {/* Empty div to balance the grid layout (for navbar to be centered)*. to be changed for a profile component later on*/}
       </div>
     </header>
   );
