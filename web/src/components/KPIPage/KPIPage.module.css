@@ -1,0 +1,164 @@
+.page {
+  width: 100%;
+  font-family: var(--font);
+}
+
+.title {
+  text-align: center;
+  margin: 2rem 0 1.5rem;
+  color: var(--gray-200);
+}
+
+.title::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: #F2C94C;
+  margin: 10px auto 20px auto;
+  border-radius: 6px;
+}
+
+.panel {
+  background: var(--white);
+  border-radius: 1rem;
+  padding: 1.5rem 2rem;
+  box-shadow:
+    0 4px 6px -2px rgba(0, 0, 0, 0.05),
+    0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpiCard {
+  background: var(--white-50);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--white-100);
+}
+
+.kpiLabel {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--gray-200);
+  margin-bottom: 0.25rem;
+}
+
+.kpiValue {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--gray-200);
+}
+
+.subTitle {
+  margin: 1.5rem 0 0.75rem;
+  color: var(--gray-200);
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 180px;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: var(--gray-200);
+}
+
+.input {
+  border: 1px solid var(--white-100);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font);
+  color: var(--gray-200);
+  background: var(--white);
+}
+
+.results {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.resultItem {
+  background: var(--white-50);
+  border: 1px solid var(--white-100);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.carName {
+  font-weight: 600;
+  color: var(--gray-200);
+}
+
+.resultText {
+  color: var(--gray-200);
+}
+
+.empty {
+  margin-top: 0.75rem;
+  color: var(--gray-200);
+  text-align: center;
+}
+
+
+.table {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--white-100);
+}
+
+.tableHeader,
+.tableRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 2fr 1fr;
+  padding: 0.75rem 1rem;
+  align-items: center;
+}
+
+.tableHeader {
+  background: var(--white-50);
+  font-weight: 600;
+  color: var(--gray-200);
+  border-bottom: 1px solid var(--white-100);
+}
+
+.tableRow {
+  background: var(--white);
+  border-bottom: 1px solid var(--white-100);
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.car {
+  font-weight: 600;
+}
+
+.status {
+  font-size: 0.85rem;
+}
