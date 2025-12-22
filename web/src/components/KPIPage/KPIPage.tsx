@@ -48,6 +48,7 @@ const fakeBookingResults: Booking[] = [
 ];
 
 const KPIPage = () => {
+    //all initialized with empty values and populated on first load
     const [kpis, setKpis] = useState<KPI[]>([]);
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
@@ -59,23 +60,22 @@ const KPIPage = () => {
     useEffect(() => {
         setKpis(fakeKpis);
         setAllBookings(fakeBookingResults);
-        setFilteredBookings(fakeBookingResults); // default view = all
+        setFilteredBookings(fakeBookingResults); // show all by default (in the future maybe not such a good idea)
     }, []);
 
-    const dateRangeIsValid = useMemo(() => {
+    const dateRangeIsValid = useMemo(() => {//actually no need to useMemo here (cheap operation), but why not
         if (!startDate || !endDate) return false;
-        return startDate <= endDate; // works because YYYY-MM-DD sorts lexicographically
+        return startDate <= endDate; //string comparison works or YYYY-MM-DD format
     }, [startDate, endDate]);
 
     const applyFilters = () => {
         if (!dateRangeIsValid) {
-            //popup alert("Please select a valid date range.");
-            alert("Please select a valid date range.");
+            alert("Please select a valid date range."); //to be changed in the future probably (good for now)
             return;
         }
 
         const results = allBookings.filter((b) => {
-            // for example check if start date is within booking range
+            // for now i did it so that it checks if start date is within booking range (to be discussed how it should work exactly)
             return b.from >= startDate && b.from <= endDate;
         });
 
@@ -85,11 +85,11 @@ const KPIPage = () => {
     const resetFilters = () => {
         setStartDate("");
         setEndDate("");
-        setFilteredBookings(allBookings);
+        setFilteredBookings(allBookings);//to be changed in the future probably (good for now)
     };
 
-    const formatDate = (iso: string) => { //i just wanted the dates to be displayed as DD.MM.YYYY
-        const [y, m, d] = iso.split("-");
+    const formatDate = (arg: string) => { //i just wanted the dates to be displayed as DD.MM.YYYY
+        const [y, m, d] = arg.split("-");
         return `${d}.${m}.${y}`;
     };
 
@@ -98,71 +98,69 @@ const KPIPage = () => {
         <div className={styles.page}>
             <h1 className={styles.title}>Key Performance Indicators</h1>
 
-            <section className={styles.panel}>
-                <div className={styles.kpiGrid}>
-                    {kpis.map((k) => (
-                        <div key={k.label} className={styles.kpiCard}>
-                            <span className={styles.kpiLabel}>{k.label}</span>
-                            <span className={styles.kpiValue}>{k.value}</span>
-                        </div>
-                    ))}
+            <div className={styles.kpiGrid}>
+                {kpis.map((k) => (
+                    <div key={k.label} className={styles.kpiCard}>
+                        <span className={styles.kpiLabel}>{k.label}</span>
+                        <span className={styles.kpiValue}>{k.value}</span>
+                    </div>
+                ))}
+            </div>
+
+            <h3 className={styles.subTitle}>Search criteria</h3>
+
+            <FilterBar onApply={applyFilters} onReset={resetFilters}>
+                <div className={styles.filters}>
+                    <label className={styles.field}>
+                        <span className={styles.label}>Start date</span>
+                        <input
+                            className={styles.input}
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                        />
+                    </label>
+
+                    <label className={styles.field}>
+                        <span className={styles.label}>End date</span>
+                        <input
+                            className={styles.input}
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                        />
+                    </label>
+
+
+                </div>
+            </FilterBar>
+
+            <h3 className={styles.subTitle}>Matching bookings</h3>
+
+            <div className={styles.table}>
+                <div className={styles.tableHeader}>
+                    <span>Car</span>
+                    <span>From</span>
+                    <span>To</span>
+                    <span>User</span>
+                    <span>Status</span>
                 </div>
 
-                <h3 className={styles.subTitle}>Search criteria</h3>
-
-                <FilterBar onApply={applyFilters} onReset={resetFilters}>
-                    <div className={styles.filters}>
-                        <label className={styles.field}>
-                            <span className={styles.label}>Start date</span>
-                            <input
-                                className={styles.input}
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                            />
-                        </label>
-
-                        <label className={styles.field}>
-                            <span className={styles.label}>End date</span>
-                            <input
-                                className={styles.input}
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                            />
-                        </label>
-
-
+                {filteredBookings.map((b) => (
+                    <div key={b.id} className={styles.tableRow}>
+                        <span className={styles.car}>{b.car}</span>
+                        <span>{formatDate(b.from)}</span>
+                        <span>{formatDate(b.to)}</span>
+                        <span>{b.user}</span>
+                        <span className={styles.status}>{b.status}</span>
                     </div>
-                </FilterBar>
-
-                <h3 className={styles.subTitle}>Matching bookings</h3>
-
-                <div className={styles.table}>
-                    <div className={styles.tableHeader}>
-                        <span>Car</span>
-                        <span>From</span>
-                        <span>To</span>
-                        <span>User</span>
-                        <span>Status</span>
-                    </div>
-
-                    {filteredBookings.map((b) => (
-                        <div key={b.id} className={styles.tableRow}>
-                            <span className={styles.car}>{b.car}</span>
-                            <span>{formatDate(b.from)}</span>
-                            <span>{formatDate(b.to)}</span>
-                            <span>{b.user}</span>
-                            <span className={styles.status}>{b.status}</span>
-                        </div>
-                    ))}
-                </div>
+                ))}
+            </div>
 
 
-                {filteredBookings.length === 0 ? (
-                    <p className={styles.empty}>No bookings match the selected date range.</p>
-                ) : null}
-            </section>
+            {filteredBookings.length === 0 ? (
+                <p className={styles.empty}>No bookings match the selected date range.</p>
+            ) : null}
         </div>
     );
 };
