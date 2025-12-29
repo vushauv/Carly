@@ -1,0 +1,78 @@
+Name;DisplayName;BrandId;Version;CarTypeDictionaryId;TransmissionTypeDictionaryId;FuelTypeDictionaryId;DriveTypeDictionaryId
+911;Porsche 911;1;992 Carrera;1;4;1;12
+911 Turbo S;Porsche 911 Turbo S;1;992 Turbo S;1;4;1;12
+Taycan;Porsche Taycan;1;Turbo;3;6;8;3
+Cayenne;Porsche Cayenne;1;GTS;8;2;1;12
+Macan;Porsche Macan;1;S;8;4;1;12
+Panamera;Porsche Panamera;1;4 E-Hybrid;3;4;6;12
+RS Q8;Audi RS Q8;2;4.0 TFSI;8;2;1;5
+Q5;Audi Q5;2;45 TFSI;8;2;1;6
+A4;Audi A4;2;40 TDI;3;2;2;6
+S3;Audi S3;2;2.0 TFSI;3;4;1;5
+RS3;Audi RS3;2;2.5 TFSI;3;4;1;5
+e-tron GT;Audi e-tron GT;2;RS;3;6;8;3
+G-Class;Mercedes G-Wagon;3;G 63 AMG;16;2;1;10
+C-Class;Mercedes C-Class;3;C 200;3;2;1;2
+E-Class;Mercedes E-Class;3;E 220d;3;2;2;2
+S-Class;Mercedes S-Class;3;S 580 4MATIC;3;2;7;9
+GLC;Mercedes GLC;3;300 4MATIC;8;2;1;9
+AMG GT;Mercedes-AMG GT;3;GT 63 4MATIC+;15;2;1;10
+EQE;Mercedes EQE;3;350+;3;6;8;2
+EQS;Mercedes EQS;3;580 4MATIC;3;6;8;9
+3 Series;BMW 3 Series;4;320i;3;2;1;2
+5 Series;BMW 5 Series;4;520d;3;2;2;2
+X3;BMW X3;4;30d;8;2;2;7
+X5;BMW X5;4;40i;8;2;1;7
+M3;BMW M3;4;Competition;3;2;1;8
+M5;BMW M5;4;Competition;3;2;1;8
+i4;BMW i4;4;M50;3;6;8;3
+iX;BMW iX;4;xDrive50;8;6;8;7
+Golf;VW Golf;5;1.5 TSI;4;1;1;1
+Golf R;VW Golf R;5;Mk8;4;4;1;11
+Passat;VW Passat;5;2.0 TDI;5;2;2;1
+Tiguan;VW Tiguan;5;2.0 TDI;8;2;2;11
+Touareg;VW Touareg;5;V6 TDI;8;2;2;11
+ID.4;VW ID.4;5;Pro;8;6;8;2
+Octavia;Škoda Octavia;6;1.5 TSI;4;1;1;1
+Octavia RS;Škoda Octavia RS;6;2.0 TSI;4;4;1;1
+Superb;Škoda Superb;6;2.0 TDI;5;2;2;3
+Kodiaq;Škoda Kodiaq;6;2.0 TDI;8;2;2;3
+Leon;SEAT Leon;7;1.5 TSI;4;1;1;1
+Formentor;Cupra Formentor;8;VZ;9;4;1;3
+Born;Cupra Born;8;58 kWh;4;6;8;2
+Corolla;Toyota Corolla;9;1.8 Hybrid;4;3;5;1
+RAV4;Toyota RAV4;9;Hybrid AWD-i;8;3;5;15
+Camry;Toyota Camry;9;2.5 Hybrid;3;3;5;1
+Prius;Toyota Prius;9;PHEV;4;3;6;1
+bZ4X;Toyota bZ4X;9;AWD;8;6;8;3
+RX;Lexus RX;10;450h+;8;3;6;3
+NX;Lexus NX;10;350h;8;3;5;3
+IS;Lexus IS;10;300;3;2;1;2
+RZ;Lexus RZ;10;DIRECT4;8;6;8;16
+Civic;Honda Civic;11;1.5 VTEC Turbo;4;1;1;1
+CR-V;Honda CR-V;11;Hybrid;8;3;5;3
+Qashqai;Nissan Qashqai;12;e-POWER;9;2;5;3
+GT-R;Nissan GT-R;12;R35;15;4;1;24
+Leaf;Nissan Leaf;12;40 kWh;4;6;8;1
+Mazda3;Mazda 3;13;Skyactiv-G;4;2;1;1
+CX-5;Mazda CX-5;13;Skyactiv-D;8;2;2;3
+Impreza;Subaru Impreza;14;2.0i;4;3;1;14
+Outback;Subaru Outback;14;2.5;8;3;1;14
+WRX;Subaru WRX;14;2.4 Turbo;3;1;1;14
+Outlander;Mitsubishi Outlander;15;PHEV;8;2;6;25
+Focus;Ford Focus;16;1.0 EcoBoost;4;1;1;1
+Kuga;Ford Kuga;16;2.5 PHEV;8;3;6;17
+Mustang;Ford Mustang;16;GT;1;1;1;2
+F-150;Ford F-150;16;Lariat;10;2;1;4
+Wrangler;Jeep Wrangler;17;Rubicon;16;2;1;19
+Grand Cherokee;Jeep Grand Cherokee;17;4xe;8;2;6;20
+Defender;Land Rover Defender;18;110;8;2;2;21
+Range Rover Sport;Range Rover Sport;18;PHEV;8;2;6;22
+XC60;Volvo XC60;19;B5;8;2;7;23
+XC90;Volvo XC90;19;T8;8;2;6;23
+Model 3;Tesla Model 3;20;Long Range;3;6;8;3
+Model Y;Tesla Model Y;20;Performance;8;6;8;3
+Giulia;Alfa Romeo Giulia;21;Veloce;3;2;1;3
+Stelvio;Alfa Romeo Stelvio;21;Quadrifoglio;8;2;1;3
+Cooper;MINI Cooper;22;S;4;2;1;1
+F-Type;Jaguar F-Type;23;P450;1;2;1;2

@@ -31,9 +31,9 @@ CREATE TABLE [System].[Systems] (
     [Name] VARCHAR(64) NOT NULL,
     [DisplayName] VARCHAR(64) NOT NULL,
     [Description] VARCHAR(1024) NULL,
-    [CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [IsEnabled] BIT NOT NULL DEFAULT(1)
+    [CreationTime] DATETIME NOT NULL,
+    [ModificationTime] DATETIME NOT NULL,
+    [IsEnabled] BIT NOT NULL
 );
 
 -- ===========================================================
@@ -44,10 +44,11 @@ CREATE TABLE [System].[Systems] (
 CREATE TABLE [User].[UserTypeDictionary] (
 	[UserTypeDictionaryId] SMALLINT PRIMARY KEY IDENTITY(1, 1),
 	[Name] VARCHAR(64), --Admin, SuperAdmin, Carly, Flatly, Parkingly (systems)
+	[DisplayName] VARCHAR(64),
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 CREATE TABLE [User].[Users] (
@@ -58,9 +59,9 @@ CREATE TABLE [User].[Users] (
 	[LastName] NVARCHAR(128) NOT NULL,
 	[ContactNumber] BIGINT NULL,
 	[Email] VARCHAR(256) NOT NULL, /* TODO: maybe drop not null for Flatly, Parkingly */
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()), 
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL, 
+	[IsEnabled] BIT NOT NULL
 );
 /* ensures uniqueness of email on active users */
 CREATE UNIQUE INDEX UX_Users_Email_Active
@@ -76,9 +77,9 @@ CREATE TABLE [Location].[LocationTypeDictionary] (
 	[Name] VARCHAR(64) NOT NULL,
 	[DisplayName] VARCHAR(64) NOT NULL,
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 CREATE TABLE [Location].[Locations] (
@@ -87,9 +88,9 @@ CREATE TABLE [Location].[Locations] (
 	[Latitude] DECIMAL(8, 6) NOT NULL,
 	[Longitude] DECIMAL(9, 6) NOT NULL,
 	[LocationTypeDictionaryId] SMALLINT NOT NULL FOREIGN KEY REFERENCES Location.LocationTypeDictionary(LocationTypeDictionaryId),
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 -- ===========================================================
@@ -102,9 +103,9 @@ CREATE TABLE [Car].[CarTypeDictionary] (
 	[Name] VARCHAR(64) NOT NULL,
 	[DisplayName] VARCHAR(64) NOT NULL,
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 /* Diesel, gasoline, electric, hybrid, etc. */
@@ -113,9 +114,9 @@ CREATE TABLE [Car].[FuelTypeDictionary] (
 	[Name] VARCHAR(64) NOT NULL,
 	[DisplayName] VARCHAR(64) NOT NULL,
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 /* manual, automatic, etc. */
@@ -124,9 +125,9 @@ CREATE TABLE [Car].[TransmissionTypeDictionary] (
 	[Name] VARCHAR(64) NOT NULL,
 	[DisplayName] VARCHAR(64) NOT NULL,
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 /* front, back, awd etc. */
@@ -135,9 +136,9 @@ CREATE TABLE [Car].[DriveTypeDictionary] (
 	[Name] VARCHAR(64) NOT NULL,
 	[DisplayName] VARCHAR(64) NOT NULL,
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 CREATE TABLE [Car].[CarStatusDictionary] (
@@ -145,10 +146,10 @@ CREATE TABLE [Car].[CarStatusDictionary] (
 	[Name] VARCHAR(64) NOT NULL,
 	[DisplayName] VARCHAR(64) NOT NULL,
 	[Description] VARCHAR(1024) NULL,
-	[IsAvailable] BIT NOT NULL DEFAULT(1), /* TODO: flag that informs us about whether the car can be booked - maybe a better name needed */
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[IsAvailable] BIT NOT NULL, /* TODO: flag that informs us about whether the car can be booked - maybe a better name needed */
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 CREATE TABLE [Car].[Brands] (
@@ -156,9 +157,9 @@ CREATE TABLE [Car].[Brands] (
 	[Name] VARCHAR(128) NOT NULL,
 	[DisplayName] VARCHAR(128) NOT NULL,
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 	/* TODO: we can add country, HQ, founding year, etc */
 );
 
@@ -173,9 +174,9 @@ CREATE TABLE [Car].[Models] (
 	[TransmissionTypeDictionaryId] SMALLINT NOT NULL FOREIGN KEY REFERENCES Car.TransmissionTypeDictionary(TransmissionTypeDictionaryId),
 	[FuelTypeDictionaryId] SMALLINT NOT NULL FOREIGN KEY REFERENCES Car.FuelTypeDictionary(FuelTypeDictionaryId),
 	[DriveTypeDictionaryId] SMALLINT NOT NULL FOREIGN KEY REFERENCES Car.DriveTypeDictionary(DriveTypeDictionaryId),
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 CREATE TABLE [Car].[ModelDetails] (
@@ -188,9 +189,9 @@ CREATE TABLE [Car].[ModelDetails] (
 	[EnergyStorageCapacity] DECIMAL(6, 2) NULL, /* (kWh) max <=> 9999.99 */
 	[DoorCount] TINYINT NOT NULL,
 	[SeatCount] TINYINT NOT NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 
 );
 
@@ -200,9 +201,9 @@ CREATE TABLE [Car].[CarColorDictionary] (
 	[Name] VARCHAR(64) NOT NULL,
 	[DisplayName] VARCHAR(64) NOT NULL,
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 /* 
@@ -214,9 +215,9 @@ CREATE TABLE [Car].[Cars] (
 	[ModelId] INT NOT NULL FOREIGN KEY REFERENCES Car.Models(ModelId),
 	[CarColorDictionaryId] SMALLINT NOT NULL FOREIGN KEY REFERENCES Car.CarColorDictionary(CarColorDictionaryId),
 	[ProductionCountryId] SMALLINT, /* TODO: do we wanna keep countries in a seperate table? */
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 CREATE TABLE [Car].[CarLocations] (
@@ -225,7 +226,7 @@ CREATE TABLE [Car].[CarLocations] (
 	[LocationId] INT NOT NULL FOREIGN KEY REFERENCES Location.Locations(LocationId),
 	[CreationTime] DATETIME NOT NULL,
 	[ModificationTime] DATETIME NOT NULL,
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[IsEnabled] BIT NOT NULL
 );
 
 /* we will store images as paths on a disk or as links */
@@ -233,9 +234,9 @@ CREATE TABLE [Car].[CarImages] (
 	[CarImageId] INT PRIMARY KEY IDENTITY(1, 1),
 	[CarId] INT NOT NULL FOREIGN KEY REFERENCES Car.Cars(CarId),
 	[Path] VARCHAR(256) NOT NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 /* 
@@ -254,9 +255,9 @@ CREATE TABLE [Car].[CarPrices] (
 	[ExtensionPriceHour] MONEY NULL,
 	[DelayPriceDay] MONEY NULL,
 	[DelayPriceHour] MONEY NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 CREATE TABLE [Car].[CarDetails] (
@@ -272,9 +273,9 @@ CREATE TABLE [Car].[CarStatuses] (
 	[CarStatusId] INT PRIMARY KEY IDENTITY(1, 1),
 	[CarId] INT NOT NULL FOREIGN KEY REFERENCES Car.Cars(CarId),
 	[CarStatusDictionaryId] SMALLINT NOT NULL FOREIGN KEY REFERENCES Car.CarStatusDictionary(CarStatusDictionaryId),
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 -- ===========================================================
@@ -291,9 +292,9 @@ CREATE TABLE [Customer].[Customers] (
 	[Birthdate] DATE,
 	[ContactNumber] BIGINT NOT NULL,
 	[Email] VARCHAR(256) NOT NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 /* ensures email uniqueness as long as the record is active [IsEnabled] = 1 */
 CREATE UNIQUE INDEX UX_Customers_Email_Active
@@ -305,9 +306,9 @@ CREATE TABLE [Customer].[LicenceCategoryDictionary] (
 	[LicenceCategoryDictionaryId] SMALLINT PRIMARY KEY IDENTITY(1, 1),
 	[Name] VARCHAR(32) NOT NULL, /* B, C, B + E */
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 CREATE TABLE [Customer].[Licences] (
@@ -318,10 +319,10 @@ CREATE TABLE [Customer].[Licences] (
 	[IssueDate] DATE NOT NULL, /* we might want to enforce miniumum number of years of experience */
 	[ValidFrom] DATE NOT NULL, 
 	[ValidTo] DATE NOT NULL,
-	[IsValid] BIT NOT NULL DEFAULT(1), /* we can add dynamically calculating IsValid based on ValidFrom:ValidTo dates */
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[IsValid] BIT NOT NULL, /* we can add dynamically calculating IsValid based on ValidFrom:ValidTo dates */
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 -- ===========================================================
@@ -334,9 +335,9 @@ CREATE TABLE [Booking].[BookingStatusDictionary] (
 	[Name] VARCHAR(64) NOT NULL,
 	[DisplayName] VARCHAR(64) NOT NULL,
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()), 
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL, 
+	[IsEnabled] BIT NOT NULL
 );
 
 
@@ -347,9 +348,9 @@ CREATE TABLE [Booking].[DiscountTypeDictionary] (
 	[Name] VARCHAR(64) NOT NULL,
 	[DisplayName] VARCHAR(64) NOT NULL,
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 /* Car / Flat booking*/
@@ -358,9 +359,9 @@ CREATE TABLE [Booking].[BookingTypeDictionary] (
 	[Name] VARCHAR(64) NOT NULL,
 	[DisplayName] VARCHAR(64) NOT NULL,
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 /* TODO: match datatypes to the other systems, better name for ConnectedBookingId */
@@ -394,18 +395,18 @@ CREATE TABLE [Booking].[Bookings] (
 	[DiscountAmount] DECIMAL(10, 2) NULL,
 	[ActualPrice] MONEY NULL, /* can be calculated on UPDATE, where we check the DiscountType and Amount */
 	[IsPaid] BIT NOT NULL DEFAULT(0),
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 /* allows 0 to many relation between a car booking and flat bookings */
 CREATE TABLE [Booking].[CarFlatBookingLinks] (
     [CarBookingId] INT NOT NULL FOREIGN KEY REFERENCES Booking.Bookings(BookingId),
     [FlatBookingId] INT NOT NULL FOREIGN KEY REFERENCES Booking.Bookings(BookingId),
-    [CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [IsEnabled] BIT NOT NULL DEFAULT(1),
+    [CreationTime] DATETIME NOT NULL,
+    [ModificationTime] DATETIME NOT NULL,
+    [IsEnabled] BIT NOT NULL,
 	
 	CONSTRAINT [PK_CarFlatBookingLinks]
         PRIMARY KEY ([CarBookingId], [FlatBookingId])
@@ -421,9 +422,9 @@ CREATE TABLE [Booking].[CarBookingDetails] (
 	[ReturnLocationId] INT NOT NULL FOREIGN KEY REFERENCES Location.Locations(LocationId),
 	[PickupActualTime] DATETIME NULL,
 	[ReturnActualTime] DATETIME NULL, 
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 ALTER TABLE [Booking].[CarBookingDetails]
 ADD CONSTRAINT [PK_CarBookingDetails] PRIMARY KEY ([BookingId]);
@@ -433,9 +434,9 @@ CREATE TABLE [Booking].[FlatBookingDetails] (
 	
 	/*TODO: store here all columns that we decide on and that correspond to Flatly's implementation */
 	
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 	/*TODO: maybe add some more columns for Flat details, like images, statuses etc (TBD) */
 );
 ALTER TABLE [Booking].[FlatBookingDetails]
@@ -445,9 +446,9 @@ CREATE TABLE [Booking].[BookingStatuses] (
 	[BookingStatusId] INT PRIMARY KEY IDENTITY(1, 1),
 	[BookingId] INT NOT NULL FOREIGN KEY REFERENCES Booking.Bookings(BookingId),
 	[BookingStatusDictionaryId] SMALLINT NOT NULL FOREIGN KEY REFERENCES Booking.BookingStatusDictionary(BookingStatusDictionaryId),
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 -- ===========================================================
@@ -460,9 +461,9 @@ CREATE TABLE [Email].[EmailStatusDictionary] (
 	[Name] VARCHAR(64) NOT NULL,
 	[DisplayName] VARCHAR(64) NOT NULL,
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 /* sign-in, verification, informative etc. */
@@ -471,9 +472,9 @@ CREATE TABLE [Email].[EmailTypeDictionary] (
 	[Name] VARCHAR(64) NOT NULL,
 	[DisplayName] VARCHAR(64) NOT NULL,
 	[Description] VARCHAR(1024) NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
  /*TODO: do we wanna store the code in a seperate column if its already in the [Body] (decide datatype too) */
@@ -483,9 +484,9 @@ CREATE TABLE [Email].[Emails] (
 	[Body] VARCHAR(MAX) NOT NULL,
 	[Subject] VARCHAR(256) NOT NULL,
 	[EmailTypeDictionaryId] SMALLINT FOREIGN KEY REFERENCES Email.EmailTypeDictionary(EmailTypeDictionaryId),
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 CREATE TABLE [Email].[EmailCodes] (
@@ -494,9 +495,9 @@ CREATE TABLE [Email].[EmailCodes] (
 	[Code] NVARCHAR(256) NOT NULL,
 	[ExpiresAt] DATETIME NOT NULL,
 	[UsedAt] DATETIME NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 --Optional
@@ -504,16 +505,16 @@ CREATE TABLE [Email].[Attachments] (
 	[AttachmentId] BIGINT PRIMARY KEY IDENTITY(1, 1),
 	[EmailId] BIGINT FOREIGN KEY REFERENCES Email.Emails(EmailId),
 	[Path] VARCHAR(256) NOT NULL,
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );
 
 CREATE TABLE [Email].[EmailStatuses] (
 	[EmailStatusId] BIGINT PRIMARY KEY IDENTITY(1, 1),
 	[EmailId] BIGINT FOREIGN KEY REFERENCES Email.Emails(EmailId),
 	[EmailStatusDictionaryId] SMALLINT FOREIGN KEY REFERENCES Email.EmailStatusDictionary(EmailStatusDictionaryId),
-	[CreationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[ModificationTime] DATETIME NOT NULL DEFAULT(GETDATE()),
-	[IsEnabled] BIT NOT NULL DEFAULT(1)
+	[CreationTime] DATETIME NOT NULL,
+	[ModificationTime] DATETIME NOT NULL,
+	[IsEnabled] BIT NOT NULL
 );

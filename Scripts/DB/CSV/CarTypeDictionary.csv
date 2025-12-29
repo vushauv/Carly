@@ -1,0 +1,17 @@
+Name;DisplayName;Description
+coupe;Coupe;2-door passenger car with fixed roof
+convertible;Convertible;Passenger car with retractable roof
+sedan;Sedan;4-door passenger car
+hatchback;Hatchback;Passenger car with rear hatch door
+wagon;Wagon;Estate car with extended cargo area
+liftback;Liftback;Hatchback-style rear with sedan profile
+fastback;Fastback;Roofline slopes continuously to rear
+suv;SUV;Sport Utility Vehicle
+crossover;Crossover;Car-based SUV / crossover utility vehicle
+pickup;Pickup;Light-duty truck with open cargo bed
+van;Van;Multi-purpose van for passengers/cargo
+minivan;Minivan;Family-oriented van (MPV)
+roadster;Roadster;2-seat open-top sports car
+sports_car;Sports Car;Performance-focused passenger car
+gt;Grand Tourer;High-performance long-distance touring car
+offroad;Off-road;Body-on-frame / off-road oriented vehicle

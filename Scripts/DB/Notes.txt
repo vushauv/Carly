@@ -1,3 +1,15 @@
+TODO
+• Add test-data for remaining schemas: Customer & Booking (opt Email)
+• Create instructions for executing
+	➢ SET GLOBAL local_infile = 1;
+	➢ SHOW VARIABLES LIKE 'local_infile';
+	➢ Run as administrator
+	➢ Proper folder
+	➢ Cleanup script
+• Organize script naming convention and placement
+• Improve selector
+• Add readme for SuperAdmin 2
+
 I took the liberty of creating a directory for all non-code-related matters - /Scripts
 
 I also added the mockups and project requirements, as I found myself using them a lot so its gonna be convenient to have
