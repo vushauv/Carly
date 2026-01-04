@@ -5,7 +5,6 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Email
 -- =========================
 DROP TABLE IF EXISTS EmailStatuses;
-DROP TABLE IF EXISTS Attachments;
 DROP TABLE IF EXISTS EmailCodes;
 DROP TABLE IF EXISTS Emails;
 DROP TABLE IF EXISTS EmailTypeDictionary;

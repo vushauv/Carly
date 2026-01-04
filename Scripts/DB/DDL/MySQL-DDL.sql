@@ -523,18 +523,6 @@ CREATE TABLE EmailCodes (
     FOREIGN KEY (EmailId) REFERENCES Emails (EmailId)
 ) ENGINE=InnoDB;
 
-CREATE TABLE Attachments (
-  AttachmentId BIGINT NOT NULL AUTO_INCREMENT,
-  EmailId BIGINT NULL,
-  Path VARCHAR(256) NOT NULL,
-  CreationTime DATETIME NOT NULL,
-  ModificationTime DATETIME NOT NULL,
-  IsEnabled BOOLEAN NOT NULL,
-  PRIMARY KEY (AttachmentId),
-  CONSTRAINT FK_Attachments_Emails
-    FOREIGN KEY (EmailId) REFERENCES Emails (EmailId)
-) ENGINE=InnoDB;
-
 CREATE TABLE EmailStatuses (
   EmailStatusId BIGINT NOT NULL AUTO_INCREMENT,
   EmailId BIGINT NULL,

@@ -500,16 +500,6 @@ CREATE TABLE [Email].[EmailCodes] (
 	[IsEnabled] BIT NOT NULL
 );
 
---Optional
-CREATE TABLE [Email].[Attachments] (
-	[AttachmentId] BIGINT PRIMARY KEY IDENTITY(1, 1),
-	[EmailId] BIGINT FOREIGN KEY REFERENCES Email.Emails(EmailId),
-	[Path] VARCHAR(256) NOT NULL,
-	[CreationTime] DATETIME NOT NULL,
-	[ModificationTime] DATETIME NOT NULL,
-	[IsEnabled] BIT NOT NULL
-);
-
 CREATE TABLE [Email].[EmailStatuses] (
 	[EmailStatusId] BIGINT PRIMARY KEY IDENTITY(1, 1),
 	[EmailId] BIGINT FOREIGN KEY REFERENCES Email.Emails(EmailId),
