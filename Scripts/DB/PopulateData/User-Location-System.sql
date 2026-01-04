@@ -20,7 +20,10 @@ SET
   CreationTime = NOW(),
   ModificationTime = NOW(),
   IsEnabled = 1;
-  
+ 
+-- =========================
+-- UserTypeDictionary
+-- =========================
 LOAD DATA LOCAL INFILE 'C:/Carly/FinalProjectCarly/Scripts/DB/CSV/UserTypeDictionary.csv'
 INTO TABLE UserTypeDictionary
 CHARACTER SET utf8mb4
@@ -33,6 +36,9 @@ SET
   ModificationTime = NOW(),
   IsEnabled = 1;
 
+-- =========================
+-- Users
+-- =========================
 LOAD DATA LOCAL INFILE 'C:/Carly/FinalProjectCarly/Scripts/DB/CSV/Users.csv'
 INTO TABLE Users
 CHARACTER SET utf8mb4
@@ -46,7 +52,10 @@ SET
   CreationTime = NOW(),
   ModificationTime = NOW(),
   IsEnabled = 1;
-  
+ 
+-- =========================
+-- LocationTypeDictionary
+-- =========================
 LOAD DATA LOCAL INFILE 'C:/Carly/FinalProjectCarly/Scripts/DB/CSV/LocationTypeDictionary.csv'
 INTO TABLE LocationTypeDictionary
 CHARACTER SET utf8mb4
@@ -59,6 +68,9 @@ SET
   ModificationTime = NOW(),
   IsEnabled = 1;
 
+-- =========================
+-- Locations
+-- =========================
 LOAD DATA LOCAL INFILE 'C:/Carly/FinalProjectCarly/Scripts/DB/CSV/Locations.csv'
 INTO TABLE Locations
 CHARACTER SET utf8mb4

@@ -5,7 +5,9 @@ SET autocommit = 0;
 SET foreign_key_checks = 0;
 SET unique_checks = 0;
 
--- Dictionaries
+-- =========================
+-- BookingTypeDictionary
+-- =========================
 LOAD DATA LOCAL INFILE 'C:/Carly/FinalProjectCarly/Scripts/DB/CSV/BookingTypeDictionary.csv'
 INTO TABLE BookingTypeDictionary
 CHARACTER SET utf8mb4
@@ -15,6 +17,9 @@ IGNORE 1 LINES
 (Name, DisplayName, Description)
 SET CreationTime = NOW(), ModificationTime = NOW(), IsEnabled = 1;
 
+-- =========================
+-- DiscountTypeDictionary
+-- =========================
 LOAD DATA LOCAL INFILE 'C:/Carly/FinalProjectCarly/Scripts/DB/CSV/DiscountTypeDictionary.csv'
 INTO TABLE DiscountTypeDictionary
 CHARACTER SET utf8mb4
@@ -24,6 +29,9 @@ IGNORE 1 LINES
 (Name, DisplayName, Description)
 SET CreationTime = NOW(), ModificationTime = NOW(), IsEnabled = 1;
 
+-- =========================
+-- BookingStatusDictionary
+-- =========================
 LOAD DATA LOCAL INFILE 'C:/Carly/FinalProjectCarly/Scripts/DB/CSV/BookingStatusDictionary.csv'
 INTO TABLE BookingStatusDictionary
 CHARACTER SET utf8mb4
@@ -33,7 +41,10 @@ IGNORE 1 LINES
 (Name, DisplayName, Description)
 SET CreationTime = NOW(), ModificationTime = NOW(), IsEnabled = 1;
 
+
+-- =========================
 -- Bookings
+-- =========================
 LOAD DATA LOCAL INFILE 'C:/Carly/FinalProjectCarly/Scripts/DB/CSV/Bookings.csv'
 INTO TABLE Bookings
 CHARACTER SET utf8mb4
@@ -43,7 +54,9 @@ IGNORE 1 LINES
 (BookingTypeDictionaryId, SourceSystemId, ProviderSystemId, ProviderExternalBookingId, ProviderExternalItemId, CustomerId, CarId, DateFrom, DateTo, BasePrice, DiscountTypeDictionaryId, DiscountAmount, ActualPrice, IsPaid, IsEnabled)
 SET CreationTime = NOW(), ModificationTime = NOW();
 
--- CarBookingDetails (only for car bookings)
+-- =========================
+-- CarBookingDetails
+-- =========================
 LOAD DATA LOCAL INFILE 'C:/Carly/FinalProjectCarly/Scripts/DB/CSV/CarBookingDetails.csv'
 INTO TABLE CarBookingDetails
 CHARACTER SET utf8mb4
@@ -53,7 +66,9 @@ IGNORE 1 LINES
 (BookingId, PickupLocationId, ReturnLocationId, PickupActualTime, ReturnActualTime, IsEnabled)
 SET CreationTime = NOW(), ModificationTime = NOW();
 
--- FlatBookingDetails (only for flat bookings)
+-- =========================
+-- FlatBookingDetails
+-- =========================
 LOAD DATA LOCAL INFILE 'C:/Carly/FinalProjectCarly/Scripts/DB/CSV/FlatBookingDetails.csv'
 INTO TABLE FlatBookingDetails
 CHARACTER SET utf8mb4
@@ -63,7 +78,9 @@ IGNORE 1 LINES
 (BookingId, IsEnabled)
 SET CreationTime = NOW(), ModificationTime = NOW();
 
--- Car-Flat links
+-- =========================
+-- CarFlatBookingLinks
+-- =========================
 LOAD DATA LOCAL INFILE 'C:/Carly/FinalProjectCarly/Scripts/DB/CSV/CarFlatBookingLinks.csv'
 INTO TABLE CarFlatBookingLinks
 CHARACTER SET utf8mb4
@@ -73,7 +90,9 @@ IGNORE 1 LINES
 (CarBookingId, FlatBookingId, IsEnabled)
 SET CreationTime = NOW(), ModificationTime = NOW();
 
--- BookingStatuses (history)
+-- =========================
+-- BookingStatuses
+-- =========================
 LOAD DATA LOCAL INFILE 'C:/Carly/FinalProjectCarly/Scripts/DB/CSV/BookingStatuses.csv'
 INTO TABLE BookingStatuses
 CHARACTER SET utf8mb4

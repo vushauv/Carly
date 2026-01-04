@@ -42,6 +42,12 @@ SELECT * FROM FlatBookingDetails;
 SELECT * FROM CarFlatBookingLinks;
 SELECT * FROM BookingStatuses;
 
+SELECT * FROM EmailStatusDictionary;
+SELECT * FROM EmailTypeDictionary;
+SELECT * FROM Emails;
+SELECT * FROM EmailCodes;
+SELECT * FROM EmailStatuses;
+
 -- Models resolved (brand + dictionaries)
 SELECT
   m.ModelId,
@@ -152,7 +158,7 @@ JOIN Brands b ON b.BrandId = m.BrandId
 JOIN Locations l ON l.LocationId = cl.LocationId
 ORDER BY l.LocationName, b.Name, m.Name, cl.CarId;
 
-- Models with resolved dictionary values + brand
+-- Models with resolved dictionary values + brand
 SELECT
   m.ModelId,
   b.BrandId,
@@ -178,12 +184,6 @@ JOIN TransmissionTypeDictionary tt ON tt.TransmissionTypeDictionaryId = m.Transm
 JOIN FuelTypeDictionary ft ON ft.FuelTypeDictionaryId = m.FuelTypeDictionaryId
 JOIN DriveTypeDictionary dt ON dt.DriveTypeDictionaryId = m.DriveTypeDictionaryId
 ORDER BY b.Name, m.Name;
-
-USE backend;
-
-SELECT * FROM CarDetails;
-
-SELECT * FROM CarStatuses;
 
 -- Active (current) status per car
 SELECT
@@ -263,13 +263,6 @@ LEFT JOIN LicenceCategoryDictionary lcd
   ON lcd.LicenceCategoryDictionaryId = l.LicenceCategoryDictionaryId
 ORDER BY c.CustomerId, l.CustomerLicenceId;
 
--- Sanity: duplicates on Email for active customers (should return 0 rows)
-SELECT Email, COUNT(*) AS Cnt
-FROM Customers
-WHERE IsEnabled = 1
-GROUP BY Email
-HAVING COUNT(*) > 1;
-
 
 
 -- Bookings resolved (type + systems + customer + car)
@@ -324,8 +317,44 @@ JOIN Bookings car ON car.BookingId = l.CarBookingId
 JOIN Bookings flat ON flat.BookingId = l.FlatBookingId
 WHERE l.IsEnabled = 1;
 
--- Sanity: ensure each FlatBookingId has only one active link
-SELECT FlatBookingId, SUM(CASE WHEN IsEnabled = 1 THEN 1 ELSE 0 END) AS ActiveLinks
-FROM CarFlatBookingLinks
-GROUP BY FlatBookingId
-HAVING ActiveLinks > 1;
+-- Emails resolved with type
+SELECT
+  e.EmailId,
+  e.Email,
+  etd.Name AS EmailType,
+  e.Subject,
+  e.IsEnabled,
+  e.CreationTime,
+  e.ModificationTime
+FROM Emails e
+LEFT JOIN EmailTypeDictionary etd
+  ON etd.EmailTypeDictionaryId = e.EmailTypeDictionaryId
+ORDER BY e.EmailId;
+
+-- Current status per email
+SELECT
+  es.EmailId,
+  es.EmailStatusId,
+  d.Name AS StatusName,
+  d.DisplayName AS StatusDisplayName,
+  es.CreationTime,
+  es.ModificationTime
+FROM EmailStatuses es
+JOIN EmailStatusDictionary d
+  ON d.EmailStatusDictionaryId = es.EmailStatusDictionaryId
+WHERE es.IsEnabled = 1
+ORDER BY es.EmailId;
+
+-- Codes with email target
+SELECT
+  c.EmailCodeId,
+  c.EmailId,
+  e.Email AS RecipientEmail,
+  c.Code,
+  c.ExpiresAt,
+  c.UsedAt,
+  c.IsEnabled
+FROM EmailCodes c
+LEFT JOIN Emails e
+  ON e.EmailId = c.EmailId
+ORDER BY c.EmailId, c.EmailCodeId;
