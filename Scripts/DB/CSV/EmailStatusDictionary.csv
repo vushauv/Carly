@@ -1,0 +1,8 @@
+Name;DisplayName;Description
+new;New;Created and queued for sending
+sending;Sending;Currently being sent
+sent;Sent;Successfully sent
+delivered;Delivered;Delivered to recipient (if tracked)
+bounced;Bounced;Rejected by recipient server
+error;Error;Sending failed due to an error
+cancelled;Cancelled;Cancelled and will not be sent

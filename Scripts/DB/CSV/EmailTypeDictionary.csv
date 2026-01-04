@@ -1,0 +1,8 @@
+Name;DisplayName;Description
+sign_in_code;Sign-in code;One-time login code
+verification;Verification;Email verification message
+booking_confirmation;Booking confirmation;Booking confirmed message
+booking_cancelled;Booking cancelled;Booking cancelled message
+invoice;Invoice;Invoice or payment confirmation
+notification;Notification;Generic notification message
+passwordless_login;Passwordless login;Passwordless authentication email
