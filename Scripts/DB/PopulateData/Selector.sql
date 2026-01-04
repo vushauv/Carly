@@ -27,6 +27,21 @@ SELECT * FROM CarLocations;
 SELECT * FROM CarDetails;
 SELECT * FROM CarStatuses;
 
+
+SELECT * FROM LicenceCategoryDictionary;
+SELECT * FROM Customers;
+SELECT * FROM Licences;
+
+SELECT * FROM BookingTypeDictionary;
+SELECT * FROM DiscountTypeDictionary;
+SELECT * FROM BookingStatusDictionary;
+
+SELECT * FROM Bookings;
+SELECT * FROM CarBookingDetails;
+SELECT * FROM FlatBookingDetails;
+SELECT * FROM CarFlatBookingLinks;
+SELECT * FROM BookingStatuses;
+
 -- Models resolved (brand + dictionaries)
 SELECT
   m.ModelId,
@@ -219,3 +234,98 @@ JOIN Models m ON m.ModelId = c.ModelId
 JOIN Brands b ON b.BrandId = m.BrandId
 JOIN CarColorDictionary col ON col.CarColorDictionaryId = c.CarColorDictionaryId
 ORDER BY b.Name, m.Name, c.CarId;
+
+
+-- Customers with licences resolved
+SELECT
+  c.CustomerId,
+  c.FirstName,
+  c.SecondName,
+  c.LastName,
+  c.Pesel,
+  c.Birthdate,
+  c.ContactNumber,
+  c.Email,
+  c.IsEnabled,
+  l.CustomerLicenceId,
+  lcd.LicenceCategoryDictionaryId,
+  lcd.Name AS LicenceCategory,
+  l.LicenceNumber,
+  l.IssueDate,
+  l.ValidFrom,
+  l.ValidTo,
+  l.IsValid AS LicenceIsValid,
+  l.IsEnabled AS LicenceIsEnabled
+FROM Customers c
+LEFT JOIN Licences l
+  ON l.CustomerId = c.CustomerId
+LEFT JOIN LicenceCategoryDictionary lcd
+  ON lcd.LicenceCategoryDictionaryId = l.LicenceCategoryDictionaryId
+ORDER BY c.CustomerId, l.CustomerLicenceId;
+
+-- Sanity: duplicates on Email for active customers (should return 0 rows)
+SELECT Email, COUNT(*) AS Cnt
+FROM Customers
+WHERE IsEnabled = 1
+GROUP BY Email
+HAVING COUNT(*) > 1;
+
+
+
+-- Bookings resolved (type + systems + customer + car)
+SELECT
+  b.BookingId,
+  btd.Name AS BookingType,
+  ss.Name AS SourceSystem,
+  ps.Name AS ProviderSystem,
+  b.ProviderExternalBookingId,
+  b.ProviderExternalItemId,
+  b.CustomerId,
+  c.Email AS CustomerEmail,
+  b.CarId,
+  b.DateFrom,
+  b.DateTo,
+  b.BasePrice,
+  dtd.Name AS DiscountType,
+  b.DiscountAmount,
+  b.ActualPrice,
+  b.IsPaid,
+  b.IsEnabled
+FROM Bookings b
+JOIN BookingTypeDictionary btd ON btd.BookingTypeDictionaryId = b.BookingTypeDictionaryId
+JOIN Systems ss ON ss.SystemId = b.SourceSystemId
+JOIN Systems ps ON ps.SystemId = b.ProviderSystemId
+LEFT JOIN Customers c ON c.CustomerId = b.CustomerId
+LEFT JOIN DiscountTypeDictionary dtd ON dtd.DiscountTypeDictionaryId = b.DiscountTypeDictionaryId
+ORDER BY b.BookingId;
+
+-- Current status per booking
+SELECT
+  bs.BookingId,
+  d.Name AS StatusName,
+  d.DisplayName AS StatusDisplayName,
+  bs.CreationTime,
+  bs.ModificationTime
+FROM BookingStatuses bs
+JOIN BookingStatusDictionary d ON d.BookingStatusDictionaryId = bs.BookingStatusDictionaryId
+WHERE bs.IsEnabled = 1
+ORDER BY bs.BookingId;
+
+-- Car-Flat link view
+SELECT
+  l.CarBookingId,
+  l.FlatBookingId,
+  car.SourceSystemId AS CarSourceSystemId,
+  flat.ProviderSystemId AS FlatProviderSystemId,
+  car.CarId,
+  car.CustomerId
+FROM CarFlatBookingLinks l
+JOIN Bookings car ON car.BookingId = l.CarBookingId
+JOIN Bookings flat ON flat.BookingId = l.FlatBookingId
+WHERE l.IsEnabled = 1;
+
+-- Sanity: ensure each FlatBookingId has only one active link
+SELECT FlatBookingId, SUM(CASE WHEN IsEnabled = 1 THEN 1 ELSE 0 END) AS ActiveLinks
+FROM CarFlatBookingLinks
+GROUP BY FlatBookingId
+HAVING ActiveLinks > 1;
