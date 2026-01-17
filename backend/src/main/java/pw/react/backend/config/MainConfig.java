@@ -8,12 +8,6 @@ import org.springframework.context.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import pw.react.backend.repositories.CompanyLogoRepository;
-import pw.react.backend.repositories.UserRepository;
-import pw.react.backend.services.CompanyLogoService;
-import pw.react.backend.services.HttpService;
-import pw.react.backend.services.UserMainService;
-import pw.react.backend.services.UserService;
 
 import javax.sql.DataSource;
 import java.util.*;

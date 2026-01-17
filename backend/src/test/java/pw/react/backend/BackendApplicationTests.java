@@ -8,7 +8,6 @@ import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import pw.react.backend.services.HttpService;
 
 import java.util.Collections;
 import java.util.HashMap;
