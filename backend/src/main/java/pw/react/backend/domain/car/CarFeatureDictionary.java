@@ -25,3 +25,6 @@ public class CarFeatureDictionary extends Auditable {
     @Column(name = "Description")
     private String description;
 }
+
+// preallocated - has finite number of values
+// GET /feature-types -> store them in state on frontend

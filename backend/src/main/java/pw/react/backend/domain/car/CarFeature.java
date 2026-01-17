@@ -25,11 +25,11 @@ public class CarFeature extends Auditable {
     @Column(name = "Value", precision = 19, scale = 4)
     private BigDecimal value;
 
-    @Column(name = "Name", nullable = false)
-    private String name;
+    @Column(name = "ValueName", nullable = false)
+    private String valueName;
 
-    @Column(name = "DisplayName", nullable = false)
-    private String displayName;
+    @Column(name = "ValueDisplayName", nullable = false)
+    private String valueDisplayName;
 
     @Column(name = "Description")
     private String description;

@@ -18,7 +18,6 @@ import pw.react.backend.domain.Auditable;
         }
 )
 public class CarToFeatureLink extends Auditable {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "CarToFeatureLinkId", nullable = false)
@@ -32,3 +31,4 @@ public class CarToFeatureLink extends Auditable {
     @JoinColumn(name = "CarFeatureId", nullable = false)
     private CarFeature carFeature;
 }
+// on delete of Car, set isEnabled of CarToFeatureLink to false

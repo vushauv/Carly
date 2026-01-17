@@ -6,5 +6,4 @@ import pw.react.backend.domain.car.CarFeatureDictionary;
 import java.util.Optional;
 
 public interface CarFeatureDictionaryRepository extends JpaRepository<CarFeatureDictionary, Short> {
-    Optional<CarFeatureDictionary> findByName(String name);
 }

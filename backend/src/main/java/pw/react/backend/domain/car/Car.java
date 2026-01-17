@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 import pw.react.backend.domain.Auditable;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Getter
 @Setter
 @Entity
@@ -15,4 +18,7 @@ public class Car extends Auditable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "CarId", nullable = false)
     private Integer carId;
+
+    @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CarToFeatureLink> featureLinks = new HashSet<>();
 }
