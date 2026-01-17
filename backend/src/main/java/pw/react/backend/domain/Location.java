@@ -3,6 +3,7 @@ package pw.react.backend.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import pw.react.backend.domain.Auditable;
 
 import java.math.BigDecimal;
 
@@ -10,7 +11,7 @@ import java.math.BigDecimal;
 @Setter
 @Entity
 @Table(name = "Locations")
-public class Location {
+public class Location extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

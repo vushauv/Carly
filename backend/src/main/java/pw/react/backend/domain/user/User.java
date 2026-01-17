@@ -3,6 +3,7 @@ package pw.react.backend.domain.user;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import pw.react.backend.domain.Auditable;
 
 @Getter
 @Setter
@@ -11,12 +12,12 @@ import lombok.Setter;
         name = "Users",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "UX_Users_Email",
-                        columnNames = {"Email"}
+                        name = "UX_Users_Email_IsEnabled",
+                        columnNames = {"Email", "IsEnabled"}
                 )
         }
 )
-public class User {
+public class User extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,11 +40,9 @@ public class User {
     @Column(name = "ContactNumber")
     private Long contactNumber;
 
-    // Email is optional per your example
-    @Column(name = "Email")
+    @Column(name = "Email", nullable = false)
     private String email;
 
-    // Nullable to support one-time-code / external auth
     @Column(name = "Password")
     private String password;
 }

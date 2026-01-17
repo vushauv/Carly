@@ -3,6 +3,7 @@ package pw.react.backend.domain.car;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import pw.react.backend.domain.Auditable;
 
 import java.math.BigDecimal;
 
@@ -10,7 +11,7 @@ import java.math.BigDecimal;
 @Setter
 @Entity
 @Table(name = "CarFeatures")
-public class CarFeature {
+public class CarFeature extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

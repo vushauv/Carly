@@ -11,6 +11,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import pw.react.backend.repositories.CompanyLogoRepository;
 import pw.react.backend.services.CompanyLogoService;
 import pw.react.backend.services.HttpService;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import javax.sql.DataSource;
 import java.util.*;
@@ -57,7 +59,6 @@ public class MainConfig {
     public CompanyLogoService logoService(CompanyLogoRepository companyLogoRepository) {
         return new CompanyLogoService(companyLogoRepository);
     }
-
 
     @Bean
     public WebMvcConfigurer corsConfigurer() {

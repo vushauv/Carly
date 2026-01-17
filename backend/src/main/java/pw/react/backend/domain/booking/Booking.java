@@ -3,10 +3,10 @@ package pw.react.backend.domain.booking;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import pw.react.backend.domain.Auditable;
+import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.Location;
 import pw.react.backend.domain.user.User;
-import pw.react.backend.domain.car.Car;
-
 
 import java.time.LocalDateTime;
 
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "Bookings")
-public class Booking {
+public class Booking extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
