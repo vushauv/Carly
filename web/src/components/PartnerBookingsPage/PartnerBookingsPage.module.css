@@ -1,0 +1,125 @@
+/* Same base styling approach as KPIPage.module.css */
+.page {
+  width: 100%;
+  font-family: var(--font);
+}
+
+.title {
+  text-align: center;
+  margin: 2rem 0 1.5rem;
+  color: var(--gray-200);
+}
+
+.title::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: #F2C94C;
+  margin: 10px auto 20px auto;
+  border-radius: 6px;
+}
+
+.subTitle {
+  margin: 1.5rem 0 0.75rem;
+  color: var(--gray-200);
+}
+
+.topActions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 180px;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: var(--gray-200);
+}
+
+.table {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--white-100);
+}
+
+.tableHeader,
+.tableRow {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 2fr;
+  padding: 0.75rem 1rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tableHeader {
+  background: var(--white-50);
+  font-weight: 600;
+  color: var(--gray-200);
+  border-bottom: 1px solid var(--white-100);
+}
+
+.tableRow {
+  background: var(--white);
+  border-bottom: 1px solid var(--white-100);
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.car {
+  font-weight: 600;
+  color: var(--gray-200);
+}
+
+.status {
+  font-size: 0.85rem;
+  color: var(--gray-200);
+}
+
+.actionsHeader {
+  text-align: right;
+}
+
+.actionButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.empty {
+  margin-top: 0.75rem;
+  color: var(--gray-200);
+  text-align: center;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.25rem 0 0.25rem;
+}
+
+.pageInfo {
+  color: var(--gray-200);
+}
