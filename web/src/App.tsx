@@ -1,6 +1,7 @@
 import "./App.css";
 import LoginPage from "./components/LoginPage/LoginPage";
 import KPIPage from "./components/KPIPage/KPIPage";
+import PartnerBookingsPage from "./components/PartnerBookingsPage/PartnerBookingsPage";
 import Content from "./components/Content/Content";
 import Header from "./components/Header/Header";
 import { useState } from "react";
@@ -15,7 +16,7 @@ function App() {
       <Header loggedIn={loggedIn}></Header>
       <Content>
         {/*Insides of Content section can be replaced by different components depending on the route*/}
-        <KPIPage></KPIPage>
+        <PartnerBookingsPage></PartnerBookingsPage>
       </Content>
       <Footer></Footer>
     </>
