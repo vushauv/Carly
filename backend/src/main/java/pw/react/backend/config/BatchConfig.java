@@ -4,7 +4,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import pw.react.backend.domain.Company;
 import pw.react.backend.repositories.*;
+import pw.react.backend.services.CompanyBatchService;
+import pw.react.backend.services.CompanyService;
 
 import javax.sql.DataSource;
 
