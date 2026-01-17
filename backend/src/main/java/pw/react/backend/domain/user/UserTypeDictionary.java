@@ -1,0 +1,26 @@
+package pw.react.backend.domain.user;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Entity
+@Table(name = "UserTypeDictionary")
+public class UserTypeDictionary {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "UserTypeDictionaryId", nullable = false)
+    private Short userTypeDictionaryId;
+
+    @Column(name = "Name", nullable = false)
+    private String name;
+
+    @Column(name = "DisplayName", nullable = false)
+    private String displayName;
+
+    @Column(name = "Description")
+    private String description;
+}
