@@ -6,6 +6,7 @@ import Content from "./components/Content/Content";
 import Header from "./components/Header/Header";
 import { useState } from "react";
 import Footer from "./components/Footer/Footer";
+import ManageCarsPage from "./components/ManageCarsPage/ManageCarsPage";
 
 function App() {
   // Ofc this would be in the global state
@@ -16,7 +17,7 @@ function App() {
       <Header loggedIn={loggedIn}></Header>
       <Content>
         {/*Insides of Content section can be replaced by different components depending on the route*/}
-        <PartnerBookingsPage></PartnerBookingsPage>
+        <ManageCarsPage></ManageCarsPage>
       </Content>
       <Footer></Footer>
     </>
