@@ -4,10 +4,13 @@ azure:
 
 
 spring:
+  profiles:
+    active: local
+    ##local or dev, if dev then the data seeder runs
   servlet:
     multipart:
       ## MULTIPART (MultipartProperties)
-      enabled:
+      enabled: true
       # Threshold after which files are written to disk.
       file-size-threshold: 2KB
       # Max file size.
