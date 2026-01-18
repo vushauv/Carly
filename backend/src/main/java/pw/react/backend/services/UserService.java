@@ -2,6 +2,7 @@ package pw.react.backend.services;
 
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
+import pw.react.backend.domain.user.User;
 import pw.react.backend.dto.request.LoginUserRequest;
 import pw.react.backend.dto.request.RegisterUserRequest;
 import pw.react.backend.dto.request.UpdateUserRequest;
@@ -12,15 +13,15 @@ import java.util.List;
 
 public interface UserService {
 
-    GetUserIDResponse registerUser(RegisterUserRequest request);
+    User registerUser(User user);
 
-    GetUserIDResponse loginUser(LoginUserRequest request);
+    User loginUser(String email, String password);
 
-    List<GetUserInfoResponse> getAllUsersInfo();
+    List<User> getAllUsers();
 
-    GetUserInfoResponse getUserInfoByID(Integer id);
+    User getUserByID(Integer id);
 
     void deleteUserById(Integer id);
 
-    void updateUserInfoById(Integer id, UpdateUserRequest request);
+    void updateUser(User user);
 }

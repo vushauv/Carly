@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pw.react.backend.domain.user.User;
 import pw.react.backend.domain.user.UserTypeDictionary;
-import pw.react.backend.dto.mapper.UserMapper;
 import pw.react.backend.dto.request.LoginUserRequest;
 import pw.react.backend.dto.request.RegisterUserRequest;
 import pw.react.backend.dto.request.UpdateUserRequest;
@@ -22,16 +21,13 @@ public class UserMainService implements UserService {
 
     private final UserRepository userRepository;
     private final UserTypeDictionaryRepository userTypeDictionaryRepository;
-    private final UserMapper userMapper;
 
     @Override
-    public GetUserIDResponse registerUser(RegisterUserRequest request) {
+    public User registerUser(User user) {
 
-        if (userRepository.existsByEmailAndIsEnabledTrue(request.getEmail())) {
+        if (userRepository.existsByEmailAndIsEnabledTrue(user.getEmail())) {
             throw new IllegalArgumentException("Email already in use");
         }
-
-        User user = userMapper.toUser(request);
 
         UserTypeDictionary customerType =
                 userTypeDictionaryRepository.findById((short) 1)
@@ -40,38 +36,32 @@ public class UserMainService implements UserService {
         user.setUserType(customerType);
         user.setEnabled(true);
 
-        User savedUser = userRepository.save(user);
-
-        return userMapper.toGetUserIDResponse(savedUser);
+        return userRepository.save(user);
     }
 
     @Override
-    public GetUserIDResponse loginUser(LoginUserRequest request) {
+    public User loginUser(String email, String password) {
 
         User user = userRepository
-                .findByEmailAndIsEnabledTrue(request.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getEmail()));
+                .findByEmailAndIsEnabledTrue(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
 
-        if (!user.getPassword().equals(request.getPassword())) {
+        if (!user.getPassword().equals(password)) {
             throw new IllegalArgumentException("Invalid credentials");
         }
 
-        return userMapper.toGetUserIDResponse(user);
+        return user;
     }
 
     @Override
-    public List<GetUserInfoResponse> getAllUsersInfo() {
-        return userRepository.findAllByIsEnabledTrue()
-                .stream()
-                .map(userMapper::toGetUserInfoResponse)
-                .toList();
+    public List<User> getAllUsers() {
+        return userRepository.findAllByIsEnabledTrue();
     }
 
     @Override
-    public GetUserInfoResponse getUserInfoByID(Integer id) {
-        User user = userRepository.findByUserIdAndIsEnabledTrue(id)
+    public User getUserByID(Integer id) {
+        return userRepository.findByUserIdAndIsEnabledTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
-        return userMapper.toGetUserInfoResponse(user);
     }
 
     @Override
@@ -84,29 +74,8 @@ public class UserMainService implements UserService {
     }
 
     @Override
-    public void updateUserInfoById(Integer id, UpdateUserRequest request) {
-        User user = userRepository
-                .findByUserIdAndIsEnabledTrue(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
-        if (request.getFirstName() != null)
-            user.setFirstName(request.getFirstName());
-        if (request.getSecondName() != null)
-            user.setSecondName(request.getSecondName());
-        if  (request.getLastName() != null)
-            user.setLastName(request.getLastName());
-        if (request.getEmail() != null) {
-            if (userRepository.existsByEmailAndIsEnabledTrue(request.getEmail()) && !user.getEmail().equals(request.getEmail())) {
-                throw new IllegalArgumentException("Email already in use");
-            }
-            else {
-                user.setEmail(request.getEmail());
-            }
-        }
-        if  (request.getPassword() != null)
-            user.setPassword(request.getPassword());
-        if (request.getContactNumber() != null)
-            user.setContactNumber(request.getContactNumber());
-        userRepository.save(user);
+    public void updateUser(User newUser) {
+        userRepository.save(newUser);
     }
 
 
