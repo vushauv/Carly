@@ -12,4 +12,5 @@ public class GetUserInfoResponse {
     private String secondName;
     private String lastName;
     private String email;
+    private Long contactNumber;
 }

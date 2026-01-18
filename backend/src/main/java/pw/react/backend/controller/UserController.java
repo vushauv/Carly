@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pw.react.backend.dto.request.LoginUserRequest;
 import pw.react.backend.dto.request.RegisterUserRequest;
+import pw.react.backend.dto.request.UpdateUserRequest;
 import pw.react.backend.dto.response.GetUserIDResponse;
 import pw.react.backend.dto.response.GetUserInfoResponse;
 import pw.react.backend.services.UserService;
@@ -60,6 +61,20 @@ public class UserController {
         return  ResponseEntity.ok(userService.getUserInfoByID(id));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUserById(@RequestHeader HttpHeaders headers, @PathVariable Integer id) {
+        logHeaders(headers);
+        userService.deleteUserById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> updateUserById(@RequestHeader HttpHeaders headers, @PathVariable Integer id, @Valid @RequestBody UpdateUserRequest request) {
+        logHeaders(headers);
+        userService.updateUserInfoById(id, request);
+        return ResponseEntity.noContent().build();
+    }
+
     private void logHeaders(@RequestHeader HttpHeaders headers) {
         log.info(
                 "Controller request headers {}",
@@ -70,10 +85,4 @@ public class UserController {
         );
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity deleteUserById(@RequestHeader HttpHeaders headers, @PathVariable Integer id) {
-        logHeaders(headers);
-        userService.deleteUserById(id);
-        return ResponseEntity.noContent().build();
-    }
 }
