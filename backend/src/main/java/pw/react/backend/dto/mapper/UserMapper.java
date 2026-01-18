@@ -4,8 +4,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import pw.react.backend.domain.user.User;
-import pw.react.backend.dto.request.RegisterRequest;
-import pw.react.backend.dto.response.RegisterUserResponse;
+import pw.react.backend.dto.request.RegisterUserRequest;
+import pw.react.backend.dto.response.GetUserInfoResponse;
+import pw.react.backend.dto.response.GetUserIDResponse;
 
 @Mapper(
         componentModel = "spring",
@@ -18,7 +19,8 @@ public interface UserMapper {
     @Mapping(target = "creationTime", ignore = true)
     @Mapping(target = "modificationTime", ignore = true)
     @Mapping(target = "enabled", ignore = true)
-    User toUser(RegisterRequest request);
+    User toUser(RegisterUserRequest request);
 
-    RegisterUserResponse toUserResponse(User user);
+    GetUserIDResponse toGetUserIDResponse(User user);
+    GetUserInfoResponse toGetUserInfoResponse(User user);
 }

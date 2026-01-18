@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RegisterUserResponse {
+public class GetUserIDResponse {
 
     private Long userId;
 

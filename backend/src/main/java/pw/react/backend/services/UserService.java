@@ -1,12 +1,13 @@
 package pw.react.backend.services;
 
-import pw.react.backend.dto.request.LoginRequest;
-import pw.react.backend.dto.request.RegisterRequest;
-import pw.react.backend.dto.response.RegisterUserResponse;
+import pw.react.backend.dto.request.LoginUserRequest;
+import pw.react.backend.dto.request.RegisterUserRequest;
+import pw.react.backend.dto.response.GetUserInfoResponse;
+import pw.react.backend.dto.response.GetUserIDResponse;
 
 public interface UserService {
 
-    RegisterUserResponse register(RegisterRequest request);
+    GetUserIDResponse register(RegisterUserRequest request);
 
-    RegisterUserResponse login(LoginRequest request);
+    GetUserIDResponse login(LoginUserRequest request);
 }
