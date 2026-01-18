@@ -43,7 +43,7 @@ function FiltersForm<K extends string>({
 
   return (
     <>
-    <h3 className={styles.subTitle}>Search criteria</h3>
+    <h3 className={styles.subTitle}>Search criterias</h3>
 
     <FilterBarLayout
       onApply={() => onApply(values)}
