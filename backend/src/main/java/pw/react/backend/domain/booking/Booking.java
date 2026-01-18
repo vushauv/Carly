@@ -43,16 +43,16 @@ public class Booking extends Auditable {
     @JoinColumn(name = "FlatBookingStatusId")
     private BookingStatusDictionary flatBookingStatus;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "CarBookingStatusId", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "CarBookingStatusId")
     private BookingStatusDictionary carBookingStatus;
 
     @Column(name = "ProviderExternalBookingId")
     private Long providerExternalBookingId;
 
-    @Column(name = "CarBookingDateFrom", nullable = false)
+    @Column(name = "CarBookingDateFrom")
     private LocalDateTime carBookingDateFrom;
 
-    @Column(name = "CarBookingDateTo", nullable = false)
+    @Column(name = "CarBookingDateTo")
     private LocalDateTime carBookingDateTo;
 }
