@@ -10,7 +10,6 @@ import pw.react.backend.domain.Auditable;
 @Entity
 @Table(name = "CarFeatureDictionary")
 public class CarFeatureDictionary extends Auditable {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "CarFeatureDictionaryId", nullable = false)
@@ -18,10 +17,6 @@ public class CarFeatureDictionary extends Auditable {
 
     @Column(name = "Name", nullable = false)
     private String name;
-
-    @Column(name = "DisplayName", nullable = false)
-    private String displayName;
-
-    @Column(name = "Description")
-    private String description;
 }
+
+
