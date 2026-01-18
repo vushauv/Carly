@@ -1,4 +1,4 @@
-package pw.react.backend.services;
+package pw.react.backend.services.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

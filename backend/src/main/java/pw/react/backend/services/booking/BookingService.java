@@ -1,4 +1,4 @@
-package pw.react.backend.services;
+package pw.react.backend.services.booking;
 
 import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.exceptions.ResourceNotFoundException;

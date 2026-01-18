@@ -13,7 +13,7 @@ import pw.react.backend.dto.request.booking.UpdateBookingRequest;
 import pw.react.backend.dto.response.booking.BookingResponse;
 import pw.react.backend.dto.response.booking.GetBookingResponse;
 import pw.react.backend.exceptions.ResourceNotFoundException;
-import pw.react.backend.services.BookingService;
+import pw.react.backend.services.booking.BookingService;
 
 import java.util.Collection;
 import java.util.List;

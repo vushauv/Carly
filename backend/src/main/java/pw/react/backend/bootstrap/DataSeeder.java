@@ -38,27 +38,19 @@ public class DataSeeder implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         log.info("DataSeeder running. Active profiles: {}", String.join(",", args.getSourceArgs()));
 
-
-        // 1) User types
-        upsertUserType("CUSTOMER", "Customer", "Standard end user");
-        upsertUserType("SYSTEM", "System", "System / integration user");
-        upsertUserType("SUPER_ADMIN", "Super Admin", "All permissions");
-        upsertUserType("ADMIN", "Admin", "Administrative user");
-
-        // 2) Locations
+        // 1) Locations
         upsertLocation("Warsaw Central", new BigDecimal("52.2297"), new BigDecimal("21.0122"));
         upsertLocation("Krakow Main", new BigDecimal("50.0647"), new BigDecimal("19.9450"));
         upsertLocation("Gdansk Old Town", new BigDecimal("54.3520"), new BigDecimal("18.6466"));
 
-        // 3) Cars (no natural key -> just ensure a few exist)
+        //TODO (WSE): Added so I could create test booking records (FK contraints), remove/improve later
         ensureCarsExist(5);
 
-        // ---- Booking statuses (CAR booking) ----
+        // ===============================================================================================
+        //                                  Booking statuses
+        // ===============================================================================================
         BookingStatusDictionary created =
                 upsertBookingStatus("CREATED", "Created", "Booking created");
-
-        BookingStatusDictionary confirmed =
-                upsertBookingStatus("CONFIRMED", "Confirmed", "Booking confirmed");
 
         BookingStatusDictionary cancelled =
                 upsertBookingStatus("CANCELLED", "Cancelled", "Booking cancelled");
@@ -66,61 +58,105 @@ public class DataSeeder implements ApplicationRunner {
         BookingStatusDictionary completed =
                 upsertBookingStatus("COMPLETED", "Completed", "Booking completed");
 
-        // ---- Users (required for FK integrity) ----
+        // ===============================================================================================
+        //                                  Users % UserTypes
+        // ===============================================================================================
+
+        upsertUserType("CUSTOMER", "Customer", "Standard end user");
+        upsertUserType("SYSTEM", "System", "System / integration user");
+        upsertUserType("SUPER_ADMIN", "Super Admin", "All permissions");
+        upsertUserType("ADMIN", "Admin", "Administrative user");
+
         UserTypeDictionary superAdminType = userTypeDictionaryRepository.findByName("SUPER_ADMIN")
                 .orElseThrow(() -> new IllegalStateException("SUPER_ADMIN user type missing"));
         UserTypeDictionary systemType = userTypeDictionaryRepository.findByName("SYSTEM")
                 .orElseThrow(() -> new IllegalStateException("SYSTEM user type missing"));
         UserTypeDictionary customerType = userTypeDictionaryRepository.findByName("CUSTOMER")
                 .orElseThrow(() -> new IllegalStateException("CUSTOMER user type missing"));
-
-// 1) SuperAdmin
+        // 1) Systems
         upsertUserByEmail(
-                "wojtek.sendek@sigma.com",
-                "Wojtek",
-                "Sendek",
-                superAdminType,
-                null,
-                null
-        );
-
-// 2) Systems
-        upsertUserByEmail(
-                "system.carly@local",
+                "carly@pw.edu.pl",
                 "Carly",
                 "System",
                 systemType,
                 null,
                 null
         );
-
         upsertUserByEmail(
-                "system.parkly@local",
+                "parkly@pw.edu.pl",
                 "Parkly",
                 "System",
                 systemType,
                 null,
                 null
         );
-
         upsertUserByEmail(
-                "system.flatly@local",
+                "flatly@pw.edu.pl",
                 "Flatly",
                 "System",
                 systemType,
                 null,
                 null
         );
-
-// 3) Example customer (to avoid FK breakage)
+        // 2) SuperAdmins
         upsertUserByEmail(
-                "customer.example@local",
-                "Jan",
-                "Kowalski",
+                "oleh.shuptar.stud@pw.edu.pl",
+                "Oleh",
+                "Shuptar",
+                superAdminType,
+                null,
+                111111111L
+        );
+        upsertUserByEmail(
+                "vasili.vushau.stud@pw.edu.pl",
+                "Vasili",
+                "Vushau",
+                superAdminType,
+                null,
+                222222222L
+        );
+        upsertUserByEmail(
+                "stanislaw.zielinski.stud@pw.edu.pl",
+                "Stanisław",
+                "Zieliński",
+                superAdminType,
+                null,
+                333333333L
+        );
+        upsertUserByEmail(
+                "wojciech.sendek.stud@pw.edu.pl",
+                "Wojtek",
+                "Sendek",
+                superAdminType,
+                "ass",
+                444444444L
+        );
+        // 3) Example customers (to avoid FK mistakes when creating test data)
+        upsertUserByEmail(
+                "DT@family.com",
+                "Dominic",
+                "Toretto",
                 customerType,
                 null,
-                48100100100L
+                987654321L
         );
+        upsertUserByEmail(
+                "BB@shire.gov",
+                "Bilbo",
+                "Baggins",
+                customerType,
+                null,
+                999999999L
+        );
+        upsertUserByEmail(
+                "JS@blackpearl.org",
+                "Jack",
+                "Sparrow",
+                customerType,
+                null,
+                123456789L
+        );
+
         log.info("DataSeeder finished.");
     }
 
@@ -131,11 +167,8 @@ public class DataSeeder implements ApplicationRunner {
         e.setName(name);
         e.setDisplayName(displayName);
         e.setDescription(description);
-
         // audit column
         e.setEnabled(true);
-
-
         return userTypeDictionaryRepository.save(e);
     }
 
@@ -146,20 +179,16 @@ public class DataSeeder implements ApplicationRunner {
         e.setLocationName(locationName);
         e.setLatitude(latitude);
         e.setLongitude(longitude);
-
         // audit column
         e.setEnabled(true);
-
-
         return locationRepository.save(e);
     }
-
+    //TODO: this creates meaningless records without features, remove
     private void ensureCarsExist(int targetCount) {
         long current = carRepository.count();
         if (current >= targetCount) {
             return;
         }
-
         int toCreate = (int) (targetCount - current);
         for (int i = 0; i < toCreate; i++) {
             Car c = new Car();
