@@ -8,7 +8,7 @@ import { useState } from "react";
 import Footer from "./components/Footer/Footer";
 import ManageCarsPage from "./components/ManageCarsPage/ManageCarsPage";
 import ManageBookingsPage from "./components/ManageBookingsPage/ManageBookingsPage";
-import UsersPage from "./components/Users/UsersPage";
+import UsersPage from "./components/UsersPage/UsersPage";
 
 import { Routes, Route, Navigate } from "react-router-dom";
 
