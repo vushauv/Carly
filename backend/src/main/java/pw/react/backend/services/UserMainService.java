@@ -13,6 +13,8 @@ import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.repositories.user.UserTypeDictionaryRepository;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserMainService implements UserService {
@@ -22,7 +24,7 @@ public class UserMainService implements UserService {
     private final UserMapper userMapper;
 
     @Override
-    public GetUserIDResponse register(RegisterUserRequest request) {
+    public GetUserIDResponse registerUser(RegisterUserRequest request) {
 
         if (userRepository.existsByEmailAndIsEnabledTrue(request.getEmail())) {
             throw new IllegalArgumentException("Email already in use");
@@ -43,7 +45,7 @@ public class UserMainService implements UserService {
     }
 
     @Override
-    public GetUserIDResponse login(LoginUserRequest request) {
+    public GetUserIDResponse loginUser(LoginUserRequest request) {
 
         User user = userRepository
                 .findByEmailAndIsEnabledTrue(request.getEmail())
@@ -55,4 +57,14 @@ public class UserMainService implements UserService {
 
         return userMapper.toGetUserIDResponse(user);
     }
+
+    @Override
+    public List<GetUserInfoResponse> getAllUsersInfo() {
+        return userRepository.findAllByIsEnabledTrue()
+                .stream()
+                .map(userMapper::toGetUserInfoResponse)
+                .toList();
+    }
+
+
 }

@@ -5,9 +5,13 @@ import pw.react.backend.dto.request.RegisterUserRequest;
 import pw.react.backend.dto.response.GetUserInfoResponse;
 import pw.react.backend.dto.response.GetUserIDResponse;
 
+import java.util.List;
+
 public interface UserService {
 
-    GetUserIDResponse register(RegisterUserRequest request);
+    GetUserIDResponse registerUser(RegisterUserRequest request);
 
-    GetUserIDResponse login(LoginUserRequest request);
+    GetUserIDResponse loginUser(LoginUserRequest request);
+
+    List<GetUserInfoResponse> getAllUsersInfo();
 }

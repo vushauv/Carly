@@ -23,4 +23,5 @@ public interface UserMapper {
 
     GetUserIDResponse toGetUserIDResponse(User user);
     GetUserInfoResponse toGetUserInfoResponse(User user);
+
 }

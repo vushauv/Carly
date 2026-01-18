@@ -14,6 +14,8 @@ import pw.react.backend.dto.response.GetUserIDResponse;
 import pw.react.backend.dto.response.GetUserInfoResponse;
 import pw.react.backend.services.UserService;
 
+import java.util.List;
+
 import static java.util.stream.Collectors.joining;
 
 @RestController
@@ -32,7 +34,7 @@ public class UserController {
             @Valid @RequestBody RegisterUserRequest request
     ) {
         logHeaders(headers);
-        GetUserIDResponse response = userService.register(request);
+        GetUserIDResponse response = userService.registerUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -42,8 +44,14 @@ public class UserController {
             @Valid @RequestBody LoginUserRequest request
     ) {
         logHeaders(headers);
-        GetUserIDResponse response = userService.login(request);
+        GetUserIDResponse response = userService.loginUser(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<GetUserInfoResponse>> getAllUsersInfo(@RequestHeader HttpHeaders headers) {
+        logHeaders(headers);
+        return ResponseEntity.ok(userService.getAllUsersInfo());
     }
 
     private void logHeaders(@RequestHeader HttpHeaders headers) {
