@@ -28,7 +28,7 @@ const Navbar = () => {
           end={item.to === "/kpi" || item.to === "/cars" || item.to === "/users"}
           className={styles.navLink} // style the link wrapper if needed
         >
-          {({ isActive }) => (
+          {({ isActive }: { isActive: boolean }) => (
             <NavbarButton isActive={isActive}>
               {item.label}
             </NavbarButton>
