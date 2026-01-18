@@ -1,9 +1,8 @@
 ## TODO:
-1. Add API endpoints for KPI (for backend)
-2. Main User Page
-3. Main ManageBookings Page
-4. Add API fetching stub code
-5. Modify FilterForm styles
-6. Create generalized EditEntityComponent
+1. Make Pagination Component
+2. Make Page for Entity Information and General Component for it
+3. Make API code for User Page (create handlers and api calls)
+4. Refactor Users and User Pages
+5. Use this for Bookings and Cars
 
    

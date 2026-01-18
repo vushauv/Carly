@@ -5,7 +5,10 @@ import AddNewEntityComponent from "../AddNewEntityComponent/AddNewComponent";
 import FiltersForm from "../FiltersForm/FiltersForm";
 import { fakeUsers } from "./sampleData.ts";
 import type { User } from "./types.ts";
-import {type Filters, defaultFilters, type UserFilterKey, userFilterFields} from "./filters.ts";
+import { type Filters, defaultFilters, type UserFilterKey, userFilterFields } from "./filters.conf.ts";
+import DataTable from "../DataTable/DataTable";
+import { usersColumns, usersRowKey, usersActions } from "./datatable.conf.ts";
+import { useMemo } from "react";
 
 
 const PAGE_SIZE = 3;
@@ -36,7 +39,11 @@ const ManageUsersPage = () => {
     loadUsersPage(1);
   }, []);
 
-
+  const columns = useMemo(
+    () => usersColumns({ primaryCell: styles.primaryCell, status: styles.status }),
+    [styles.primaryCell, styles.status]
+  );
+  
 
 
   return (
@@ -56,48 +63,29 @@ const ManageUsersPage = () => {
         }}
       />
 
-          
-
       <AddNewEntityComponent
-          title="Users"
-          buttonText="Add new user"
-          onButtonClick={() => {
-            // later: navigate("/users/new") or open modal
+        title="Users"
+        buttonText="Add new user"
+        onButtonClick={() => {
+          // later: navigate("/users/new") or open modal
         }}
       />
-      <div className={styles.table}>
-        <div className={styles.tableHeader}>
-          <span>Id</span>
-          <span>Name</span>
-          <span>Email</span>
-          <span>Is enabled</span>
-          <span className={styles.actionsHeader}>Actions</span>
-        </div>
 
-        {users.map((u) => (
-          <div key={u.userId} className={styles.tableRow}>
-            <span>{u.userId}</span>
-
-            <span className={styles.car}>
-              {u.firstName} {u.secondName ? `${u.secondName} ` : ""}
-              {u.lastName}
-            </span>
-
-            <span>{u.email}</span>
-
-            <span className={styles.status}>
-              {u.isEnabled ? "true" : "false"}
-            </span>
-
-            <div className={styles.actionButtons}>
-              <Button>Details</Button>
-              <Button color="secondary">Edit</Button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {users.length === 0 ? <p className={styles.empty}>No users found.</p> : null}
+      <DataTable<User>
+        rows={users}
+        rowKey={usersRowKey}
+        columns={columns}
+        actions={usersActions}
+        emptyText="No users found."
+        styles={{
+          table: styles.table,
+          tableHeader: styles.tableHeader,
+          tableRow: styles.tableRow,
+          empty: styles.empty,
+          actionsHeader: styles.actionsHeader,
+          actionButtons: styles.actionButtons,
+        }}
+      />
 
       <div className={styles.pagination}>
         <Button
