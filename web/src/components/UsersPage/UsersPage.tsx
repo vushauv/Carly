@@ -1,128 +1,16 @@
 import { useEffect, useState } from "react";
-import Input from "../Input/Input";
 import Button from "../Button/Button";
-import styles from "./UsersPage.module.css"; // reusing same styles
+import styles from "./UsersPage.module.css";
 import AddNewEntityComponent from "../AddNewEntityComponent/AddNewComponent";
 import FiltersForm from "../FiltersForm/FiltersForm";
-import type { FilterFieldDef } from "../FiltersForm/FiltersForm";
+import { fakeUsers } from "./sampleData.ts";
+import type { User } from "./types.ts";
+import {type Filters, defaultFilters, type UserFilterKey, userFilterFields} from "./filters.ts";
 
-
-type UserType = "ADMIN" | "CUSTOMER" | "MANAGER";
-
-type User = {
-  userId: number;
-  firstName: string;
-  secondName?: string | null;
-  lastName: string;
-  email: string;
-  contactNumber?: number | null;
-  userType: UserType;
-  isEnabled: boolean;
-  createdAt: string; // ISO-like string for demo
-};
-
-// Fake "backend" data (only for rendering placeholders)
-const fakeUsers: User[] = [
-  {
-    userId: 1,
-    firstName: "Anna",
-    secondName: null,
-    lastName: "Kowalska",
-    email: "anna.kowalska@example.com",
-    contactNumber: 48123456789,
-    userType: "CUSTOMER",
-    isEnabled: true,
-    createdAt: "2026-01-02",
-  },
-  {
-    userId: 2,
-    firstName: "Piotr",
-    secondName: "Jan",
-    lastName: "Nowak",
-    email: "piotr.nowak@example.com",
-    contactNumber: null,
-    userType: "MANAGER",
-    isEnabled: true,
-    createdAt: "2026-01-05",
-  },
-  {
-    userId: 3,
-    firstName: "Vasil",
-    secondName: null,
-    lastName: "Vushau",
-    email: "vasil@example.com",
-    contactNumber: 48500111222,
-    userType: "ADMIN",
-    isEnabled: true,
-    createdAt: "2026-01-10",
-  },
-  {
-    userId: 4,
-    firstName: "Ola",
-    secondName: null,
-    lastName: "Zielinska",
-    email: "ola.zielinska@example.com",
-    contactNumber: 48777111222,
-    userType: "CUSTOMER",
-    isEnabled: false,
-    createdAt: "2025-12-20",
-  },
-  {
-    userId: 5,
-    firstName: "Mateusz",
-    secondName: null,
-    lastName: "Kaczmarek",
-    email: "mateusz.k@example.com",
-    contactNumber: 48666111222,
-    userType: "CUSTOMER",
-    isEnabled: true,
-    createdAt: "2026-01-14",
-  },
-  {
-    userId: 6,
-    firstName: "Kasia",
-    secondName: "Maria",
-    lastName: "Lewandowska",
-    email: "kasia.lew@example.com",
-    contactNumber: null,
-    userType: "MANAGER",
-    isEnabled: true,
-    createdAt: "2026-01-16",
-  },
-  {
-    userId: 7,
-    firstName: "Tomasz",
-    secondName: null,
-    lastName: "Wrobel",
-    email: "twrobel@example.com",
-    contactNumber: 48555111222,
-    userType: "CUSTOMER",
-    isEnabled: true,
-    createdAt: "2026-01-17",
-  },
-];
 
 const PAGE_SIZE = 3;
 
-type Filters = {
-  userId: string;
-  nameOrSurname: string;
-  email: string;
-  userType: string;
-  isEnabled: string;
-  createdFrom: string;
-  createdTo: string;
-};
 
-const defaultFilters: Filters = {
-  userId: "",
-  nameOrSurname: "",
-  email: "",
-  userType: "",
-  isEnabled: "",
-  createdFrom: "",
-  createdTo: "",
-};
 
 const ManageUsersPage = () => {
   const [filters, setFilters] = useState<Filters>(defaultFilters);
@@ -149,62 +37,6 @@ const ManageUsersPage = () => {
   }, []);
 
 
-type UserFilterKey =
-  | "userId"
-  | "nameOrSurname"
-  | "email"
-  | "userType"
-  | "createdFrom"
-  | "createdTo";
-
-const userFilterFields: FilterFieldDef<UserFilterKey>[] = [
-  {
-    key: "userId",
-    label: "UserId",
-    type: "text",
-    placeholder: "e.g. 3",
-    hint: "Internal user ID",
-    errorMessage: "Please enter a valid user id.",
-  },
-  {
-    key: "nameOrSurname",
-    label: "Name / Surname",
-    type: "text",
-    placeholder: "e.g. Nowak, Anna",
-    hint: "Matches first/second/last name",
-    errorMessage: "Please enter a valid text.",
-  },
-  {
-    key: "email",
-    label: "Email",
-    type: "text",
-    placeholder: "e.g. anna@...",
-    hint: "Search by email substring",
-    errorMessage: "Please enter a valid email.",
-  },
-  {
-    key: "userType",
-    label: "User type",
-    type: "text",
-    placeholder: "ADMIN / CUSTOMER / MANAGER",
-    hint: "Dictionary type",
-    errorMessage: "Please enter a valid user type.",
-  },
-  {
-    key: "createdFrom",
-    label: "Created from",
-    type: "date",
-    hint: "Date of adding (from)",
-    errorMessage: "Please enter a valid date.",
-  },
-  {
-    key: "createdTo",
-    label: "Created to",
-    type: "date",
-    hint: "Date of adding (to)",
-    errorMessage: "Please enter a valid date.",
-  },
-];
 
 
   return (
