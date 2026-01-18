@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Button from "../Button/Button";
-import styles from "./FilterBar.module.css";
+import styles from "./FilterBarLayout.module.css";
 
 export interface FilterBarProps {
   children: ReactNode;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import FilterBar from "../FilterBar/FilterBar";
+import FilterBar from "../FilterBarLayout/FilterBarLayout";
 import Input from "../Input/Input";
 import Button from "../Button/Button";
 import styles from "./UsersPage.module.css"; // reusing same styles
