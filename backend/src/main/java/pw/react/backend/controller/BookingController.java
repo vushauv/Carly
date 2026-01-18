@@ -1,23 +1,22 @@
 package pw.react.backend.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import pw.react.backend.dto.response.*;
+import pw.react.backend.domain.booking.Booking;
+import pw.react.backend.dto.mapper.BookingMapper;
+import pw.react.backend.dto.request.booking.CreateBookingRequest;
+import pw.react.backend.dto.request.booking.UpdateBookingRequest;
+import pw.react.backend.dto.response.booking.BookingResponse;
+import pw.react.backend.dto.response.booking.GetBookingResponse;
 import pw.react.backend.exceptions.ResourceNotFoundException;
+import pw.react.backend.services.BookingService;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
 import static java.util.stream.Collectors.joining;
 
@@ -27,10 +26,10 @@ import static java.util.stream.Collectors.joining;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class BookingController {
 
-    //private final BookingService bookingService;
-    //private final BookingMapper bookingMapper;
-
     public static final String BOOKINGS_PATH = "/bookings";
+
+    private final BookingService bookingService;
+    private final BookingMapper bookingMapper;
 
     private void logHeaders(@RequestHeader HttpHeaders headers) {
         log.info("Controller request headers {}",
@@ -42,49 +41,80 @@ public class BookingController {
     }
 
     @PostMapping(path = "")
-    public ResponseEntity<Collection<Void>> createBooking(@RequestHeader HttpHeaders headers,
-                                                            @RequestBody(required = false) Object body)
-    {
-        //TODO: decide what exactly goes in the request payload!
+    public ResponseEntity<Collection<BookingResponse>> createBookings(
+            @RequestHeader HttpHeaders headers,
+            @Valid @RequestBody List<CreateBookingRequest> bookings
+    ) {
         logHeaders(headers);
 
-        log.info("createBooking called – skeleton implementation");
+        List<Booking> createdBookings = bookingMapper.createRequestToBookingList(bookings);
+        List<Booking> saved = bookingService.batchSave(createdBookings);
 
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        List<BookingResponse> result = bookingMapper.bookingToResponseList(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+
+    @GetMapping(path = "/{bookingId}")
+    public ResponseEntity<GetBookingResponse> getBooking(
+            @RequestHeader HttpHeaders headers,
+            @PathVariable Integer bookingId
+    ) {
+        logHeaders(headers);
+
+        GetBookingResponse result = bookingService.getById(bookingId)
+                .map(bookingMapper::bookingToGetBookingResponse)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("Booking with %d does not exist", bookingId)));
+
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping
-    public ResponseEntity<String> getBookings(@RequestHeader HttpHeaders headers,
-                                                    @RequestParam(required = false) Integer page,
-                                                    @RequestParam(required = false) Integer size)
-    {
-        //TODO: implement query parameters to filter based on given criteria
+    public ResponseEntity<List<GetBookingResponse>> getAllBookings(
+            @RequestHeader HttpHeaders headers,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
+    ) {
         logHeaders(headers);
-        log.info("getBookings called – skeleton implementation");
 
-        return ResponseEntity.ok("getBookings called correctly!");
+        if (page == null || size == null) {return ResponseEntity.ok(bookingMapper.bookingToGetBookingResponseList(bookingService.getAll()));
+        }
+        return ResponseEntity.ok(bookingMapper.bookingToGetBookingResponseList(bookingService.getBookingsPage(page, size)));
     }
-    @GetMapping(path = "/{bookingId}")
-    public ResponseEntity<String> getBooking(@RequestHeader HttpHeaders headers, @PathVariable Integer bookingId) {
+
+    @PutMapping(path = "/{bookingId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateBooking(
+            @RequestHeader HttpHeaders headers,
+            @PathVariable Integer bookingId,
+            @RequestBody UpdateBookingRequest updatedBooking
+    ) {
         logHeaders(headers);
-        //Get all details of a specific booking
-        return ResponseEntity.ok(String.format("getBookings with bookingId=%d called correctly!", bookingId));
+
+        Booking existing = bookingService.getById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format("Booking with %d does not exist", bookingId)));
+
+        // Merge only provided fields (non-null)
+        bookingMapper.applyUpdate(updatedBooking, existing);
+        log.info("After update: carBookingStatusId={}",
+                existing.getCarBookingStatus() == null ? null : existing.getCarBookingStatus().getBookingStatusDictionaryId());
+
+        bookingService.updateBooking(bookingId, existing);
+
     }
-    @PatchMapping(path = "/{bookingId}")
-    //@ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<String> updateBooking(@RequestHeader HttpHeaders headers, @PathVariable Integer bookingId,
-                              @Valid @RequestBody Integer updatedBooking) {
-        logHeaders(headers);
-        return ResponseEntity.ok(String.format("getBookings with bookingId=%d called correctly!", bookingId));
-    }
+
 
     @DeleteMapping(path = "/{bookingId}")
-    //@ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<String> deleteBooking(@RequestHeader HttpHeaders headers, @PathVariable Integer bookingId,
-                                                @Valid @RequestBody Integer updatedBooking) {
+    public ResponseEntity<String> deleteBooking(
+            @RequestHeader HttpHeaders headers,
+            @PathVariable Integer bookingId
+    ) {
         logHeaders(headers);
-        return ResponseEntity.ok(String.format("deleteBooking with bookingId=%d called correctly!", bookingId));
+
+        boolean deleted = bookingService.deleteBooking(bookingId);
+        if (!deleted) {
+            return ResponseEntity.badRequest().body(String.format("Booking with id %s does not exist.", bookingId));
+        }
+        return ResponseEntity.ok(String.format("Booking with id %s deleted.", bookingId));
     }
-
-
 }
