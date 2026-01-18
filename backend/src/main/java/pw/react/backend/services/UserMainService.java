@@ -73,5 +73,14 @@ public class UserMainService implements UserService {
         return userMapper.toGetUserInfoResponse(user);
     }
 
+    @Override
+    public void deleteUserById(Integer id) {
+        User user = userRepository
+                .findByUserIdAndIsEnabledTrue(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+        user.setEnabled(false);
+        userRepository.save(user);
+    }
+
 
 }

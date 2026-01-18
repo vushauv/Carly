@@ -69,4 +69,11 @@ public class UserController {
                         .collect(joining(","))
         );
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity deleteUserById(@RequestHeader HttpHeaders headers, @PathVariable Integer id) {
+        logHeaders(headers);
+        userService.deleteUserById(id);
+        return ResponseEntity.noContent().build();
+    }
 }
