@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import pw.react.backend.domain.Auditable;
 
+import java.util.Objects;
+
 @Getter
 @Setter
 @Entity
@@ -30,5 +32,13 @@ public class CarToFeatureLink extends Auditable {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "CarFeatureId", nullable = false)
     private CarFeature carFeature;
+
+    // Do not mutate CarId or DictionaryId
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                car.getCarId(),
+                carFeature.getDictionary().getCarFeatureDictionaryId()
+        );
+    }
 }
-// on delete of Car, set isEnabled of CarToFeatureLink to false

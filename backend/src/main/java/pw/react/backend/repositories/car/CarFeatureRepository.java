@@ -13,11 +13,12 @@ public interface CarFeatureRepository extends JpaRepository<CarFeature, Integer>
         select f
         from CarFeature f
         where f.dictionary.carFeatureDictionaryId = :dictId
-          and (f.value = :value or f.valueName = :valueName)
+          and f.value = :value
     """)
     Optional<CarFeature> findFeatureBy(
             @Param("dictId") Short dictId,
-            @Param("value") BigDecimal value,
-            @Param("valueName") String valueName
+            @Param("value") String value
     );
+
+    String value(String value);
 }

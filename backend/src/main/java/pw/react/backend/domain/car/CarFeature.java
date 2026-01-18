@@ -10,9 +10,14 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Entity
-@Table(name = "CarFeatures")
+@Table(
+        name="CarFeatures",
+        uniqueConstraints = @UniqueConstraint(
+                name="UX_CarFeature_Dictionary_Value",
+                columnNames={"CarFeatureDictionaryId","Value"}
+        )
+)
 public class CarFeature extends Auditable {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "CarFeatureId", nullable = false)
@@ -22,15 +27,7 @@ public class CarFeature extends Auditable {
     @JoinColumn(name = "CarFeatureDictionaryId", nullable = false)
     private CarFeatureDictionary dictionary;
 
-    @Column(name = "Value", precision = 19, scale = 4)
-    private BigDecimal value;
-
-    @Column(name = "ValueName", nullable = false)
-    private String valueName;
-
-    @Column(name = "ValueDisplayName", nullable = false)
-    private String valueDisplayName;
-
-    @Column(name = "Description")
-    private String description;
+    @Column(name = "Value", nullable = false)
+    private String value;
 }
+
