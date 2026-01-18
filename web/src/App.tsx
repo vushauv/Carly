@@ -7,21 +7,56 @@ import Header from "./components/Header/Header";
 import { useState } from "react";
 import Footer from "./components/Footer/Footer";
 import ManageCarsPage from "./components/ManageCarsPage/ManageCarsPage";
+import ManageBookingsPage from "./components/ManageBookingsPage/ManageBookingsPage";
+import UsersPage from "./components/Users/UsersPage";
+
+import { Routes, Route, Navigate } from "react-router-dom";
+
 
 function App() {
-  // Ofc this would be in the global state
-  const [loggedIn, setLoggedIn] = useState<boolean>(true); //for testing purposes set to true (should be false ofc)
+  const [loggedIn, setLoggedIn] = useState<boolean>(true);
 
   return (
     <>
-      <Header loggedIn={loggedIn}></Header>
+      <Header loggedIn={loggedIn} />
+
       <Content>
-        {/*Insides of Content section can be replaced by different components depending on the route*/}
-        <ManageCarsPage></ManageCarsPage>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+
+          <Route
+            path="/kpi"
+            element={loggedIn ? <KPIPage /> : <Navigate to="/login" />}
+          />
+
+          <Route
+            path="/cars"
+            element={loggedIn ? <ManageCarsPage /> : <Navigate to="/login" />}
+          />
+
+          <Route
+            path="/users"
+            element={loggedIn ? <UsersPage /> : <Navigate to="/login" />}
+          />
+
+          <Route
+            path="/manage-bookings"
+            element={loggedIn ? <ManageBookingsPage /> : <Navigate to="/login" />}
+          />
+
+          <Route
+            path="/partner-bookings"
+            element={loggedIn ? <PartnerBookingsPage /> : <Navigate to="/login" />}
+          />
+
+          <Route path="*" element={<Navigate to="/kpi" />} />
+        </Routes>
       </Content>
-      <Footer></Footer>
+
+      <Footer />
     </>
   );
 }
 
 export default App;
+
