@@ -3,6 +3,7 @@ import FilterBar from "../FilterBar/FilterBar";
 import Input from "../Input/Input";
 import Button from "../Button/Button";
 import styles from "./ManageBookingsPage.module.css";
+import AddNewEntityComponent from "../AddNewEntityComponent/AddNewComponent";
 
 type Car = {
   id: string;
@@ -113,10 +114,6 @@ const ManageBookingsPage = () => {
     <div className={styles.page}>
       <h1 className={styles.title}>Admin Dashboard – Manage Bookings</h1>
 
-      <div className={styles.topActions}>
-        <Button onClick={() => {}}>Add new car</Button>
-      </div>
-
       <h3 className={styles.subTitle}>Search criteria</h3>
 
       <FilterBar onApply={applyFilters} onReset={resetFilters}>
@@ -200,7 +197,13 @@ const ManageBookingsPage = () => {
         </div>
       </FilterBar>
 
-      <h3 className={styles.subTitle}>Cars</h3>
+      <AddNewEntityComponent
+          title="Bookings"
+          buttonText="Add new booking"
+          onButtonClick={() => {
+            // later: navigate("/users/new") or open modal
+        }}
+      />
 
       <div className={styles.table}>
         <div className={styles.tableHeader}>

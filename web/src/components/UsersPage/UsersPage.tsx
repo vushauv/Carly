@@ -250,12 +250,12 @@ const ManageUsersPage = () => {
       </FilterBar>
 
       <AddNewEntityComponent
-        title="Users"
-        buttonText="Add new user"
-        onButtonClick={() => {
-          // later: navigate("/users/new") or open modal
-      }}
-/>
+          title="Users"
+          buttonText="Add new user"
+          onButtonClick={() => {
+            // later: navigate("/users/new") or open modal
+        }}
+      />
       <div className={styles.table}>
         <div className={styles.tableHeader}>
           <span>Id</span>
