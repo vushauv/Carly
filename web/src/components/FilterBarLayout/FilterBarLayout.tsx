@@ -8,7 +8,7 @@ export interface FilterBarProps {
   onReset: () => void;
 }
 
-const FilterBar = ({ children, onApply, onReset }: FilterBarProps) => {
+const FilterBarLayout = ({ children, onApply, onReset }: FilterBarProps) => {
   return (
     <div className={styles.searchShell}>
       <div className={styles.searchCriteria}>{children}</div>
@@ -24,4 +24,4 @@ const FilterBar = ({ children, onApply, onReset }: FilterBarProps) => {
   );
 };
 
-export default FilterBar;
+export default FilterBarLayout;

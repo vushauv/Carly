@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import FilterBar from "../FilterBarLayout/FilterBarLayout";
 import Input from "../Input/Input";
 import Button from "../Button/Button";
 import styles from "./UsersPage.module.css"; // reusing same styles
 import AddNewEntityComponent from "../AddNewEntityComponent/AddNewComponent";
+import FiltersForm from "../FiltersForm/FiltersForm";
+import type { FilterFieldDef } from "../FiltersForm/FiltersForm";
+
 
 type UserType = "ADMIN" | "CUSTOMER" | "MANAGER";
 
@@ -146,108 +148,83 @@ const ManageUsersPage = () => {
     loadUsersPage(1);
   }, []);
 
+
+type UserFilterKey =
+  | "userId"
+  | "nameOrSurname"
+  | "email"
+  | "userType"
+  | "createdFrom"
+  | "createdTo";
+
+const userFilterFields: FilterFieldDef<UserFilterKey>[] = [
+  {
+    key: "userId",
+    label: "UserId",
+    type: "text",
+    placeholder: "e.g. 3",
+    hint: "Internal user ID",
+    errorMessage: "Please enter a valid user id.",
+  },
+  {
+    key: "nameOrSurname",
+    label: "Name / Surname",
+    type: "text",
+    placeholder: "e.g. Nowak, Anna",
+    hint: "Matches first/second/last name",
+    errorMessage: "Please enter a valid text.",
+  },
+  {
+    key: "email",
+    label: "Email",
+    type: "text",
+    placeholder: "e.g. anna@...",
+    hint: "Search by email substring",
+    errorMessage: "Please enter a valid email.",
+  },
+  {
+    key: "userType",
+    label: "User type",
+    type: "text",
+    placeholder: "ADMIN / CUSTOMER / MANAGER",
+    hint: "Dictionary type",
+    errorMessage: "Please enter a valid user type.",
+  },
+  {
+    key: "createdFrom",
+    label: "Created from",
+    type: "date",
+    hint: "Date of adding (from)",
+    errorMessage: "Please enter a valid date.",
+  },
+  {
+    key: "createdTo",
+    label: "Created to",
+    type: "date",
+    hint: "Date of adding (to)",
+    errorMessage: "Please enter a valid date.",
+  },
+];
+
+
   return (
     <div className={styles.page}>
       <h1 className={styles.title}>Admin Dashboard – Manage Users</h1>
 
-      
 
-      <h3 className={styles.subTitle}>Search criteria</h3>
+      <FiltersForm<UserFilterKey>
+        fields={userFilterFields}
+        onApply={(values) => {
+          // call API: GET /users?... based on values
+          console.log("APPLY", values);
+        }}
+        onReset={() => {
+          // optional: call API without filters
+          console.log("RESET");
+        }}
+      />
 
-      {/* onApply / onReset will later trigger API calls */}
-      <FilterBar onApply={() => {}} onReset={() => {}}>
-        <div className={styles.filters}>
-          <div className={styles.field}>
-            <span className={styles.label}>UserId</span>
-            <Input
-              type="text"
-              placeholder="e.g. 3"
-              hint="Internal user ID"
-              errorMessage="Please enter a valid user id."
-              isRequired={false}
-              value={filters.userId}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFilters((p) => ({ ...p, userId: e.target.value }))
-              }
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>Name / Surname</span>
-            <Input
-              type="text"
-              placeholder="e.g. Nowak, Anna"
-              hint="Matches first/second/last name"
-              errorMessage="Please enter a valid text."
-              isRequired={false}
-              value={filters.nameOrSurname}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFilters((p) => ({ ...p, nameOrSurname: e.target.value }))
-              }
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>Email</span>
-            <Input
-              type="text"
-              placeholder="e.g. anna@..."
-              hint="Search by email substring"
-              errorMessage="Please enter a valid email."
-              isRequired={false}
-              value={filters.email}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFilters((p) => ({ ...p, email: e.target.value }))
-              }
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>User type</span>
-            <Input
-              type="text"
-              placeholder="ADMIN / CUSTOMER / MANAGER"
-              hint="Dictionary type"
-              errorMessage="Please enter a valid user type."
-              isRequired={false}
-              value={filters.userType}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFilters((p) => ({ ...p, userType: e.target.value }))
-              }
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>Created from</span>
-            <Input
-              type="date"
-              placeholder=""
-              hint="Date of adding (from)"
-              errorMessage="Please enter a valid date."
-              isRequired={false}
-              value={filters.createdFrom}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFilters((p) => ({ ...p, createdFrom: e.target.value }))
-              }
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>Created to</span>
-            <Input
-              type="date"
-              placeholder=""
-              hint="Date of adding (to)"
-              errorMessage="Please enter a valid date."
-              isRequired={false}
-              value={filters.createdTo}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFilters((p) => ({ ...p, createdTo: e.target.value }))
-              }
-            />
-          </div>
-        </div>
-      </FilterBar>
+          
 
       <AddNewEntityComponent
           title="Users"
