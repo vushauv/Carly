@@ -66,5 +66,12 @@ public class UserMainService implements UserService {
                 .toList();
     }
 
+    @Override
+    public GetUserInfoResponse getUserInfoByID(Integer id) {
+        User user = userRepository.findByUserIdAndIsEnabledTrue(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+        return userMapper.toGetUserInfoResponse(user);
+    }
+
 
 }

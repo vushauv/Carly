@@ -54,6 +54,12 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsersInfo());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<GetUserInfoResponse> getUserInfoById(@RequestHeader HttpHeaders headers, @PathVariable Integer id) {
+        logHeaders(headers);
+        return  ResponseEntity.ok(userService.getUserInfoByID(id));
+    }
+
     private void logHeaders(@RequestHeader HttpHeaders headers) {
         log.info(
                 "Controller request headers {}",
