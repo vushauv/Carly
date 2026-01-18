@@ -8,8 +8,6 @@ import org.springframework.context.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import pw.react.backend.repositories.CompanyLogoRepository;
-import pw.react.backend.services.CompanyLogoService;
 import pw.react.backend.services.HttpService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
@@ -55,10 +53,7 @@ public class MainConfig {
         return new HttpService(restTemplate);
     }
 
-    @Bean
-    public CompanyLogoService logoService(CompanyLogoRepository companyLogoRepository) {
-        return new CompanyLogoService(companyLogoRepository);
-    }
+
 
     @Bean
     public WebMvcConfigurer corsConfigurer() {
