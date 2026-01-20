@@ -41,19 +41,20 @@ public class BookingController {
         );
     }
 
-    @PostMapping(path = "")
+    @PostMapping
     public ResponseEntity<Collection<BookingResponse>> createBookings(
             @RequestHeader HttpHeaders headers,
-            @Valid @RequestBody List<CreateBookingRequest> bookings
+            @Valid @RequestBody List<CreateBookingRequest> requests
     ) {
-        //TODO: wrap list inside of a component?
         logHeaders(headers);
 
-        List<Booking> createdBookings = bookingMapper.createRequestToBookingList(bookings);
-        List<Booking> saved = bookingService.batchSave(createdBookings);
+        List<Booking> toCreate = bookingMapper.createRequestToBookingList(requests);
 
-        List<BookingResponse> result = bookingMapper.bookingToResponseList(saved);
-        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        List<Booking> saved = bookingService.batchSave(toCreate);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(bookingMapper.bookingToResponseList(saved));
     }
 
     @GetMapping(path = "/{bookingId}")
@@ -83,7 +84,7 @@ public class BookingController {
     ) {
         logHeaders(headers);
 
-        // If no filters provided, keep your old behavior
+        // no filters -> we get all bookings (pagination included)
         boolean noFilters =
                 bookingId == null &&
                         (status == null || status.isBlank()) &&
@@ -97,6 +98,7 @@ public class BookingController {
             }
             return ResponseEntity.ok(bookingMapper.bookingToGetBookingResponseList(bookingService.getBookingsPage(page, size)));
         }
+        //if no filers passed, so just '/bookings' -> we get all booking (including pagination)
 
         // Parse dates (ISO-8601 LocalDateTime, e.g. 2026-02-01T10:00:00)
         java.time.LocalDateTime from = (dateFrom == null || dateFrom.isBlank())
@@ -132,6 +134,7 @@ public class BookingController {
             @PathVariable Integer bookingId,
             @RequestBody UpdateBookingRequest updatedBooking
     ) {
+        //only used in the admin panel
         logHeaders(headers);
 
         Booking existing = bookingService.getById(bookingId)
@@ -140,13 +143,12 @@ public class BookingController {
 
         // Merge only provided fields (non-null)
         bookingMapper.applyUpdate(updatedBooking, existing);
-        log.info("After update: carBookingStatusId={}",
-                existing.getCarBookingStatus() == null ? null : existing.getCarBookingStatus().getBookingStatusDictionaryId());
+
+        log.info(String.format("Booking with id %s successfully modified.", existing.getBookingId()));
 
         bookingService.updateBooking(bookingId, existing);
 
     }
-
 
     @DeleteMapping(path = "/{bookingId}")
     public ResponseEntity<String> deleteBooking(
@@ -160,5 +162,26 @@ public class BookingController {
             return ResponseEntity.badRequest().body(String.format("Booking with id %s does not exist.", bookingId));
         }
         return ResponseEntity.ok(String.format("Booking with id %s deleted.", bookingId));
+    }
+
+    //instead of reusing the PUT method, we create dedicated endpoints only for cancellation - easier to hook up
+    @PostMapping(path = "/{bookingId}/cancel-car")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancelCarBooking(
+            @RequestHeader HttpHeaders headers,
+            @PathVariable Integer bookingId
+    ) {
+        logHeaders(headers);
+        bookingService.cancelCarBooking(bookingId);
+    }
+
+    @PostMapping(path = "/{bookingId}/cancel-flat")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancelFlatBooking(
+            @RequestHeader HttpHeaders headers,
+            @PathVariable Integer bookingId
+    ) {
+        logHeaders(headers);
+        bookingService.cancelFlatBooking(bookingId);
     }
 }

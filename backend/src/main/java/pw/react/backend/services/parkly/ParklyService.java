@@ -7,7 +7,7 @@ import pw.react.backend.dto.parkly.ParklyCarResponse;
 
 import java.util.List;
 
-public interface ParklyIntegrationService {
+public interface ParklyService {
 
     List<ParklyCarResponse> searchAvailableCars(ParklySearchCarsRequest request);
 

@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface BookingService {
 
-    Booking updateBooking(Integer id, Booking updatedBooking) throws ResourceNotFoundException;
+    void updateBooking(Integer id, Booking updatedBooking) throws ResourceNotFoundException;
 
     boolean deleteBooking(Integer bookingId);
 
@@ -22,4 +22,8 @@ public interface BookingService {
 
     List<Booking> getBookingsPage(int page, int size);
     Page<Booking> search(BookingSearchCriteria criteria, int page, int size);
+
+    void cancelCarBooking(Integer bookingId);
+    void cancelFlatBooking(Integer bookingId);
+
 }

@@ -29,40 +29,23 @@ public class FlatlyService {
     @Transactional
     public Booking createFlatBookingInFlatly(CreateFlatlyBookingRequest request) {
 
-        //CustomerId of the User doing the booking from Carly
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getUserId()));
 
-        //We set the FlatBookingStatusId to 'Created'
+        //if not bookings to 'attach' the FlatBooking to, we throw an exception
+        Booking booking = bookingRepository.findFirstByUser_UserIdOrderByBookingIdDesc(user.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No bookings exist for userId=" + user.getUserId() + ". Create a car booking first."
+                ));
+
         BookingStatusDictionary created = bookingStatusDictionaryRepository.findByName("CREATED")
                 .orElseThrow(() -> new ResourceNotFoundException("CREATED status missing (seed data)"));
 
-        //TODO: Refactor this, when we create a Flat booking, there will always be a Car booking
-        //already - we retrieve the latest one (since PK is autoincrement we can sort by it)
-        Booking booking = bookingRepository.findFirstByUser_UserIdOrderByBookingIdDesc(user.getUserId())
-                .filter(this::hasFlatPart) // only reuse if there is an existing flat booking "part"
-                .orElseGet(() -> {
-                    Booking b = new Booking();
-                    b.setEnabled(true);
-                    b.setUser(user);
-                    return b;
-                });
-
-        // If it's already set, leave it. If not, set CREATED.
-        if (booking.getCarBookingStatus() == null) {
-            booking.setCarBookingStatus(created);
-        }
-
-        // Update "flat part" of the booking row
         booking.setFlatBookingStatus(created);
 
-
-        // Persist first if new, so we have bookingId as correlationId
-        Booking savedLocal = bookingRepository.save(booking);
-
-        // Call Flatly
+        // Call Flatly (we pass OUR bookingId as correlation)
         FlatlyCreateBookingRequest outbound = new FlatlyCreateBookingRequest();
-        outbound.setBookingId(savedLocal.getBookingId().longValue());
+        outbound.setBookingId(booking.getBookingId().longValue());
         outbound.setFlatId(request.getFlatId());
         outbound.setDateFrom(request.getDateFrom());
         outbound.setDateTo(request.getDateTo());
@@ -72,12 +55,12 @@ public class FlatlyService {
             throw new IllegalStateException("Flatly returned empty response or missing flatBookingId");
         }
 
-        // Store Flatly booking id (external reference)
-        savedLocal.setProviderExternalBookingId(flatlyResponse.getFlatBookingId());
+        // Store Flatly external booking id (ONLY after Flatly success)
+        booking.setProviderExternalBookingId(flatlyResponse.getFlatBookingId());
 
-        Booking updated = bookingRepository.save(savedLocal);
+        Booking updated = bookingRepository.save(booking);
 
-        log.info("Flatly booking upserted: userId={}, localBookingId={}, flatlyBookingId={}",
+        log.info("Flatly booking attached: userId={}, localBookingId={}, flatlyBookingId={}",
                 user.getUserId(), updated.getBookingId(), flatlyResponse.getFlatBookingId());
 
         return updated;

@@ -5,6 +5,8 @@ import pw.react.backend.domain.booking.Booking;
 
 import java.time.LocalDateTime;
 
+//this fucker does some magic, it allows us to filer by given query params while gracefully handling null values, so we can pass
+//only userId=10 and it will filter only by that
 public final class BookingSpecifications {
 
     private BookingSpecifications() { }

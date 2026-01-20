@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Setter
 public class BookingSearchCriteria {
     private Integer bookingId;
-    private String status; // e.g. CREATED/CANCELLED/COMPLETED/ERROR
+    private String status; // e.g. CREATED/CANCELLED/COMPLETED
     private LocalDateTime dateFrom;
     private LocalDateTime dateTo;
     private Integer userId;

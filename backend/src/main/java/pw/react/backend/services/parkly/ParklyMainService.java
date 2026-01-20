@@ -26,7 +26,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ParklyIntegrationMainService implements ParklyIntegrationService {
+public class ParklyMainService implements ParklyService {
 
     //TODO (WSE): We have to know the ID assigned to Parkly here, I think realistically the ids wont change so keeping the email
     // is equivalent to keeping the hard-coded ID iteself, maybe there is a better way in the future
@@ -61,6 +61,7 @@ public class ParklyIntegrationMainService implements ParklyIntegrationService {
     @Override
     @Transactional
     public ParklyBookingResponse createCarBooking(ParklyCreateCarBookingRequest request) {
+        //TODO: remove locations if we decide on getting rid of them
         User parklyUser = userRepository.findByEmail(PARKLY_SYSTEM_EMAIL)
                 .orElseThrow(() -> new ResourceNotFoundException("Parkly system user not found. Seed data missing."));
 
@@ -104,30 +105,31 @@ public class ParklyIntegrationMainService implements ParklyIntegrationService {
                     return toResponse(saved, created);
                 });
     }
-    @Override
     @Transactional
     public boolean cancelCarBooking(Long externalBookingId) {
-        User parklyUser = userRepository.findByEmail(PARKLY_SYSTEM_EMAIL)
+        User parklyUser = userRepository.findByEmail("parkly@pw.edu.pl")
                 .orElseThrow(() -> new ResourceNotFoundException("Parkly system user not found. Seed data missing."));
 
-        BookingStatusDictionary cancelled = bookingStatusDictionaryRepository.findByName(CANCELLED_STATUS)
-                .orElseThrow(() -> new ResourceNotFoundException("CANCELLED status not found. Seed data missing."));
+        BookingStatusDictionary cancelled = bookingStatusDictionaryRepository.findByName("CANCELLED")
+                .orElseThrow(() -> new ResourceNotFoundException("CANCELLED status missing (seed data)"));
 
         return bookingRepository
                 .findByUser_UserIdAndProviderExternalBookingId(parklyUser.getUserId(), externalBookingId)
                 .map(b -> {
-                    // idempotent: if already cancelled, do nothing but return success
-                    if (b.getCarBookingStatus() != null
-                            && CANCELLED_STATUS.equalsIgnoreCase(b.getCarBookingStatus().getName())) {
+                    // safeguard to no cancel an already cancelled booking
+                    if (b.getCarBookingStatus() != null &&
+                            "CANCELLED".equalsIgnoreCase(b.getCarBookingStatus().getName())) {
                         return true;
                     }
-                    //We don't remove or set IsEnabled=1, just set the CarBookingStatus to 'Cancelled'
+
                     b.setCarBookingStatus(cancelled);
                     bookingRepository.save(b);
                     return true;
                 })
                 .orElse(false);
+        //we do not notify Parkly on cancellation from our system
     }
+
 
     private ParklyBookingResponse toResponse(Booking booking, BookingStatusDictionary status) {
         ParklyBookingResponse r = new ParklyBookingResponse();

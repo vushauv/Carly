@@ -12,7 +12,7 @@ import pw.react.backend.dto.parkly.ParklyBookingResponse;
 import pw.react.backend.dto.parkly.ParklyCarResponse;
 import pw.react.backend.dto.mapper.ParklyCarMapper;
 import pw.react.backend.services.car.CarService;
-import pw.react.backend.services.parkly.ParklyIntegrationService;
+import pw.react.backend.services.parkly.ParklyService;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ public class ParklyController {
     //return car details (images!) instead of only the CarId
     public static final String PARKLY_PATH = "/parkly";
 
-    private final ParklyIntegrationService parklyIntegrationService;
+    private final ParklyService parklyService;
     private final CarService carService;
     private final ParklyCarMapper parklyCarMapper;
 
@@ -60,7 +60,7 @@ public class ParklyController {
             @Valid @RequestBody ParklyCreateCarBookingRequest request
     ) {
         logHeaders(headers);
-        ParklyBookingResponse response = parklyIntegrationService.createCarBooking(request);
+        ParklyBookingResponse response = parklyService.createCarBooking(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     //TODO (TBD): Decide whether Parkly has to provide our BookingId, or their BookingId!
@@ -71,12 +71,14 @@ public class ParklyController {
     ) {
         logHeaders(headers);
 
-        boolean cancelled = parklyIntegrationService.cancelCarBooking(externalBookingId);
+        boolean cancelled = parklyService.cancelCarBooking(externalBookingId);
         if (!cancelled) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(String.format("Booking with externalBookingId=%d not found for Parkly.", externalBookingId));
         }
+
         return ResponseEntity.ok(String.format("Booking with externalBookingId=%d cancelled.", externalBookingId));
     }
+
 }
 

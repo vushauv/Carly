@@ -20,21 +20,8 @@ public class CreateBookingRequest {
     @NotNull(message = "Car id is mandatory")
     private Integer carId;
 
-    // Optional (nullable in DB)
     private Integer pickupLocationId;
-
-    // Optional (nullable in DB)
     private Integer returnLocationId;
-
-    // Required per schema discussion (NOT NULL)
-    @NotNull(message = "Car booking status id is mandatory")
-    private Short carBookingStatusId;
-
-    // Optional (nullable in DB)
-    private Short flatBookingStatusId;
-
-    // Optional
-    private Long providerExternalBookingId;
 
     @JsonDeserialize(using = JsonDateDeserializer.class)
     @JsonSerialize(using = JsonDateSerializer.class)

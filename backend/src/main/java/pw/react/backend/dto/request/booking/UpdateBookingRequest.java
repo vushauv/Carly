@@ -14,15 +14,18 @@ import java.time.LocalDateTime;
 @Setter
 public class UpdateBookingRequest {
 
-    // Optional updates (nullable means "do not change")
-    private Integer carId;
+    //we don't allow to change these 2
+    //private Integer carId;
+    //private Integer userId;
+
     private Integer pickupLocationId;
     private Integer returnLocationId;
 
     private Short carBookingStatusId;
     private Short flatBookingStatusId;
 
-    private Long providerExternalBookingId;
+    //we shouldn't update the PK of Flatly system, hence it shouldn't be contained in the UpdateBookingRequest
+    //private Long providerExternalBookingId;
 
     @JsonDeserialize(using = JsonDateDeserializer.class)
     @JsonSerialize(using = JsonDateSerializer.class)

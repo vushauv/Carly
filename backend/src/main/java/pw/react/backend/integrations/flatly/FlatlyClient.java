@@ -31,7 +31,7 @@ public class FlatlyClient {
         response.setStatus("CREATED");
 
         return response;
-
+//prod:
 //        HttpHeaders headers = new HttpHeaders();
 //        headers.setContentType(MediaType.APPLICATION_JSON);
 //
@@ -48,10 +48,13 @@ public class FlatlyClient {
     }
 
     public FlatlyCancelBookingResponse cancelBooking(Long flatBookingId) {
+        //tests
         FlatlyCancelBookingResponse response = new FlatlyCancelBookingResponse();
         response.setCancelled(true);
 
         return response;
+
+        //prod:
 //        HttpHeaders headers = new HttpHeaders();
 //        HttpEntity<Void> entity = new HttpEntity<>(headers);
 //

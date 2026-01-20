@@ -19,6 +19,9 @@ public class FlatlyController {
     public static final String FLATLY_PATH = "/flatly";
     private final FlatlyService flatlyService;
 
+    //TODO:
+    //1) Get all available bookings from their API
+    //2) Get a specific booking from their API
     @PostMapping("/bookings")
     public ResponseEntity<BookingResponse> createFlatlyBooking(@Valid @RequestBody CreateFlatlyBookingRequest request) {
         Booking booking = flatlyService.createFlatBookingInFlatly(request);

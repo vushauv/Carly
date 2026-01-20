@@ -26,8 +26,6 @@ public interface BookingMapper {
             @Mapping(target = "car", source = "carId", qualifiedByName = "carFromId"),
             @Mapping(target = "pickupLocation", source = "pickupLocationId", qualifiedByName = "locationFromId"),
             @Mapping(target = "returnLocation", source = "returnLocationId", qualifiedByName = "locationFromId"),
-            @Mapping(target = "carBookingStatus", source = "carBookingStatusId", qualifiedByName = "statusFromId"),
-            @Mapping(target = "flatBookingStatus", source = "flatBookingStatusId", qualifiedByName = "statusFromId")
     })
     Booking createRequestToBooking(CreateBookingRequest createBookingRequest);
 
@@ -38,8 +36,6 @@ public interface BookingMapper {
     // -------------------------
     @Mappings({
             @Mapping(target = "bookingId", ignore = true),
-            @Mapping(target = "user", ignore = true), // user typically not updated via booking update
-            @Mapping(target = "car", source = "carId", qualifiedByName = "carFromId"),
             @Mapping(target = "pickupLocation", source = "pickupLocationId", qualifiedByName = "locationFromId"),
             @Mapping(target = "returnLocation", source = "returnLocationId", qualifiedByName = "locationFromId"),
             @Mapping(target = "carBookingStatus", source = "carBookingStatusId", qualifiedByName = "statusFromId"),
@@ -53,12 +49,10 @@ public interface BookingMapper {
      */
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mappings({
-            @Mapping(target = "car", source = "carId", qualifiedByName = "carFromId"),
             @Mapping(target = "pickupLocation", source = "pickupLocationId", qualifiedByName = "locationFromId"),
             @Mapping(target = "returnLocation", source = "returnLocationId", qualifiedByName = "locationFromId"),
             @Mapping(target = "carBookingStatus", source = "carBookingStatusId", qualifiedByName = "statusFromId"),
             @Mapping(target = "flatBookingStatus", source = "flatBookingStatusId", qualifiedByName = "statusFromId")
-            // providerExternalBookingId, dates will map automatically by name
     })
     void applyUpdate(UpdateBookingRequest request, @MappingTarget Booking booking);
 
