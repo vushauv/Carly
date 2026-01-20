@@ -12,6 +12,9 @@ import pw.react.backend.domain.Location;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.car.CarFeatureDictionary;
 import pw.react.backend.domain.car.CarToFeatureLink;
+import pw.react.backend.domain.enums.CarFeatureType;
+import pw.react.backend.domain.enums.CarFuelType;
+import pw.react.backend.domain.enums.UserRole;
 import pw.react.backend.domain.user.UserTypeDictionary;
 import pw.react.backend.repositories.LocationRepository;
 import pw.react.backend.repositories.car.CarFeatureDictionaryRepository;
@@ -41,10 +44,10 @@ public class DataSeeder implements ApplicationRunner {
 
 
         // 1) User types
-        upsertUserType("CUSTOMER", "Customer", "Standard end user");
-        upsertUserType("SYSTEM", "System", "System / integration user");
-        upsertUserType("SUPER_ADMIN", "Super Admin", "All permissions");
-        upsertUserType("ADMIN", "Admin", "Administrative user");
+        upsertUserType(UserRole.CUSTOMER.getValue(), "Customer", "Standard end user");
+        upsertUserType(UserRole.SYSTEM.getValue(), "System", "System / integration user");
+        upsertUserType(UserRole.SUPER_ADMIN.getValue(), "Super Admin", "All permissions");
+        upsertUserType(UserRole.ADMIN.getValue(), "Admin", "Administrative user");
 
         // 2) Locations
         upsertLocation("Warsaw Central", new BigDecimal("52.2297"), new BigDecimal("21.0122"));
@@ -52,16 +55,17 @@ public class DataSeeder implements ApplicationRunner {
         upsertLocation("Gdansk Old Town", new BigDecimal("54.3520"), new BigDecimal("18.6466"));
 
         // 3) Car Feature Dictionaries
-        CarFeatureDictionary fuelType = upsertCarFeatureDictionary("FUEL_TYPE");
-        CarFeatureDictionary brand = upsertCarFeatureDictionary("BRAND");
-        CarFeatureDictionary color = upsertCarFeatureDictionary("COLOR");
-        CarFeatureDictionary status = upsertCarFeatureDictionary("STATUS");
-        CarFeatureDictionary model = upsertCarFeatureDictionary("MODEL");
+        CarFeatureDictionary fuelType = upsertCarFeatureDictionary(CarFeatureType.FUEL_TYPE.getValue());
+        CarFeatureDictionary brand = upsertCarFeatureDictionary(CarFeatureType.BRAND.getValue());
+        CarFeatureDictionary color = upsertCarFeatureDictionary(CarFeatureType.COLOR.getValue());
+        CarFeatureDictionary status = upsertCarFeatureDictionary(CarFeatureType.STATUS.getValue());
+        CarFeatureDictionary model = upsertCarFeatureDictionary(CarFeatureType.MODEL.getValue());
 
         // 4) Car feature values (canonical, shared)
-        CarFeature fuelGas = upsertCarFeature(fuelType, "GAS");
-        CarFeature fuelDiesel = upsertCarFeature(fuelType, "DIESEL");
-        CarFeature fuelElectric = upsertCarFeature(fuelType, "ELECTRIC");
+        CarFeature fuelGas = upsertCarFeature(fuelType, CarFuelType.GAS.getValue());
+        CarFeature fuelDiesel = upsertCarFeature(fuelType, CarFuelType.DIESEL.getValue());
+        CarFeature fuelElectric = upsertCarFeature(fuelType, CarFuelType.ELECTRIC.getValue());
+        CarFeature fuelHybrid = upsertCarFeature(fuelType, CarFuelType.HYBRID.getValue());
 
         CarFeature brandBmw = upsertCarFeature(brand, "BMW");
         CarFeature brandAudi = upsertCarFeature(brand, "AUDI");

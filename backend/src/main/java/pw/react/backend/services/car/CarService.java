@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.car.CarToFeatureLink;
+import pw.react.backend.dto.request.car.CarSearchParams;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.car.CarFeatureDictionaryRepository;
 import pw.react.backend.repositories.car.CarFeatureRepository;
@@ -64,7 +65,8 @@ public class CarService implements ICarService {
 
     // TODO: Add filtering here
     @Override
-    public List<Car> getAll() {
+    public List<Car> getAll(CarSearchParams searchParams)
+    {
         return carRepository.findAll();
     }
 
@@ -76,7 +78,7 @@ public class CarService implements ICarService {
     }
 
     @Override
-    public List<Car> getPage(int page, int size)
+    public List<Car> getPage(int page, int size, CarSearchParams searchParams)
     {
         int defaultPageSize = 10;
         return carRepository.findAll(PageRequest.of(page, size == 0  ? defaultPageSize : size)).getContent();
