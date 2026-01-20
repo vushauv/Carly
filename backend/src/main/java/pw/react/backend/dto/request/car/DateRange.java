@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
 public class DateRange {
     @JsonDeserialize(using = JsonDateDeserializer.class)
     @JsonSerialize(using = JsonDateSerializer.class)
-    private LocalDateTime startDate;
+    private LocalDateTime from;
 
     @JsonDeserialize(using = JsonDateDeserializer.class)
     @JsonSerialize(using = JsonDateSerializer.class)
-    private LocalDateTime endDate;
+    private LocalDateTime to;
 }

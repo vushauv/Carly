@@ -14,6 +14,7 @@ import pw.react.backend.domain.car.CarFeatureDictionary;
 import pw.react.backend.domain.car.CarToFeatureLink;
 import pw.react.backend.domain.enums.CarFeatureType;
 import pw.react.backend.domain.enums.CarFuelType;
+import pw.react.backend.domain.enums.CarStatus;
 import pw.react.backend.domain.enums.UserRole;
 import pw.react.backend.domain.user.UserTypeDictionary;
 import pw.react.backend.repositories.LocationRepository;
@@ -44,10 +45,10 @@ public class DataSeeder implements ApplicationRunner {
 
 
         // 1) User types
-        upsertUserType(UserRole.CUSTOMER.getValue(), "Customer", "Standard end user");
-        upsertUserType(UserRole.SYSTEM.getValue(), "System", "System / integration user");
-        upsertUserType(UserRole.SUPER_ADMIN.getValue(), "Super Admin", "All permissions");
-        upsertUserType(UserRole.ADMIN.getValue(), "Admin", "Administrative user");
+        upsertUserType(UserRole.CUSTOMER.name(), "Customer", "Standard end user");
+        upsertUserType(UserRole.SYSTEM.name(), "System", "System / integration user");
+        upsertUserType(UserRole.SUPER_ADMIN.name(), "Super Admin", "All permissions");
+        upsertUserType(UserRole.ADMIN.name(), "Admin", "Administrative user");
 
         // 2) Locations
         upsertLocation("Warsaw Central", new BigDecimal("52.2297"), new BigDecimal("21.0122"));
@@ -55,18 +56,19 @@ public class DataSeeder implements ApplicationRunner {
         upsertLocation("Gdansk Old Town", new BigDecimal("54.3520"), new BigDecimal("18.6466"));
 
         // 3) Car Feature Dictionaries
-        CarFeatureDictionary fuelType = upsertCarFeatureDictionary(CarFeatureType.FUEL_TYPE.getValue());
-        CarFeatureDictionary brand = upsertCarFeatureDictionary(CarFeatureType.BRAND.getValue());
-        CarFeatureDictionary color = upsertCarFeatureDictionary(CarFeatureType.COLOR.getValue());
-        CarFeatureDictionary status = upsertCarFeatureDictionary(CarFeatureType.STATUS.getValue());
-        CarFeatureDictionary model = upsertCarFeatureDictionary(CarFeatureType.MODEL.getValue());
+        CarFeatureDictionary fuelType = upsertCarFeatureDictionary(CarFeatureType.FUEL_TYPE.name());
+        CarFeatureDictionary brand = upsertCarFeatureDictionary(CarFeatureType.BRAND.name());
+        CarFeatureDictionary color = upsertCarFeatureDictionary(CarFeatureType.COLOR.name());
+        CarFeatureDictionary status = upsertCarFeatureDictionary(CarFeatureType.STATUS.name());
+        CarFeatureDictionary model = upsertCarFeatureDictionary(CarFeatureType.MODEL.name());
 
         // 4) Car feature values (canonical, shared)
-        CarFeature fuelGas = upsertCarFeature(fuelType, CarFuelType.GAS.getValue());
-        CarFeature fuelDiesel = upsertCarFeature(fuelType, CarFuelType.DIESEL.getValue());
-        CarFeature fuelElectric = upsertCarFeature(fuelType, CarFuelType.ELECTRIC.getValue());
-        CarFeature fuelHybrid = upsertCarFeature(fuelType, CarFuelType.HYBRID.getValue());
+        CarFeature fuelGas = upsertCarFeature(fuelType, CarFuelType.GAS.name());
+        CarFeature fuelDiesel = upsertCarFeature(fuelType, CarFuelType.DIESEL.name());
+        CarFeature fuelElectric = upsertCarFeature(fuelType, CarFuelType.ELECTRIC.name());
+        CarFeature fuelHybrid = upsertCarFeature(fuelType, CarFuelType.HYBRID.name());
 
+        // Dynamic letters
         CarFeature brandBmw = upsertCarFeature(brand, "BMW");
         CarFeature brandAudi = upsertCarFeature(brand, "AUDI");
         CarFeature brandToyota = upsertCarFeature(brand, "TOYOTA");
@@ -75,8 +77,9 @@ public class DataSeeder implements ApplicationRunner {
         CarFeature colorWhite = upsertCarFeature(color, "WHITE");
         CarFeature colorRed = upsertCarFeature(color, "RED");
 
-        CarFeature statusAvailable = upsertCarFeature(status, "AVAILABLE");
-        CarFeature statusRented = upsertCarFeature(status, "RENTED");
+        CarFeature statusActive = upsertCarFeature(status, CarStatus.ACTIVE.name());
+        CarFeature statusInactive = upsertCarFeature(status, CarStatus.INACTIVE.name());
+        CarFeature statusUnderRepair = upsertCarFeature(status, CarStatus.UNDER_REPAIR.name());
 
         CarFeature modelSeries3 = upsertCarFeature(model, "SERIES_3");
         CarFeature modelA4 = upsertCarFeature(model, "A4");
@@ -88,13 +91,13 @@ public class DataSeeder implements ApplicationRunner {
         // 6) Attach features to cars
         attachFeaturesToCars(
                 List.of(
-                        fuelGas, brandBmw, modelSeries3, colorBlack, statusAvailable
+                        fuelGas, brandBmw, modelSeries3, colorBlack, statusActive
                 ),
                 List.of(
-                        fuelDiesel, brandAudi, modelA4, colorWhite, statusAvailable
+                        fuelDiesel, brandAudi, modelA4, colorWhite, statusInactive
                 ),
                 List.of(
-                        fuelElectric, brandToyota, modelCorolla, colorRed, statusRented
+                        fuelElectric, brandToyota, modelCorolla, colorRed, statusUnderRepair
                 )
         );
         log.info("DataSeeder finished.");
