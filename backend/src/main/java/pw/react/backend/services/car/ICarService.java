@@ -14,7 +14,7 @@ public interface ICarService {
     void delete(Integer carId) throws ResourceNotFoundException;
     Car update(Integer id, List<CarFeature> requestedCarFeatures) throws ResourceNotFoundException, BadRequestException;
     Car create(List<CarFeature> requestedCarFeatures) throws ResourceNotFoundException, BadRequestException;
-    List<Car> getAll(CarSearchCriteria searchCriteria);
+    List<Car> getAll(CarSearchCriteria searchCriteria) throws BadRequestException;
     Car getById(Integer carId) throws ResourceNotFoundException;
     List<Car> getPage(int page, int size, CarSearchCriteria searchCriteria);
 }

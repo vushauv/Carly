@@ -7,11 +7,14 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.dto.mapper.car.CarFeatureMapper;
 import pw.react.backend.dto.mapper.car.CarMapper;
+import pw.react.backend.dto.mapper.car.CarSearchCriteriaMapper;
 import pw.react.backend.dto.request.car.CarSearchParams;
 import pw.react.backend.dto.request.car.CreateCarRequestDto;
 import pw.react.backend.dto.request.car.UpdateCarRequestDto;
@@ -35,6 +38,7 @@ public class CarController {
     private final CarService carService;
     private final CarMapper carMapper;
     private final CarFeatureMapper carFeatureMapper;
+    private final CarSearchCriteriaMapper carSearchCriteriaMapper;
 
     @PostMapping(path="")
     public ResponseEntity<CreateCarResponseDto> createCar(@RequestHeader HttpHeaders headers,
@@ -79,18 +83,30 @@ public class CarController {
         return ResponseEntity.ok(carMapper.toGetResponseDto(car));
     }
 
-    // TODO: introduce mapping to domain object here
     @GetMapping("")
     public ResponseEntity<List<GetCarResponseDto>> getAllCars(@RequestHeader HttpHeaders headers,
                                                               @ModelAttribute CarSearchParams searchParams,
                                                               @RequestParam(required = false) Integer page,
                                                               @RequestParam(required = false) Integer size)
+            throws BadRequestException
     {
         logHeaders(headers);
+
+        // TODO: think about usage.
+        // Captures query-param binding/conversion errors for @ModelAttribute;
+        // check hasErrors() and return 400.
+//        if (bindingResult.hasErrors()) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+//                    "Invalid parameters supplied");
+//        }
+
+        var carSearchCriteria = carSearchCriteriaMapper.toCarSearchCriteria(searchParams);
         if (page == null) {
-            return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getAll()));
+            return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getAll(carSearchCriteria)));
         }
-        return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getPage(page, size == null ? 0 : size,)));
+        return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getPage(page,
+                size == null ? 0 : size,
+                carSearchCriteria)));
     }
 
     private void logHeaders(@RequestHeader HttpHeaders headers) {

@@ -1,13 +1,18 @@
 package pw.react.backend.services.car.model;
 
+import lombok.Getter;
+import lombok.Setter;
+import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.enums.CarAvailabilityStatus;
 import pw.react.backend.dto.request.car.CarFeatureFilters;
 import pw.react.backend.dto.request.car.DateRange;
 
 import java.util.List;
 
+@Getter
+@Setter
 public class CarSearchCriteria {
     DateRange dateRange;
-    List<CarFeatureFilters> carFeatureFilters;
+    List<CarFeature> carFeatures;
     CarAvailabilityStatus availabilityStatus;
 }

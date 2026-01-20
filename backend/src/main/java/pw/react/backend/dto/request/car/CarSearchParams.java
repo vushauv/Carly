@@ -4,9 +4,10 @@ import lombok.Getter;
 import lombok.Setter;
 import pw.react.backend.domain.enums.CarAvailabilityStatus;
 
-@Getter @Setter
+@Getter
+@Setter
 public class CarSearchParams {
-    private CarFeatureFilters carFeatureFilters;
+    private CarFeatureFilters features;
     private DateRange date;
     // Will be resolved by Converter
     private CarAvailabilityStatus availability;
