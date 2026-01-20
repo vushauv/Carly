@@ -16,6 +16,7 @@ import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.car.CarFeatureDictionaryRepository;
 import pw.react.backend.repositories.car.CarFeatureRepository;
 import pw.react.backend.repositories.car.CarRepository;
+import pw.react.backend.services.car.model.CarSearchCriteria;
 
 import java.util.HashSet;
 import java.util.List;
@@ -65,7 +66,7 @@ public class CarService implements ICarService {
 
     // TODO: Add filtering here
     @Override
-    public List<Car> getAll(CarSearchParams searchParams)
+    public List<Car> getAll(CarSearchCriteria searchCriteria)
     {
         return carRepository.findAll();
     }
@@ -78,7 +79,7 @@ public class CarService implements ICarService {
     }
 
     @Override
-    public List<Car> getPage(int page, int size, CarSearchParams searchParams)
+    public List<Car> getPage(int page, int size, CarSearchCriteria searchCriteria)
     {
         int defaultPageSize = 10;
         return carRepository.findAll(PageRequest.of(page, size == 0  ? defaultPageSize : size)).getContent();

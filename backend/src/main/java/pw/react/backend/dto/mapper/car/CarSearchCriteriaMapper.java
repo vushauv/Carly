@@ -1,0 +1,38 @@
+package pw.react.backend.dto.mapper.car;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+import pw.react.backend.domain.car.CarFeature;
+import pw.react.backend.domain.car.CarFeatureDictionary;
+import pw.react.backend.domain.enums.CarFeatureType;
+import pw.react.backend.dto.request.car.CarFeatureFilters;
+
+import java.util.ArrayList;
+import java.util.List;
+
+// TODO: implement mapper
+@Mapper(unmappedSourcePolicy = ReportingPolicy.IGNORE)
+public interface CarSearchCriteriaMapper {
+    default List<CarFeature> searchParamsToFeatureList(CarFeatureFilters featureFilters) {
+        if(featureFilters == null) return List.of();
+
+        var carFeatures = new ArrayList<CarFeature>();
+        addFeature(carFeatures, CarFeatureType.COLOR.name(), featureFilters.getColor());
+        addFeature(carFeatures, CarFeatureType.BRAND.name(), featureFilters.getBrand());
+        addFeature(carFeatures, CarFeatureType.MODEL.name(), featureFilters.getModel());
+        addFeature(carFeatures, CarFeatureType.COLOR.name(), featureFilters.getFuelType());
+        addFeature(carFeatures, CarFeatureType.STATUS.name(), featureFilters.getStatus());
+
+        return carFeatures;
+    }
+
+    private void addFeature(List<CarFeature> carFeatures, String dictName, String value)
+    {
+        var dictionary = new CarFeatureDictionary();
+        dictionary.setName(dictName);
+        var feature = new CarFeature();
+        feature.setDictionary(dictionary);
+        feature.setValue(value);
+        carFeatures.add(feature);
+    }
+}

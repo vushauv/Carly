@@ -79,6 +79,7 @@ public class CarController {
         return ResponseEntity.ok(carMapper.toGetResponseDto(car));
     }
 
+    // TODO: introduce mapping to domain object here
     @GetMapping("")
     public ResponseEntity<List<GetCarResponseDto>> getAllCars(@RequestHeader HttpHeaders headers,
                                                               @ModelAttribute CarSearchParams searchParams,
@@ -87,9 +88,9 @@ public class CarController {
     {
         logHeaders(headers);
         if (page == null) {
-            return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getAll(searchParams)));
+            return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getAll()));
         }
-        return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getPage(page, size == null ? 0 : size, searchParams)));
+        return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getPage(page, size == null ? 0 : size,)));
     }
 
     private void logHeaders(@RequestHeader HttpHeaders headers) {

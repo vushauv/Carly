@@ -6,6 +6,7 @@ import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.dto.request.car.CarSearchParams;
 import pw.react.backend.exceptions.ResourceNotFoundException;
+import pw.react.backend.services.car.model.CarSearchCriteria;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public interface ICarService {
     void delete(Integer carId) throws ResourceNotFoundException;
     Car update(Integer id, List<CarFeature> requestedCarFeatures) throws ResourceNotFoundException, BadRequestException;
     Car create(List<CarFeature> requestedCarFeatures) throws ResourceNotFoundException, BadRequestException;
-    List<Car> getAll(CarSearchParams searchParams);
+    List<Car> getAll(CarSearchCriteria searchCriteria);
     Car getById(Integer carId) throws ResourceNotFoundException;
-    List<Car> getPage(int page, int size, CarSearchParams searchParams);
+    List<Car> getPage(int page, int size, CarSearchCriteria searchCriteria);
 }

@@ -7,6 +7,7 @@ import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.car.CarFeatureDictionary;
 import pw.react.backend.domain.enums.CarFeatureType;
 import pw.react.backend.dto.request.car.CarFeatureDto;
+import pw.react.backend.dto.request.car.CarFeatureFilters;
 import pw.react.backend.dto.request.car.CarSearchParams;
 
 import java.util.ArrayList;
@@ -23,30 +24,4 @@ public interface CarFeatureMapper {
     @Mapping(target = "dictionary.carFeatureDictionaryId", source="dictionaryId")
     CarFeature toCarFeature(CarFeatureDto carFeatureDto);
     List<CarFeature> toCarFeatureList(List<CarFeatureDto> carFeatures);
-
-
-    default List<CarFeature> searchParamsToFeatureList(CarSearchParams searchParams) {
-        if(searchParams == null) return List.of();
-
-        // TODO: define global constants for things like "COLOR", "BRAND" etc.
-        var carFeatures = new ArrayList<CarFeature>();
-        var carFeatureFilters = searchParams.getCarFeatureFilters();
-        addFeature(carFeatures, CarFeatureType.COLOR.name(), carFeatureFilters.getColor());
-        addFeature(carFeatures, CarFeatureType.BRAND.name(), carFeatureFilters.getBrand());
-        addFeature(carFeatures, CarFeatureType.MODEL.name(), carFeatureFilters.getModel());
-        addFeature(carFeatures, CarFeatureType.COLOR.name(), carFeatureFilters.getFuelType());
-        addFeature(carFeatures, CarFeatureType.STATUS.name(), carFeatureFilters.getStatus());
-
-        return carFeatures;
-    }
-
-    private void addFeature(List<CarFeature> carFeatures, String dictName, String value)
-    {
-        var dictionary = new CarFeatureDictionary();
-        dictionary.setName(dictName);
-        var feature = new CarFeature();
-        feature.setDictionary(dictionary);
-        feature.setValue(value);
-        carFeatures.add(feature);
-    }
 }

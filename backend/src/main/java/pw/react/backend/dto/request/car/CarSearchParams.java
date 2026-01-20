@@ -8,6 +8,7 @@ import pw.react.backend.domain.enums.CarAvailabilityStatus;
 public class CarSearchParams {
     private CarFeatureFilters carFeatureFilters;
     private DateRange date;
+    // Will be resolved by Converter
     private CarAvailabilityStatus availability;
 }
 
