@@ -9,12 +9,18 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.Location;
+import pw.react.backend.domain.car.CarFeature;
+import pw.react.backend.domain.car.CarFeatureDictionary;
+import pw.react.backend.domain.car.CarToFeatureLink;
 import pw.react.backend.domain.user.UserTypeDictionary;
 import pw.react.backend.repositories.LocationRepository;
+import pw.react.backend.repositories.car.CarFeatureDictionaryRepository;
+import pw.react.backend.repositories.car.CarFeatureRepository;
 import pw.react.backend.repositories.car.CarRepository;
 import pw.react.backend.repositories.user.UserTypeDictionaryRepository;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -25,6 +31,8 @@ public class DataSeeder implements ApplicationRunner {
     private final UserTypeDictionaryRepository userTypeDictionaryRepository;
     private final CarRepository carRepository;
     private final LocationRepository locationRepository;
+    private final CarFeatureRepository carFeatureRepository;
+    private final CarFeatureDictionaryRepository carFeatureDictionaryRepository;
 
     @Override
     @Transactional
@@ -43,9 +51,48 @@ public class DataSeeder implements ApplicationRunner {
         upsertLocation("Krakow Main", new BigDecimal("50.0647"), new BigDecimal("19.9450"));
         upsertLocation("Gdansk Old Town", new BigDecimal("54.3520"), new BigDecimal("18.6466"));
 
-        // 3) Cars (no natural key -> just ensure a few exist)
+        // 3) Car Feature Dictionaries
+        CarFeatureDictionary fuelType = upsertCarFeatureDictionary("FUEL_TYPE");
+        CarFeatureDictionary brand = upsertCarFeatureDictionary("BRAND");
+        CarFeatureDictionary color = upsertCarFeatureDictionary("COLOR");
+        CarFeatureDictionary status = upsertCarFeatureDictionary("STATUS");
+        CarFeatureDictionary model = upsertCarFeatureDictionary("MODEL");
+
+        // 4) Car feature values (canonical, shared)
+        CarFeature fuelGas = upsertCarFeature(fuelType, "GAS");
+        CarFeature fuelDiesel = upsertCarFeature(fuelType, "DIESEL");
+        CarFeature fuelElectric = upsertCarFeature(fuelType, "ELECTRIC");
+
+        CarFeature brandBmw = upsertCarFeature(brand, "BMW");
+        CarFeature brandAudi = upsertCarFeature(brand, "AUDI");
+        CarFeature brandToyota = upsertCarFeature(brand, "TOYOTA");
+
+        CarFeature colorBlack = upsertCarFeature(color, "BLACK");
+        CarFeature colorWhite = upsertCarFeature(color, "WHITE");
+        CarFeature colorRed = upsertCarFeature(color, "RED");
+
+        CarFeature statusAvailable = upsertCarFeature(status, "AVAILABLE");
+        CarFeature statusRented = upsertCarFeature(status, "RENTED");
+
+        CarFeature modelSeries3 = upsertCarFeature(model, "SERIES_3");
+        CarFeature modelA4 = upsertCarFeature(model, "A4");
+        CarFeature modelCorolla = upsertCarFeature(model, "COROLLA");
+
+        // 5) Cars (no natural key -> just ensure a few exist)
         ensureCarsExist(5);
 
+        // 6) Attach features to cars
+        attachFeaturesToCars(
+                List.of(
+                        fuelGas, brandBmw, modelSeries3, colorBlack, statusAvailable
+                ),
+                List.of(
+                        fuelDiesel, brandAudi, modelA4, colorWhite, statusAvailable
+                ),
+                List.of(
+                        fuelElectric, brandToyota, modelCorolla, colorRed, statusRented
+                )
+        );
         log.info("DataSeeder finished.");
     }
 
@@ -90,6 +137,48 @@ public class DataSeeder implements ApplicationRunner {
             Car c = new Car();
             c.setEnabled(true);
             carRepository.save(c);
+        }
+    }
+
+    private CarFeatureDictionary upsertCarFeatureDictionary(String name) {
+        return carFeatureDictionaryRepository.findByName(name)
+                .orElseGet(() -> {
+                    CarFeatureDictionary d = new CarFeatureDictionary();
+                    d.setName(name);
+                    d.setEnabled(true);
+                    return carFeatureDictionaryRepository.save(d);
+                });
+    }
+
+    private CarFeature upsertCarFeature(CarFeatureDictionary dict, String value) {
+        return carFeatureRepository
+                .findFeatureBy(dict.getCarFeatureDictionaryId(), value)
+                .orElseGet(() -> {
+                    CarFeature f = new CarFeature();
+                    f.setDictionary(dict);
+                    f.setValue(value); // categorical
+                    f.setEnabled(true);
+                    return carFeatureRepository.save(f);
+                });
+    }
+
+    private void attachFeaturesToCars(List<CarFeature>... featureSets) {
+        List<Car> cars = carRepository.findAll();
+
+        for (int i = 0; i < cars.size() && i < featureSets.length; i++) {
+            Car car = cars.get(i);
+
+            // clear existing links (since schema is recreated anyway)
+            car.getFeatureLinks().clear();
+
+            for (CarFeature feature : featureSets[i]) {
+                CarToFeatureLink link = new CarToFeatureLink();
+                link.setCar(car);
+                link.setCarFeature(feature);
+                link.setEnabled(true);
+                car.getFeatureLinks().add(link);
+            }
+            carRepository.save(car);
         }
     }
 }
