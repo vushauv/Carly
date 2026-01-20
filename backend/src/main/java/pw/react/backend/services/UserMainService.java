@@ -9,6 +9,8 @@ import pw.react.backend.dto.request.RegisterUserRequest;
 import pw.react.backend.dto.request.UpdateUserRequest;
 import pw.react.backend.dto.response.GetUserInfoResponse;
 import pw.react.backend.dto.response.GetUserIDResponse;
+import pw.react.backend.exceptions.EmailAlreadyInUseException;
+import pw.react.backend.exceptions.InvalidCredentialsException;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.repositories.user.UserTypeDictionaryRepository;
@@ -26,7 +28,7 @@ public class UserMainService implements UserService {
     public User registerUser(User user) {
 
         if (userRepository.existsByEmailAndIsEnabledTrue(user.getEmail())) {
-            throw new IllegalArgumentException("Email already in use");
+            throw new EmailAlreadyInUseException("Email already in use");
         }
 
         UserTypeDictionary customerType =
@@ -44,10 +46,10 @@ public class UserMainService implements UserService {
 
         User user = userRepository
                 .findByEmailAndIsEnabledTrue(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
+                .orElseThrow(() -> new InvalidCredentialsException("User not found with email: " + email));
 
         if (!user.getPassword().equals(password)) {
-            throw new IllegalArgumentException("Invalid credentials");
+            throw new InvalidCredentialsException("Invalid credentials");
         }
 
         return user;
@@ -75,8 +77,16 @@ public class UserMainService implements UserService {
 
     @Override
     public void updateUser(User newUser) {
+        userRepository.findByEmailAndIsEnabledTrue(newUser.getEmail())//checks if email is not already in use (apart from the user that's actually updating info)
+                .ifPresent(existingUser -> {
+                    if (!existingUser.getUserId().equals(newUser.getUserId())) {
+                        throw new EmailAlreadyInUseException("Email already in use");
+                    }
+                });
+
         userRepository.save(newUser);
     }
+
 
 
 }

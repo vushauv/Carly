@@ -43,15 +43,16 @@ public class ControllerExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionDetails> genericException(Exception ex, ServletWebRequest request) {
-        log.error("Generic Exception: {}", ex.getMessage());
+        log.error("Generic Exception", ex);
         return ResponseEntity
-                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ExceptionDetails(
-                        HttpStatus.UNPROCESSABLE_ENTITY,
-                        ex.getMessage(),
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Unexpected error",
                         request.getRequest().getServletPath())
                 );
     }
+
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ExceptionDetails> noHandlerFoundException(Exception ex, ServletWebRequest request) {
@@ -92,4 +93,29 @@ public class ControllerExceptionHandler {
                         request.getRequest().getServletPath()
                 ));
     }
+
+    @ExceptionHandler(EmailAlreadyInUseException.class)
+    public ResponseEntity<ExceptionDetails> handleEmailAlreadyInUse(EmailAlreadyInUseException ex, ServletWebRequest request) {
+        log.error("EmailAlreadyInUseException: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ExceptionDetails(
+                        HttpStatus.CONFLICT,
+                        ex.getMessage(),
+                        request.getRequest().getServletPath()
+                ));
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ExceptionDetails> handleInvalidCredentials(InvalidCredentialsException ex, ServletWebRequest request) {
+        log.error("InvalidCredentialsException: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(new ExceptionDetails(
+                        HttpStatus.UNAUTHORIZED,
+                        ex.getMessage(),
+                        request.getRequest().getServletPath()
+                ));
+    }
+
 }
