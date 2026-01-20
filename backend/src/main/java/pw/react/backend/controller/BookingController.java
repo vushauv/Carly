@@ -8,6 +8,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.dto.mapper.BookingMapper;
+import pw.react.backend.dto.request.booking.BookingSearchCriteria;
 import pw.react.backend.dto.request.booking.CreateBookingRequest;
 import pw.react.backend.dto.request.booking.UpdateBookingRequest;
 import pw.react.backend.dto.response.booking.BookingResponse;
@@ -45,6 +46,7 @@ public class BookingController {
             @RequestHeader HttpHeaders headers,
             @Valid @RequestBody List<CreateBookingRequest> bookings
     ) {
+        //TODO: wrap list inside of a component?
         logHeaders(headers);
 
         List<Booking> createdBookings = bookingMapper.createRequestToBookingList(bookings);
@@ -71,15 +73,57 @@ public class BookingController {
     @GetMapping
     public ResponseEntity<List<GetBookingResponse>> getAllBookings(
             @RequestHeader HttpHeaders headers,
+            @RequestParam(required = false) Integer bookingId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String dateFrom,
+            @RequestParam(required = false) String dateTo,
+            @RequestParam(required = false) Integer userId,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size
     ) {
         logHeaders(headers);
 
-        if (page == null || size == null) {return ResponseEntity.ok(bookingMapper.bookingToGetBookingResponseList(bookingService.getAll()));
+        // If no filters provided, keep your old behavior
+        boolean noFilters =
+                bookingId == null &&
+                        (status == null || status.isBlank()) &&
+                        dateFrom == null &&
+                        dateTo == null &&
+                        userId == null;
+
+        if (noFilters) {
+            if (page == null || size == null) {
+                return ResponseEntity.ok(bookingMapper.bookingToGetBookingResponseList(bookingService.getAll()));
+            }
+            return ResponseEntity.ok(bookingMapper.bookingToGetBookingResponseList(bookingService.getBookingsPage(page, size)));
         }
-        return ResponseEntity.ok(bookingMapper.bookingToGetBookingResponseList(bookingService.getBookingsPage(page, size)));
+
+        // Parse dates (ISO-8601 LocalDateTime, e.g. 2026-02-01T10:00:00)
+        java.time.LocalDateTime from = (dateFrom == null || dateFrom.isBlank())
+                ? null
+                : java.time.LocalDateTime.parse(dateFrom);
+
+        java.time.LocalDateTime to = (dateTo == null || dateTo.isBlank())
+                ? null
+                : java.time.LocalDateTime.parse(dateTo);
+
+        BookingSearchCriteria criteria = new BookingSearchCriteria();
+        criteria.setBookingId(bookingId);
+        criteria.setStatus(status);
+        criteria.setDateFrom(from);
+        criteria.setDateTo(to);
+        criteria.setUserId(userId);
+
+        int p = page == null ? 0 : page;
+        int s = size == null ? 10 : size;
+
+        List<GetBookingResponse> result = bookingMapper.bookingToGetBookingResponseList(
+                bookingService.search(criteria, p, s).getContent()
+        );
+
+        return ResponseEntity.ok(result);
     }
+
 
     @PutMapping(path = "/{bookingId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

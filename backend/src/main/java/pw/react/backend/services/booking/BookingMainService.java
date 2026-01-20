@@ -7,10 +7,16 @@ import org.springframework.stereotype.Service;
 import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.booking.BookingRepository;
+import org.springframework.data.domain.Page;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
+import pw.react.backend.dto.request.booking.BookingSearchCriteria;
+import pw.react.backend.repositories.booking.BookingSpecifications;
 
 @Slf4j
 @Service
@@ -67,4 +73,21 @@ public class BookingMainService implements BookingService {
         int defaultPageSize = 10;
         return repository.findAll(PageRequest.of(pageNumber, pageSize == 0 ? defaultPageSize : pageSize)).getContent();
     }
+
+    @Override
+    public Page<Booking> search(BookingSearchCriteria criteria, int pageNumber, int pageSize) {
+        int defaultPageSize = 10;
+        int p = Math.max(pageNumber, 0);
+        int s = (pageSize <= 0 ? defaultPageSize : pageSize);
+
+        Specification<Booking> spec = Specification.where(BookingSpecifications.isEnabled())
+                .and(BookingSpecifications.hasBookingId(criteria.getBookingId()))
+                .and(BookingSpecifications.hasUserId(criteria.getUserId()))
+                .and(BookingSpecifications.hasStatusName(criteria.getStatus()))
+                .and(BookingSpecifications.dateFrom(criteria.getDateFrom()))
+                .and(BookingSpecifications.dateTo(criteria.getDateTo()));
+
+        return repository.findAll(spec, PageRequest.of(p, s));
+    }
+
 }

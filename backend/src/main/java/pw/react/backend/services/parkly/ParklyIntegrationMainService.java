@@ -47,10 +47,7 @@ public class ParklyIntegrationMainService implements ParklyIntegrationService {
         // Simple v1: return cars without true availability logic.
         // Later: exclude cars with overlapping bookings where status != CANCELLED and enabled=true.
 
-        int page = request.getPage() == null ? 0 : request.getPage();
-        int size = request.getSize() == null ? 20 : request.getSize();
-
-        return carRepository.findAll(PageRequest.of(page, size))
+        return carRepository.findAll(PageRequest.of(1, 10))
                 .stream()
                 .filter(Car::isEnabled)
                 .map(c -> {

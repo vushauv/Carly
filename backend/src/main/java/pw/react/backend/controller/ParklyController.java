@@ -10,6 +10,8 @@ import pw.react.backend.dto.parkly.ParklyCreateCarBookingRequest;
 import pw.react.backend.dto.parkly.ParklySearchCarsRequest;
 import pw.react.backend.dto.parkly.ParklyBookingResponse;
 import pw.react.backend.dto.parkly.ParklyCarResponse;
+import pw.react.backend.dto.mapper.ParklyCarMapper;
+import pw.react.backend.services.car.CarService;
 import pw.react.backend.services.parkly.ParklyIntegrationService;
 
 import java.util.List;
@@ -26,6 +28,8 @@ public class ParklyController {
     public static final String PARKLY_PATH = "/parkly";
 
     private final ParklyIntegrationService parklyIntegrationService;
+    private final CarService carService;
+    private final ParklyCarMapper parklyCarMapper;
 
     private void logHeaders(HttpHeaders headers) {
         log.info("Partner request headers {}",
@@ -41,7 +45,13 @@ public class ParklyController {
             @Valid ParklySearchCarsRequest request
     ) {
         logHeaders(headers);
-        return ResponseEntity.ok(parklyIntegrationService.searchAvailableCars(request));
+        // Reuse CarService to fetch cars (filtering by availability can be added later)
+        var cars = carService.getAll();
+        var responses = cars.stream()
+                .map(parklyCarMapper::toParklyCarResponse)
+                .toList();
+
+        return ResponseEntity.ok(responses);
     }
 
     @PostMapping("/car-bookings")

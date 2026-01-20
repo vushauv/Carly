@@ -63,7 +63,7 @@ public class DataSeeder implements ApplicationRunner {
                 upsertBookingStatus("COMPLETED", "Completed", "Booking completed");
 
         // ===============================================================================================
-        //                                  Users % UserTypes
+        //                                  Users & UserTypes
         // ===============================================================================================
 
         upsertUserType("CUSTOMER", "Customer", "Standard end user");
@@ -192,6 +192,7 @@ public class DataSeeder implements ApplicationRunner {
         CarFeature modelA4 = upsertCarFeature(model, "A4");
         CarFeature modelCorolla = upsertCarFeature(model, "COROLLA");
 
+        ensureCarsExist(3);
         // 6) Attach features to cars
         attachFeaturesToCars(
                 List.of(
@@ -310,6 +311,19 @@ public class DataSeeder implements ApplicationRunner {
                 car.getFeatureLinks().add(link);
             }
             carRepository.save(car);
+        }
+    }
+    private void ensureCarsExist(int targetCount) {
+        long current = carRepository.count();
+        if (current >= targetCount) {
+            return;
+        }
+
+        int toCreate = (int) (targetCount - current);
+        for (int i = 0; i < toCreate; i++) {
+            Car c = new Car();
+            c.setEnabled(true);
+            carRepository.save(c);
         }
     }
 }

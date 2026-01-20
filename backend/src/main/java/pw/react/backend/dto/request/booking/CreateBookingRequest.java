@@ -17,7 +17,7 @@ public class CreateBookingRequest {
     @NotNull(message = "User id is mandatory")
     private Integer userId;
 
-    // Optional (nullable in DB)
+    @NotNull(message = "Car id is mandatory")
     private Integer carId;
 
     // Optional (nullable in DB)
