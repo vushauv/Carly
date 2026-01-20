@@ -6,10 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-import pw.react.backend.dto.parkly.ParklyCreateCarBookingRequest;
-import pw.react.backend.dto.parkly.ParklySearchCarsRequest;
-import pw.react.backend.dto.parkly.ParklyBookingResponse;
-import pw.react.backend.dto.parkly.ParklyCarResponse;
+import pw.react.backend.dto.parkly.*;
 import pw.react.backend.dto.mapper.ParklyCarMapper;
 import pw.react.backend.services.car.CarService;
 import pw.react.backend.services.parkly.ParklyService;
@@ -78,6 +75,28 @@ public class ParklyController {
         }
 
         return ResponseEntity.ok(String.format("Booking with externalBookingId=%d cancelled.", externalBookingId));
+    }
+
+    @GetMapping("/cars/{carId}")
+    public ResponseEntity<ParklyCarResponse> getCar(
+            @RequestHeader HttpHeaders headers,
+            @PathVariable Integer carId
+    ) {
+        logHeaders(headers);
+
+        var car = carService.getById(carId);
+        var response = parklyCarMapper.toParklyCarResponse(car);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/car-bookings/{externalBookingId}")
+    public ResponseEntity<ParklyBookingDetailsResponse> getCarBooking(
+            @RequestHeader HttpHeaders headers,
+            @PathVariable Long externalBookingId
+    ) {
+        logHeaders(headers);
+        return ResponseEntity.ok(parklyService.getCarBookingByExternalBookingId(externalBookingId));
     }
 
 }

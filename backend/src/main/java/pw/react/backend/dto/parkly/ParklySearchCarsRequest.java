@@ -16,6 +16,9 @@ import java.time.LocalDateTime;
 public class ParklySearchCarsRequest {
     //TODO: I guess that's to be decided - for now Parkly can only search cars based on a given Timeframe
     // Accept as query params: startDate
+    private Integer Page;
+    private Integer Size;
+
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime startDate;
 

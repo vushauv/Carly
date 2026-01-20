@@ -5,21 +5,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pw.react.backend.domain.Location;
 import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.domain.booking.BookingStatusDictionary;
 import pw.react.backend.domain.car.Car;
-import pw.react.backend.domain.Location;
 import pw.react.backend.domain.user.User;
-import pw.react.backend.dto.parkly.ParklyCreateCarBookingRequest;
-import pw.react.backend.dto.parkly.ParklySearchCarsRequest;
-import pw.react.backend.dto.parkly.ParklyBookingResponse;
-import pw.react.backend.dto.parkly.ParklyCarResponse;
+import pw.react.backend.dto.mapper.ParklyBookingMapper;
+import pw.react.backend.dto.mapper.ParklyCarMapper;
+import pw.react.backend.dto.parkly.*;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.LocationRepository;
 import pw.react.backend.repositories.booking.BookingRepository;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
-import pw.react.backend.repositories.car.CarRepository;
 import pw.react.backend.repositories.user.UserRepository;
+import pw.react.backend.services.car.CarService;
 
 import java.util.List;
 
@@ -30,31 +29,32 @@ public class ParklyMainService implements ParklyService {
 
     //TODO (WSE): We have to know the ID assigned to Parkly here, I think realistically the ids wont change so keeping the email
     // is equivalent to keeping the hard-coded ID iteself, maybe there is a better way in the future
-    private static final Integer PARKLY_SYSTEM_ID = 2;
+
+    //private static final Integer PARKLY_SYSTEM_ID = 2;
     private static final String PARKLY_SYSTEM_EMAIL = "parkly@pw.edu.pl";
     private static final String CREATED_STATUS = "CREATED";
     private static final String CANCELLED_STATUS = "CANCELLED";
 
     private final UserRepository userRepository;
-    private final CarRepository carRepository;
     private final LocationRepository locationRepository;
     private final BookingRepository bookingRepository;
     private final BookingStatusDictionaryRepository bookingStatusDictionaryRepository;
 
+    private final ParklyCarMapper parklyCarMapper;
+    private final ParklyBookingMapper parklyBookingMapper;
+
+    private final CarService carService;
+
     @Override
     @Transactional(readOnly = true)
     public List<ParklyCarResponse> searchAvailableCars(ParklySearchCarsRequest request) {
-        // Simple v1: return cars without true availability logic.
-        // Later: exclude cars with overlapping bookings where status != CANCELLED and enabled=true.
 
-        return carRepository.findAll(PageRequest.of(1, 10))
-                .stream()
+         var page = request.getPage() == null ? 0 : request.getPage();
+         var size = request.getSize() == null ? 10 : request.getSize();
+
+        return carService.getPage(page, size).stream()
                 .filter(Car::isEnabled)
-                .map(c -> {
-                    ParklyCarResponse r = new ParklyCarResponse();
-                    r.setCarId(c.getCarId());
-                    return r;
-                })
+                .map(parklyCarMapper::toParklyCarResponse)
                 .toList();
     }
 
@@ -73,9 +73,9 @@ public class ParklyMainService implements ParklyService {
                 .findByUser_UserIdAndProviderExternalBookingId(parklyUser.getUserId(), request.getExternalBookingId())
                 .map(existing -> toResponse(existing, existing.getCarBookingStatus()))
                 .orElseGet(() -> {
-                    // Validate car exists (minimal)
-                    Car car = carRepository.findById(request.getCarId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Car not found: " + request.getCarId()));
+
+                    // Use CarService (not repository)
+                    Car car = carService.getById(request.getCarId());
 
                     Booking booking = new Booking();
                     booking.setEnabled(true);
@@ -84,13 +84,17 @@ public class ParklyMainService implements ParklyService {
 
                     if (request.getPickupLocationId() != null) {
                         Location pickup = locationRepository.findById(request.getPickupLocationId())
-                                .orElseThrow(() -> new ResourceNotFoundException("Pickup location not found: " + request.getPickupLocationId()));
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                        "Pickup location not found: " + request.getPickupLocationId()
+                                ));
                         booking.setPickupLocation(pickup);
                     }
 
                     if (request.getReturnLocationId() != null) {
                         Location ret = locationRepository.findById(request.getReturnLocationId())
-                                .orElseThrow(() -> new ResourceNotFoundException("Return location not found: " + request.getReturnLocationId()));
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                        "Return location not found: " + request.getReturnLocationId()
+                                ));
                         booking.setReturnLocation(ret);
                     }
 
@@ -100,7 +104,8 @@ public class ParklyMainService implements ParklyService {
                     booking.setCarBookingDateTo(request.getDateTo());
 
                     Booking saved = bookingRepository.save(booking);
-                    log.info("Parkly booking created: bookingId={}, externalBookingId={}", saved.getBookingId(), request.getExternalBookingId());
+                    log.info("Parkly booking created: bookingId={}, externalBookingId={}",
+                            saved.getBookingId(), request.getExternalBookingId());
 
                     return toResponse(saved, created);
                 });
@@ -127,9 +132,27 @@ public class ParklyMainService implements ParklyService {
                     return true;
                 })
                 .orElse(false);
-        //we do not notify Parkly on cancellation from our system
     }
+    @Override
+    @Transactional(readOnly = true)
+    public ParklyBookingDetailsResponse getCarBookingByExternalBookingId(Long externalBookingId) {
 
+        User parklyUser = userRepository.findByEmail(PARKLY_SYSTEM_EMAIL)
+                .orElseThrow(() -> new ResourceNotFoundException("Parkly system user not found. Seed data missing."));
+
+        Booking booking = bookingRepository
+                .findByUser_UserIdAndProviderExternalBookingId(parklyUser.getUserId(), externalBookingId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Parkly booking not found for externalBookingId: " + externalBookingId
+                ));
+
+        Car carWithFeatures = null;
+        if (booking.getCar() != null) {
+            carWithFeatures = carService.getById(booking.getCar().getCarId());
+        }
+
+        return parklyBookingMapper.toDetails(booking, carWithFeatures);
+    }
 
     private ParklyBookingResponse toResponse(Booking booking, BookingStatusDictionary status) {
         ParklyBookingResponse r = new ParklyBookingResponse();
