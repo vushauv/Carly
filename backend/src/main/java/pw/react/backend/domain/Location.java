@@ -18,7 +18,7 @@ public class Location extends Auditable {
     @Column(name = "LocationId", nullable = false)
     private Integer locationId;
 
-    @Column(name = "LocationName", nullable = false)
+    @Column(name = "LocationName", nullable = true)
     private String locationName;
 
     @Column(name = "Latitude", precision = 10, scale = 7)
