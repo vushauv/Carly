@@ -3,6 +3,7 @@ package pw.react.backend.domain.booking;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Where;
 import pw.react.backend.domain.Auditable;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.Location;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
+@Where(clause = "is_enabled = 1")
 @Table(name = "Bookings")
 public class Booking extends Auditable {
 
@@ -41,16 +43,16 @@ public class Booking extends Auditable {
     @JoinColumn(name = "FlatBookingStatusId")
     private BookingStatusDictionary flatBookingStatus;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "CarBookingStatusId", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "CarBookingStatusId")
     private BookingStatusDictionary carBookingStatus;
 
     @Column(name = "ProviderExternalBookingId")
     private Long providerExternalBookingId;
 
-    @Column(name = "CarBookingDateFrom", nullable = false)
+    @Column(name = "CarBookingDateFrom")
     private LocalDateTime carBookingDateFrom;
 
-    @Column(name = "CarBookingDateTo", nullable = false)
+    @Column(name = "CarBookingDateTo")
     private LocalDateTime carBookingDateTo;
 }
