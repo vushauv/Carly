@@ -1,5 +1,6 @@
 package pw.react.backend.controller;
 
+import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,13 +9,16 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.dto.mapper.car.CarFeatureMapper;
 import pw.react.backend.dto.mapper.car.CarMapper;
 import pw.react.backend.dto.request.car.CreateCarRequestDto;
 import pw.react.backend.dto.request.car.UpdateCarRequestDto;
+import pw.react.backend.dto.response.car.CarImageResponseDto;
 import pw.react.backend.dto.response.car.CreateCarResponseDto;
+import pw.react.backend.dto.response.car.GetCarImagesResponseDto;
 import pw.react.backend.dto.response.car.GetCarResponseDto;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.services.car.CarService;
@@ -87,6 +91,41 @@ public class CarController {
             return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getAll()));
         }
         return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getPage(page, size == null ? 0 : size)));
+    }
+
+    @GetMapping("/{carId}/images")
+    public ResponseEntity<GetCarImagesResponseDto> getCarImages(@RequestHeader HttpHeaders headers,
+                                                                @PathVariable("carId") Integer id)
+    {
+        logHeaders(headers);
+
+    }
+
+    @GetMapping("/{carId}/images/{imageId}")
+    public ResponseEntity<Resource> getCarImage(@RequestHeader HttpHeaders headers,
+                                                @PathVariable("carId") Integer carId,
+                                                @PathVariable("imageId") Integer imageId)
+    {
+        logHeaders(headers);
+
+    }
+
+    @DeleteMapping("/{carId}/images/{imageId}")
+    public void deleteCarImage(@RequestHeader HttpHeaders headers,
+                               @PathVariable("carId") Integer carId,
+                               @PathVariable("imageId") Integer imageId)
+    {
+        logHeaders(headers);
+
+    }
+
+    @PostMapping("/{carId}/images")
+    public ResponseEntity<CarImageResponseDto> createCarImage(@RequestHeader HttpHeaders headers,
+                                                              @PathVariable("carId")Integer carId,
+                                                              @RequestParam("file") MultipartFile file)
+    {
+        logHeaders(headers);
+
     }
 
     private void logHeaders(@RequestHeader HttpHeaders headers) {
