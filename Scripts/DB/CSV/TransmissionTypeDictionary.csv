@@ -1,7 +1,0 @@
-Name;DisplayName;Description
-manual;Manual;Traditional manual transmission
-automatic;Automatic;Torque-converter automatic transmission
-cvt;CVT;Continuously variable transmission
-dct;Dual-Clutch (DCT);Dual-clutch automated manual (e.g., DSG, PDK)
-amt;Automated Manual (AMT);Single-clutch automated manual
-single_speed;Single-speed;Single-speed reduction gear (typical EV)

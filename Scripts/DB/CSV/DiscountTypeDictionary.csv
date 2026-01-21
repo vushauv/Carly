@@ -1,5 +1,0 @@
-Name;DisplayName;Description
-none;None;No discount
-flat_amount;Flat amount;Fixed amount discount
-percentage;Percentage;Percentage discount
-to_amount;To amount;Discount down to a target amount

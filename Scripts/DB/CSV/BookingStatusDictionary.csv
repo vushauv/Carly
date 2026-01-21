@@ -1,8 +1,0 @@
-Name;DisplayName;Description
-new;New;Created, not started yet
-confirmed;Confirmed;Confirmed by system
-cancelled;Cancelled;Cancelled by user/system
-active;Active;In progress
-completed;Completed;Finished successfully
-extended;Extended;Booking extended
-delayed;Delayed;Return delayed
