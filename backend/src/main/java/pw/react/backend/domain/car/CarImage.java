@@ -35,6 +35,21 @@ public class CarImage extends Auditable {
     @Column(name = "ImageId", nullable = false)
     private Integer imageId;
 
+    @Column(name = "fileSize", nullable = false)
+    private Long fileSize;
+
     @Lob
     private byte[] data;
+
+    public CarImage(String filename, String contentType, Car car, Integer imageId, byte[] data, Long fileSize) {
+        super();
+        this.fileName = filename;
+        this.fileType = contentType;
+        this.car = car;
+        this.imageId = imageId;
+        this.data = data;
+        this.fileSize = fileSize;
+    }
+
+    public CarImage() {}
 }

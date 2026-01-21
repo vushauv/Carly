@@ -9,6 +9,6 @@ public class CarImageResponseDto {
     private Integer imageId;
     private String fileUri;
     private String fileType;
-    private long fileSize;
+    private Long fileSize;
 }
 

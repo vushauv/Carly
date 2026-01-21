@@ -12,5 +12,5 @@ public interface ICarImageService {
     List<CarImage> getAll(Integer carId) throws ResourceNotFoundException;
     CarImage getById(Integer carId, Integer imageId) throws ResourceNotFoundException;
     CarImage upload(MultipartFile file, Integer carId) throws ResourceNotFoundException;
-    void delete(CarImage carImage, Integer carId) throws ResourceNotFoundException;
+    void delete(Integer carId, Integer fileId) throws ResourceNotFoundException;
 }
