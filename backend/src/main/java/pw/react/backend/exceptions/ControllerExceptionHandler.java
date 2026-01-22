@@ -93,29 +93,5 @@ public class ControllerExceptionHandler {
                         request.getRequest().getServletPath()
                 ));
     }
-
-    @ExceptionHandler(EmailAlreadyInUseException.class)
-    public ResponseEntity<ExceptionDetails> handleEmailAlreadyInUse(EmailAlreadyInUseException ex, ServletWebRequest request) {
-        log.error("EmailAlreadyInUseException: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(new ExceptionDetails(
-                        HttpStatus.CONFLICT,
-                        ex.getMessage(),
-                        request.getRequest().getServletPath()
-                ));
-    }
-
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ExceptionDetails> handleInvalidCredentials(InvalidCredentialsException ex, ServletWebRequest request) {
-        log.error("InvalidCredentialsException: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(new ExceptionDetails(
-                        HttpStatus.UNAUTHORIZED,
-                        ex.getMessage(),
-                        request.getRequest().getServletPath()
-                ));
-    }
-
+//exception handlers to be added here!!!!!!!!!!
 }

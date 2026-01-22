@@ -11,8 +11,6 @@ import pw.react.backend.dto.request.RegisterUserRequest;
 import pw.react.backend.dto.request.UpdateUserRequest;
 import pw.react.backend.dto.response.GetUserInfoResponse;
 import pw.react.backend.dto.response.GetUserIDResponse;
-import pw.react.backend.exceptions.EmailAlreadyInUseException;
-import pw.react.backend.exceptions.InvalidCredentialsException;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.repositories.user.UserTypeDictionaryRepository;
@@ -31,7 +29,7 @@ public class UserMainService implements UserService {
     public User registerUser(User user) {
 
         if (userRepository.existsByEmailAndIsEnabledTrue(user.getEmail())) {
-            throw new EmailAlreadyInUseException("Email already in use");
+            throw new IllegalStateException("Email already in use");
         }
 
         UserTypeDictionary customerType =
@@ -49,10 +47,10 @@ public class UserMainService implements UserService {
 
         User user = userRepository
                 .findByEmailAndIsEnabledTrue(email)
-                .orElseThrow(() -> new InvalidCredentialsException("User not found with email: " + email));
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
         if (!user.getPassword().equals(password)) {
-            throw new InvalidCredentialsException("Invalid credentials");
+            throw new IllegalArgumentException("Invalid credentials");
         }
 
         return user;
@@ -87,7 +85,7 @@ public class UserMainService implements UserService {
             userRepository.findByEmailAndIsEnabledTrue(request.getEmail())
                     .ifPresent(existingUser -> {
                         if (!existingUser.getUserId().equals(user.getUserId())) {
-                            throw new EmailAlreadyInUseException("Email already in use");
+                            throw new IllegalStateException("Email already in use");
                         }
                     });
         }
