@@ -21,7 +21,7 @@ public class ParklyBookingMapper {
         r.setDateTo(booking.getCarBookingDateTo());
 
         if (carWithFeatures != null) {
-            r.setCar(parklyCarMapper.toParklyCarResponse(carWithFeatures));
+            r.setCar(parklyCarMapper.toParklyGetResponseDto(carWithFeatures));
         }
 
         return r;

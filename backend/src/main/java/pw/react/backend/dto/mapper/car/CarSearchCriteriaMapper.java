@@ -16,8 +16,7 @@ import java.util.List;
 // TODO: implement mapper
 @Mapper(unmappedSourcePolicy = ReportingPolicy.IGNORE)
 public interface CarSearchCriteriaMapper {
-    // IN:
-
+    // IN mappings:
     @Mapping(target = "carFeatures",
             source = "features")
     @Mapping(target = "dateRange",

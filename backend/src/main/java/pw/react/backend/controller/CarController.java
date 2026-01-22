@@ -94,7 +94,7 @@ public class CarController {
     }
 
     @GetMapping("")
-    public ResponseEntity<List<GetCarResponseDto>> getAllCars(@RequestHeader HttpHeaders headers,
+    public ResponseEntity<List<GetCarResponseDto>> searchCars(@RequestHeader HttpHeaders headers,
                                                               @ModelAttribute CarSearchParams searchParams,
                                                               @RequestParam(required = false) Integer page,
                                                               @RequestParam(required = false) Integer size)
@@ -126,6 +126,7 @@ public class CarController {
         logHeaders(headers);
         var images = carImageService.getAll(id);
 
+        // TODO: move this logic to the mapper. Add the possibility to retrieve GetCarImagesResponseDto together with GetCarResponseDto
         GetCarImagesResponseDto res = new GetCarImagesResponseDto();
         res.setImages(new ArrayList<>());
 

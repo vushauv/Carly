@@ -10,6 +10,7 @@ import java.util.List;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CarImageMapper {
+    // OUT mappings:
     @Mapping(target = "fileUri", source = "fileName")
     CarImageResponseDto toCarImageResponseDto(CarImage image);
 
