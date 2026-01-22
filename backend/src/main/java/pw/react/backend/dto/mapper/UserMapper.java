@@ -1,15 +1,15 @@
 package pw.react.backend.dto.mapper;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 import pw.react.backend.domain.user.User;
 import pw.react.backend.dto.request.RegisterUserRequest;
+import pw.react.backend.dto.request.UpdateUserRequest;
 import pw.react.backend.dto.response.GetUserInfoResponse;
 import pw.react.backend.dto.response.GetUserIDResponse;
 
 @Mapper(
         componentModel = "spring",
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public interface UserMapper {
@@ -23,5 +23,6 @@ public interface UserMapper {
 
     GetUserIDResponse toGetUserIDResponse(User user);
     GetUserInfoResponse toGetUserInfoResponse(User user);
+    void updateUserFromRequest(UpdateUserRequest request, @MappingTarget User user);
 
 }

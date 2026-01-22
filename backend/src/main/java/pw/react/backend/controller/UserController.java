@@ -88,25 +88,16 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Void> updateUserById(@RequestHeader HttpHeaders headers, @PathVariable Integer id, @Valid @RequestBody UpdateUserRequest request) {
+    public ResponseEntity<Void> updateUserById(
+            @RequestHeader HttpHeaders headers,
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdateUserRequest request) {
+
         logHeaders(headers);
 
-        User user = userService.getUserByID(id);
+        userService.updateUser(id, request);
 
-        if (request.getFirstName() != null)
-            user.setFirstName(request.getFirstName());
-        if (request.getSecondName() != null)
-            user.setSecondName(request.getSecondName());
-        if (request.getLastName() != null)
-            user.setLastName(request.getLastName());
-        if (request.getEmail() != null)
-            user.setEmail(request.getEmail());
-        if (request.getPassword() != null)
-            user.setPassword(request.getPassword());
-        if (request.getContactNumber() != null)
-            user.setContactNumber(request.getContactNumber());
 
-        userService.updateUser(user);
         return ResponseEntity.noContent().build();
     }
 

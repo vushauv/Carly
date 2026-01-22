@@ -5,6 +5,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import pw.react.backend.domain.user.User;
 import pw.react.backend.domain.user.UserTypeDictionary;
+import pw.react.backend.dto.mapper.UserMapper;
 import pw.react.backend.dto.request.LoginUserRequest;
 import pw.react.backend.dto.request.RegisterUserRequest;
 import pw.react.backend.dto.request.UpdateUserRequest;
@@ -24,6 +25,7 @@ public class UserMainService implements UserService {
 
     private final UserRepository userRepository;
     private final UserTypeDictionaryRepository userTypeDictionaryRepository;
+    private final UserMapper userMapper;
 
     @Override
     public User registerUser(User user) {
@@ -77,15 +79,21 @@ public class UserMainService implements UserService {
     }
 
     @Override
-    public void updateUser(User newUser) {
-        userRepository.findByEmailAndIsEnabledTrue(newUser.getEmail())//checks if email is not already in use (apart from the user that's actually updating info)
-                .ifPresent(existingUser -> {
-                    if (!existingUser.getUserId().equals(newUser.getUserId())) {
-                        throw new EmailAlreadyInUseException("Email already in use");
-                    }
-                });
+    public void updateUser(Integer id, UpdateUserRequest request) {
 
-        userRepository.save(newUser);
+        User user = getUserByID(id);
+
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {//if email is to be changed, it checks if email is not already in use (apart from the user that's actually updating info)
+            userRepository.findByEmailAndIsEnabledTrue(request.getEmail())
+                    .ifPresent(existingUser -> {
+                        if (!existingUser.getUserId().equals(user.getUserId())) {
+                            throw new EmailAlreadyInUseException("Email already in use");
+                        }
+                    });
+        }
+        userMapper.updateUserFromRequest(request, user);
+
+        userRepository.save(user);
     }
 
 
