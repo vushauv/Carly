@@ -1,4 +1,4 @@
-package pw.react.backend.integrations.flatly.dto;
+package pw.react.backend.integrations.flatly.dto.responses;
 
 import lombok.Getter;
 import lombok.Setter;

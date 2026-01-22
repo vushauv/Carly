@@ -10,6 +10,13 @@ import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.dto.flatly.CreateFlatlyBookingRequest;
 import pw.react.backend.dto.response.booking.BookingResponse;
 import pw.react.backend.services.flatly.FlatlyService;
+import pw.react.backend.integrations.flatly.dto.FlatlyFlatDto;
+import java.util.List;
+import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import pw.react.backend.integrations.flatly.dto.FlatlyFlatDto;
+import pw.react.backend.integrations.flatly.dto.FlatlyBookingDto;
+
 
 @RestController
 @RequestMapping(FlatlyController.FLATLY_PATH)
@@ -18,10 +25,6 @@ public class FlatlyController {
 
     public static final String FLATLY_PATH = "/flatly";
     private final FlatlyService flatlyService;
-
-    //TODO:
-    //1) Get all available bookings from their API
-    //2) Get a specific booking from their API
 
     @PostMapping("/bookings")
     public ResponseEntity<BookingResponse> createFlatlyBooking(@Valid @RequestBody CreateFlatlyBookingRequest request) {
@@ -37,7 +40,27 @@ public class FlatlyController {
             return ResponseEntity.ok("Flatly booking cancelled for bookingId=" + bookingId);
 
         return ResponseEntity.ok("Flatly booking is already cancelled for bookingId=" + bookingId);
-
     }
+
+    @GetMapping("/bookings/available")
+    public ResponseEntity<List<FlatlyFlatDto>> getAvailableBookings(
+            @RequestParam(name = "dateFrom") LocalDateTime dateFrom,
+            @RequestParam(name = "dateTo") LocalDateTime dateTo
+    ) {
+        return ResponseEntity.ok(
+                flatlyService.getAvailableBookings(dateFrom, dateTo)
+        );
+    }
+
+    @GetMapping("/flats/{flatId}")
+    public ResponseEntity<FlatlyFlatDto> getFlatDetails(@PathVariable Integer flatId) {
+        return ResponseEntity.ok(flatlyService.getFlatDetails(flatId));
+    }
+
+    @GetMapping("/flat-bookings/{flatBookingId}")
+    public ResponseEntity<FlatlyBookingDto> getFlatBookingDetails(@PathVariable Integer flatBookingId) {
+        return ResponseEntity.ok(flatlyService.getFlatBookingDetails(flatBookingId));
+    }
+
 }
 

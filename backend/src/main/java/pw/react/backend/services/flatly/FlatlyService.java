@@ -2,7 +2,6 @@ package pw.react.backend.services.flatly;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,11 +11,19 @@ import pw.react.backend.domain.user.User;
 import pw.react.backend.dto.flatly.CreateFlatlyBookingRequest;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.integrations.flatly.FlatlyClient;
-import pw.react.backend.integrations.flatly.dto.FlatlyCreateBookingRequest;
-import pw.react.backend.integrations.flatly.dto.FlatlyCreateBookingResponse;
+import pw.react.backend.integrations.flatly.dto.FlatlyBookingDto;
+import pw.react.backend.integrations.flatly.dto.requests.FlatlyCreateBookingRequest;
+import pw.react.backend.integrations.flatly.dto.responses.FlatlyCreateBookingResponse;
 import pw.react.backend.repositories.booking.BookingRepository;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
 import pw.react.backend.repositories.user.UserRepository;
+import org.springframework.http.HttpStatusCode;
+import pw.react.backend.integrations.flatly.dto.FlatlyFlatDto;
+import java.util.List;
+import java.time.LocalDateTime;
+import java.util.List;
+import org.springframework.http.HttpStatusCode;
+import pw.react.backend.integrations.flatly.dto.FlatlyFlatDto;
 
 @Slf4j
 @Service
@@ -163,4 +170,84 @@ public class FlatlyService {
         );
         return true;
     }
+
+    @Transactional(readOnly = true)
+    public List<FlatlyFlatDto> getAvailableBookings(
+            LocalDateTime dateFrom,
+            LocalDateTime dateTo
+    ) {
+        log.info("Calling Flatly getAvailableBookings: dateFrom={}, dateTo={}", dateFrom, dateTo );
+
+        var response = flatlyClient.getAvailableBookings(dateFrom, dateTo);
+        HttpStatusCode status = response.getStatusCode();
+
+        log.info("Flatly getAvailableBookings status={}", status.value());
+
+        if (status.value() != 200) {
+            throw new IllegalStateException(
+                    "Flatly getAvailableBookings failed. status=" + status.value()
+            );
+        }
+
+        return response.getBody() == null ? List.of() : response.getBody();
+    }
+
+    @Transactional(readOnly = true)
+    public FlatlyFlatDto getFlatDetails(Integer flatId) {
+
+        HttpStatusCode status = null;
+        FlatlyFlatDto body = null;
+
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            var response = flatlyClient.getFlatById(flatId);
+            status = response.getStatusCode();
+
+            log.info("Flatly getFlatDetails attempt {} status={}", attempt, status.value());
+
+            if (status.value() == 200) {
+                body = response.getBody();
+                if (body != null) {
+                    break;
+                }
+            }
+        }
+
+        if (status == null || status.value() != 200 || body == null) {
+            throw new IllegalStateException("Flatly getFlatDetails failed after retries. Last status=" +
+                    (status == null ? "null" : status.value()));
+        }
+
+        return body;
+    }
+
+    @Transactional(readOnly = true)
+    public FlatlyBookingDto getFlatBookingDetails(Integer flatBookingId) {
+
+        HttpStatusCode status = null;
+        FlatlyBookingDto body = null;
+
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            var response = flatlyClient.getFlatBookingById(flatBookingId);
+            status = response.getStatusCode();
+
+            log.info("Flatly getFlatBookingDetails attempt {} status={}", attempt, status.value());
+
+            if (status.value() == 200) {
+                body = response.getBody();
+                if (body != null) {
+                    break;
+                }
+            }
+        }
+
+        if (status == null || status.value() != 200 || body == null) {
+            throw new IllegalStateException("Flatly getFlatBookingDetails failed after retries. Last status=" +
+                    (status == null ? "null" : status.value()));
+        }
+
+        return body;
+    }
+
+
+
 }

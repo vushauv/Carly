@@ -1,4 +1,4 @@
-package pw.react.backend.integrations.flatly.dto;
+package pw.react.backend.integrations.flatly.dto.requests;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
