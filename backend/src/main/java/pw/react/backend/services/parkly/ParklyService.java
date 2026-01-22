@@ -8,7 +8,7 @@ public interface ParklyService {
 
     List<ParklyCarResponse> searchAvailableCars(ParklySearchCarsRequest request);
     ParklyBookingResponse createCarBooking(ParklyCreateCarBookingRequest request);
-    boolean cancelCarBooking(Long externalBookingId);
-    ParklyBookingDetailsResponse getCarBookingByExternalBookingId(Long externalBookingId);
+    boolean cancelCarBooking(Integer externalBookingId);
+    ParklyBookingDetailsResponse getCarBookingByExternalBookingId(Integer externalBookingId);
 }
 

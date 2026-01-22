@@ -64,7 +64,7 @@ public class ParklyController {
     @DeleteMapping("/car-bookings/{externalBookingId}")
     public ResponseEntity<String> cancelCarBooking(
             @RequestHeader HttpHeaders headers,
-            @PathVariable Long externalBookingId
+            @PathVariable Integer externalBookingId
     ) {
         logHeaders(headers);
 
@@ -93,7 +93,7 @@ public class ParklyController {
     @GetMapping("/car-bookings/{externalBookingId}")
     public ResponseEntity<ParklyBookingDetailsResponse> getCarBooking(
             @RequestHeader HttpHeaders headers,
-            @PathVariable Long externalBookingId
+            @PathVariable Integer externalBookingId
     ) {
         logHeaders(headers);
         return ResponseEntity.ok(parklyService.getCarBookingByExternalBookingId(externalBookingId));

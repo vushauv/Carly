@@ -41,27 +41,26 @@ public class FlatlyService {
         BookingStatusDictionary created = bookingStatusDictionaryRepository.findByName("CREATED")
                 .orElseThrow(() -> new ResourceNotFoundException("CREATED status missing (seed data)"));
 
-        booking.setFlatBookingStatus(created);
-
         // Call Flatly (we pass OUR bookingId as correlation)
         FlatlyCreateBookingRequest outbound = new FlatlyCreateBookingRequest();
-        outbound.setBookingId(booking.getBookingId().longValue());
+        outbound.setPartnerBookingRef(booking.getBookingId());
         outbound.setFlatId(request.getFlatId());
         outbound.setDateFrom(request.getDateFrom());
         outbound.setDateTo(request.getDateTo());
 
         FlatlyCreateBookingResponse flatlyResponse = flatlyClient.createBooking(outbound);
-        if (flatlyResponse == null || flatlyResponse.getFlatBookingId() == null) {
+        if (flatlyResponse == null || flatlyResponse.getId() == null) {
             throw new IllegalStateException("Flatly returned empty response or missing flatBookingId");
         }
 
-        // Store Flatly external booking id (ONLY after Flatly success)
-        booking.setProviderExternalBookingId(flatlyResponse.getFlatBookingId());
+        // Mark status and set ExternalBookingId only on success
+        booking.setFlatBookingStatus(created);
+        booking.setProviderExternalBookingId(flatlyResponse.getId());
 
         Booking updated = bookingRepository.save(booking);
 
         log.info("Flatly booking attached: userId={}, localBookingId={}, flatlyBookingId={}",
-                user.getUserId(), updated.getBookingId(), flatlyResponse.getFlatBookingId());
+                user.getUserId(), updated.getBookingId(), flatlyResponse.getId());
 
         return updated;
     }
