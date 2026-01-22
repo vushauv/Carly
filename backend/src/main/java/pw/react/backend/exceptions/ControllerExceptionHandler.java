@@ -43,12 +43,12 @@ public class ControllerExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionDetails> genericException(Exception ex, ServletWebRequest request) {
-        log.error("Generic Exception", ex);
+        log.error("Generic Exception: {}", ex.getMessage());
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new ExceptionDetails(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Unexpected error",
+                        HttpStatus.UNPROCESSABLE_ENTITY,
+                        ex.getMessage(),
                         request.getRequest().getServletPath())
                 );
     }
