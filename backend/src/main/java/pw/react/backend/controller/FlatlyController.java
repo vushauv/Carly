@@ -22,18 +22,22 @@ public class FlatlyController {
     //TODO:
     //1) Get all available bookings from their API
     //2) Get a specific booking from their API
+
     @PostMapping("/bookings")
     public ResponseEntity<BookingResponse> createFlatlyBooking(@Valid @RequestBody CreateFlatlyBookingRequest request) {
         Booking booking = flatlyService.createFlatBookingInFlatly(request);
         BookingResponse response = new BookingResponse();
-        response.setId(booking.getBookingId());
+        response.setId(booking.getProviderExternalBookingId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @DeleteMapping("/bookings/{bookingId}")
     public ResponseEntity<String> cancelFlatlyBooking(@PathVariable Integer bookingId) {
-        flatlyService.cancelFlatBookingInFlatly(bookingId);
-        return ResponseEntity.ok("Flatly booking cancelled for bookingId=" + bookingId);
+        if (flatlyService.cancelFlatBookingInFlatly(bookingId))
+            return ResponseEntity.ok("Flatly booking cancelled for bookingId=" + bookingId);
+
+        return ResponseEntity.ok("Flatly booking is already cancelled for bookingId=" + bookingId);
+
     }
 }
 

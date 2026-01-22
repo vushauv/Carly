@@ -2,6 +2,8 @@ package pw.react.backend.services.flatly;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pw.react.backend.domain.booking.Booking;
@@ -20,6 +22,8 @@ import pw.react.backend.repositories.user.UserRepository;
 @Service
 @RequiredArgsConstructor
 public class FlatlyService {
+
+    private static final int MAX_RETRIES = 3;
 
     private final FlatlyClient flatlyClient;
     private final UserRepository userRepository;
@@ -48,19 +52,46 @@ public class FlatlyService {
         outbound.setDateFrom(request.getDateFrom());
         outbound.setDateTo(request.getDateTo());
 
-        FlatlyCreateBookingResponse flatlyResponse = flatlyClient.createBooking(outbound);
-        if (flatlyResponse == null || flatlyResponse.getId() == null) {
-            throw new IllegalStateException("Flatly returned empty response or missing flatBookingId");
+        log.info(
+                "Calling Flatly createBooking: partnerBookingRef={}, flatId={}, dateFrom={}, dateTo={}",
+                outbound.getPartnerBookingRef(),
+                outbound.getFlatId(),
+                outbound.getDateFrom(),
+                outbound.getDateTo()
+        );
+
+        FlatlyCreateBookingResponse flatlyBody = null;
+        HttpStatusCode flatlyStatus = null;
+
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            var response = flatlyClient.createBooking(outbound);
+            flatlyStatus = response.getStatusCode();
+
+            log.info("Flatly createBooking attempt {} status={}", attempt, flatlyStatus.value());
+
+            //must be 201 - Created
+            if (flatlyStatus.value() == 201) {
+                flatlyBody = response.getBody();
+                if (flatlyBody != null && flatlyBody.getId() != null) {
+                    break;
+                }
+            }
         }
 
+        if (flatlyStatus == null || flatlyStatus.value() != 201) {
+            throw new IllegalStateException(
+                    "Flatly createBooking failed after retries. Last status=" +
+                            (flatlyStatus == null ? "null" : flatlyStatus.value())
+            );
+        }
         // Mark status and set ExternalBookingId only on success
         booking.setFlatBookingStatus(created);
-        booking.setProviderExternalBookingId(flatlyResponse.getId());
+        booking.setProviderExternalBookingId(flatlyBody.getId());
 
         Booking updated = bookingRepository.save(booking);
 
         log.info("Flatly booking attached: userId={}, localBookingId={}, flatlyBookingId={}",
-                user.getUserId(), updated.getBookingId(), flatlyResponse.getId());
+                user.getUserId(), updated.getBookingId(), flatlyBody.getId());
 
         return updated;
     }
@@ -94,13 +125,39 @@ public class FlatlyService {
                 bookingStatusDictionaryRepository.findByName("CANCELLED")
                         .orElseThrow(() -> new ResourceNotFoundException("CANCELLED status missing (seed data)"));
 
-        //TODO: we cancel the booking using their BookingId or ours?
-        flatlyClient.cancelBooking(booking.getProviderExternalBookingId());
+        if (booking.getFlatBookingStatus() == cancelled) {
+            log.info(
+                    "Flatly booking already cancelled locally: bookingId={}, flatlyBookingId={}",
+                    bookingId,
+                    booking.getProviderExternalBookingId()
+            );
+            return false;
+        }
+
+        HttpStatusCode flatlyStatus = null;
+
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            var response = flatlyClient.cancelBooking(booking.getProviderExternalBookingId());
+            flatlyStatus = response.getStatusCode();
+
+            log.info("Flatly cancelBooking attempt {} status={}", attempt, flatlyStatus.value());
+
+            if (flatlyStatus.value() == 200) {
+                break;
+            }
+        }
+
+        if (flatlyStatus == null || flatlyStatus.value() != 200) {
+            throw new IllegalStateException(
+                    "Flatly cancelBooking failed after retries. Last status=" +
+                            (flatlyStatus == null ? "null" : flatlyStatus.value())
+            );
+        }
 
         booking.setFlatBookingStatus(cancelled);
         bookingRepository.save(booking);
         log.info(
-                "Flatly booking cancelled: localBookingId={}, flatlyBookingId={}",
+                "Flatly booking cancelled: BookingId={}, flatlyBookingId={}",
                 bookingId,
                 booking.getProviderExternalBookingId()
         );
