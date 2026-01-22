@@ -17,7 +17,7 @@ public interface UserService {
 
     User loginUser(String email, String password);
 
-    List<User> getAllUsers();
+    List<User> getAllUsers(int pageNumber, int pageSize);
 
     User getUserByID(Integer id);
 

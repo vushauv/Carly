@@ -1,6 +1,7 @@
 package pw.react.backend.services;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import pw.react.backend.domain.user.User;
 import pw.react.backend.domain.user.UserTypeDictionary;
@@ -56,8 +57,8 @@ public class UserMainService implements UserService {
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAllByIsEnabledTrue();
+    public List<User> getAllUsers(int pageNumber, int pageSize) {
+        return userRepository.findAllByIsEnabledTrue(PageRequest.of(pageNumber, pageSize)).getContent();
     }
 
     @Override

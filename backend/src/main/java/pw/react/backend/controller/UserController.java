@@ -57,10 +57,14 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<GetUserInfoResponse>> getAllUsersInfo(@RequestHeader HttpHeaders headers) {
+    public ResponseEntity<List<GetUserInfoResponse>> getAllUsersInfo(
+            @RequestHeader HttpHeaders headers,
+            @RequestParam(defaultValue = "0") int pageNumber, @RequestParam(defaultValue = "10") int pageSize) {
+
         logHeaders(headers);
 
-        List<User> users = userService.getAllUsers();
+        List<User> users = userService.getAllUsers(pageNumber, pageSize);
+
         List<GetUserInfoResponse> response = users.stream()
                 .map(userMapper::toGetUserInfoResponse)
                 .toList();
