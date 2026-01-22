@@ -9,23 +9,24 @@ import pw.react.backend.repositories.car.CarImageRepository;
 
 import java.util.stream.Collectors;
 
+// TODO: modify this class - with regard to updated CarImage
 @Component
 @RequiredArgsConstructor
 public class ParklyCarMapper {
     private final CarImageRepository carImageRepository;
     private final CarMapper carMapper;
-
+//
     public ParklyCarResponse toParklyCarResponse(Car car) {
         var response = new ParklyCarResponse();
-        response.setCarId(car.getCarId());
-
-        // Map features using existing CarMapper logic
-        var getCarDto = carMapper.toGetResponseDto(car);
-        response.setCarFeatures(getCarDto.getCarFeatures());
-
-        // Load image urls
-        var images = carImageRepository.findByCar_CarId(car.getCarId());
-        response.setImageUrls(images.stream().map(img -> img.getUrl()).collect(Collectors.toList()));
+//        response.setCarId(car.getCarId());
+//
+//        // Map features using existing CarMapper logic
+//        var getCarDto = carMapper.toGetResponseDto(car);
+//        response.setCarFeatures(getCarDto.getCarFeatures());
+//
+//        // Load image urls
+//        var images = carImageRepository.findByCar_CarId(car.getCarId());
+//        response.setImageUrls(images.stream().map(img -> img.getUrl()).collect(Collectors.toList()));
         return response;
     }
 }

@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.*;
 import pw.react.backend.dto.parkly.*;
 import pw.react.backend.dto.mapper.ParklyCarMapper;
 import pw.react.backend.services.car.CarService;
+import pw.react.backend.services.car.model.CarSearchCriteria;
 import pw.react.backend.services.parkly.ParklyService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.stream.Collectors.joining;
@@ -43,10 +45,13 @@ public class ParklyController {
     ) {
         logHeaders(headers);
         // Reuse CarService to fetch cars (filtering by availability can be added later)
-        var cars = carService.getAll();
-        var responses = cars.stream()
-                .map(parklyCarMapper::toParklyCarResponse)
-                .toList();
+
+        // TODO: adjust with the updated CarService
+//        var cars = carService.getAll();
+//        var responses = cars.stream()
+//                .map(parklyCarMapper::toParklyCarResponse)
+//                .toList();
+        var responses = new ArrayList<ParklyCarResponse>();
 
         return ResponseEntity.ok(responses);
     }

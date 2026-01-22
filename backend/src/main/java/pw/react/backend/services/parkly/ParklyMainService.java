@@ -20,6 +20,8 @@ import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
 import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.services.car.CarService;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -52,10 +54,12 @@ public class ParklyMainService implements ParklyService {
          var page = request.getPage() == null ? 0 : request.getPage();
          var size = request.getSize() == null ? 10 : request.getSize();
 
-        return carService.getPage(page, size).stream()
-                .filter(Car::isEnabled)
-                .map(parklyCarMapper::toParklyCarResponse)
-                .toList();
+         // TODO: modify to accept SearchPararms
+//        return carService.getPage(page, size).stream()
+//                .filter(Car::isEnabled)
+//                .map(parklyCarMapper::toParklyCarResponse)
+//                .toList();
+        return new ArrayList<ParklyCarResponse>();
     }
 
     @Override
