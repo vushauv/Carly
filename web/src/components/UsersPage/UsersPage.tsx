@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Button from "../Button/Button";
 import styles from "./UsersPage.module.css";
 import AddNewEntityComponent from "../AddNewEntityComponent/AddNewComponent";
 import FiltersForm from "../FiltersForm/FiltersForm";
@@ -9,6 +8,7 @@ import { type Filters, defaultFilters, type UserFilterKey, userFilterFields } fr
 import DataTable from "../DataTable/DataTable";
 import { usersColumns, usersRowKey, usersActions } from "./datatable.conf.ts";
 import { useMemo } from "react";
+import Pagination from "../Pagination/Pagination.tsx";
 
 
 const PAGE_SIZE = 3;
@@ -77,17 +77,11 @@ const ManageUsersPage = () => {
         columns={columns}
         actions={usersActions}
         emptyText="No users found."
-        styles={{
-          table: styles.table,
-          tableHeader: styles.tableHeader,
-          tableRow: styles.tableRow,
-          empty: styles.empty,
-          actionsHeader: styles.actionsHeader,
-          actionButtons: styles.actionButtons,
-        }}
       />
 
-      <div className={styles.pagination}>
+
+
+      {/* <div className={styles.pagination}>
         <Button
           disabled={currentPage === 1}
         >
@@ -103,7 +97,22 @@ const ManageUsersPage = () => {
         >
           Next
         </Button>
-      </div>
+      </div> */}
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPrev={() => {
+          const newPage = Math.max(1, currentPage - 1);
+          setCurrentPage(newPage);
+          loadUsersPage(newPage);
+        }}
+        onNext={() => {
+          const newPage = Math.min(totalPages, currentPage + 1);
+          setCurrentPage(newPage);
+          loadUsersPage(newPage);
+        }}
+      />
     </div>
   );
 };

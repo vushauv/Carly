@@ -78,6 +78,7 @@ export default function DataTable<T>({
                   key={a.id}
                   disabled={a.isDisabled?.(row)}
                   onClick={() => a.onClick(row)}
+                  label={a.id}
                 >
                   {a.label}
                 </Button>
