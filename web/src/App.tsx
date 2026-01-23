@@ -22,7 +22,7 @@ function App() {
 
       <Content>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={loggedIn ? <Navigate to="/kpi" /> : <LoginPage setLoggedIn={setLoggedIn} />} />
 
           <Route
             path="/kpi"

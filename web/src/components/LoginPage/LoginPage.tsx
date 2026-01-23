@@ -3,7 +3,11 @@ import styles from "./LoginPage.module.css";
 import Button from "../Button/Button";
 import Input from "../Input/Input";
 
-const LoginPage = () => {
+type LoginPageProps = {
+  setLoggedIn: (value: boolean) => void;
+};
+
+const LoginPage = ({ setLoggedIn }: LoginPageProps) => {
   const [error, setError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>("Error Area");
   const [hasRequestedCode, setHasRequestedCode] = useState<boolean>(false); //this will tell us if it should be "send" or "resend" code
@@ -83,7 +87,7 @@ const LoginPage = () => {
               isRequired={true}
             ></Input>
           </div>
-          <Button>Enter Code</Button>
+          <Button onClick={() => setLoggedIn(true)}>Enter Code</Button>
         </form>
       </fieldset>
     </section>
