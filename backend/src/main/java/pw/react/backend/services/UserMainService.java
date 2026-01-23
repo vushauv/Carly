@@ -28,7 +28,7 @@ public class UserMainService implements UserService {
     @Override
     public User registerUser(User user) {
 
-        if (userRepository.existsByEmailAndIsEnabledTrue(user.getEmail())) {
+        if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalStateException("Email already in use");
         }
 
@@ -46,7 +46,7 @@ public class UserMainService implements UserService {
     public User loginUser(String email, String password) {
 
         User user = userRepository
-                .findByEmailAndIsEnabledTrue(email)
+                .findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
         if (!user.getPassword().equals(password)) {
@@ -58,19 +58,19 @@ public class UserMainService implements UserService {
 
     @Override
     public List<User> getAllUsers(int pageNumber, int pageSize) {
-        return userRepository.findAllByIsEnabledTrue(PageRequest.of(pageNumber, pageSize)).getContent();
+        return userRepository.findAll(PageRequest.of(pageNumber, pageSize)).getContent();
     }
 
     @Override
     public User getUserByID(Integer id) {
-        return userRepository.findByUserIdAndIsEnabledTrue(id)
+        return userRepository.findByUserId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
     }
 
     @Override
     public void deleteUserById(Integer id) {
         User user = userRepository
-                .findByUserIdAndIsEnabledTrue(id)
+                .findByUserId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
         user.setEnabled(false);
         userRepository.save(user);
@@ -82,7 +82,7 @@ public class UserMainService implements UserService {
         User user = getUserByID(id);
 
         if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {//if email is to be changed, it checks if email is not already in use (apart from the user that's actually updating info)
-            userRepository.findByEmailAndIsEnabledTrue(request.getEmail())
+            userRepository.findByEmail(request.getEmail())
                     .ifPresent(existingUser -> {
                         if (!existingUser.getUserId().equals(user.getUserId())) {
                             throw new IllegalStateException("Email already in use");

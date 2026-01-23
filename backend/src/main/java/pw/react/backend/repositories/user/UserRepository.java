@@ -10,11 +10,9 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Optional<User> findByEmail(String email);
 
-    Optional<User> findByEmailAndIsEnabledTrue(String email);
+    Page<User> findAll(Pageable pageable);
 
-    Page<User> findAllByIsEnabledTrue(Pageable pageable);
+    Optional<User> findByUserId(Integer id);
 
-    Optional<User> findByUserIdAndIsEnabledTrue(Integer id);
-
-    boolean existsByEmailAndIsEnabledTrue(String email);
+    boolean existsByEmail(String email);
 }
