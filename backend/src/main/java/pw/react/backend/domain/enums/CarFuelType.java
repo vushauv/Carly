@@ -1,10 +1,17 @@
 package pw.react.backend.domain.enums;
 
-import pw.react.backend.domain.car.CarFeature;
+import lombok.Getter;
 
+@Getter
 public enum CarFuelType {
-    GAS,
-    DIESEL,
-    ELECTRIC,
-    HYBRID;
+    GAS(1),
+    DIESEL(2),
+    ELECTRIC(3),
+    HYBRID(4);
+
+    private final int Code;
+    CarFuelType(int code)
+    {
+        this.Code = code;
+    }
 }

@@ -15,6 +15,7 @@ import pw.react.backend.domain.car.CarFeatureDictionary;
 import pw.react.backend.domain.car.CarToFeatureLink;
 import pw.react.backend.domain.enums.BookingStatus;
 import pw.react.backend.domain.enums.CarAvailabilityStatus;
+import pw.react.backend.domain.enums.CarFeatureType;
 import pw.react.backend.dto.request.car.CarSearchParams;
 import pw.react.backend.dto.request.car.DateRange;
 import pw.react.backend.exceptions.ResourceNotFoundException;
@@ -22,10 +23,14 @@ import pw.react.backend.repositories.booking.BookingRepository;
 import pw.react.backend.repositories.car.CarFeatureDictionaryRepository;
 import pw.react.backend.repositories.car.CarFeatureRepository;
 import pw.react.backend.repositories.car.CarRepository;
+import pw.react.backend.repositories.car.CarToFeatureLinkRepository;
 import pw.react.backend.services.car.model.CarSearchCriteria;
+import pw.react.backend.utils.DateUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,7 +43,7 @@ public class CarService implements ICarService {
     private final CarRepository carRepository;
     private final CarFeatureRepository carFeatureRepository;
     private final CarFeatureDictionaryRepository carFeatureDictionaryRepository;
-    private final BookingRepository bookingRepository;
+    private final CarToFeatureLinkRepository carToFeatureLinkRepository;
 
     @Override
     @Transactional
@@ -135,16 +140,41 @@ public class CarService implements ICarService {
         return carRepository.findByCarIdInOrderByCarIdAsc(filteredCarIds, PageRequest.of(page, pageSize)).getContent();
     }
 
+    // Method to be used to calculate the total price of the car on the booking
+    public BigDecimal calculateTotalPrice(Car car, DateRange dateRange)
+    {
+        var priceDictId = carFeatureDictionaryRepository.findById((short) CarFeatureType.PRICE.getCode())
+                .orElseThrow(() -> new IllegalStateException("Invariant violation: CarFeatureDictionary PRICE (" +
+                                CarFeatureType.PRICE.getCode() + ") not found"));
+
+        var managedCar = carRepository.getReferenceById(car.getCarId());
+        var carPriceLink = carToFeatureLinkRepository.getLinkByCarAndFeatureType(priceDictId.getCarFeatureDictionaryId(),
+                managedCar.getCarId());
+
+        BigDecimal price = carPriceLink
+                .map(link -> new BigDecimal(
+                        link.getCarFeature().getValue()))
+                        .orElse(null);
+
+        return price == null ? null : price.multiply(BigDecimal.valueOf(this.calculateDayDifference(dateRange)));
+    }
+
+    private long calculateDayDifference(DateRange dateRange)
+    {
+        // Computes a ceiling - if a days is touched - counts as till the end of the day
+        return DateUtils.calculateDayDifference(dateRange.getFrom(), dateRange.getTo()) + 1;
+    }
+
+    // Mutates the DateRange object - ensures when price is calculated - that the same time range is considered
     private DateRange normaliseDates(DateRange dateRange)
         throws BadRequestException
     {
-        var from = dateRange.getFrom();
-        var to = dateRange.getTo();
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
 
-        if (from == null || from.isBefore(todayStart)) from = todayStart;
-        if (!to.isAfter(from)) throw new BadRequestException("'to' must be after 'from'");
-        return new DateRange(from, to);
+        if (dateRange.getFrom() == null
+                || dateRange.getFrom().isBefore(todayStart)) dateRange.setFrom(todayStart);
+        if (!dateRange.getTo().isAfter(dateRange.getFrom())) throw new BadRequestException("'to' must be after 'from'");
+        return dateRange;
     }
 
     private List<Integer> searchCarsByFeatures(CarSearchCriteria searchCriteria,

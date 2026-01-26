@@ -173,6 +173,7 @@ public class DataSeeder implements ApplicationRunner {
         CarFeatureDictionary color = upsertCarFeatureDictionary(CarFeatureType.COLOR.name());
         CarFeatureDictionary status = upsertCarFeatureDictionary(CarFeatureType.STATUS.name());
         CarFeatureDictionary model = upsertCarFeatureDictionary(CarFeatureType.MODEL.name());
+        CarFeatureDictionary price = upsertCarFeatureDictionary(CarFeatureType.PRICE.name());
 
         // 4) Car feature values (canonical, shared)
         CarFeature fuelGas = upsertCarFeature(fuelType, CarFuelType.GAS.name());
