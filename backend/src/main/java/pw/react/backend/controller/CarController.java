@@ -19,6 +19,8 @@ import pw.react.backend.domain.car.CarImage;
 import pw.react.backend.dto.mapper.car.CarFeatureMapper;
 import pw.react.backend.dto.mapper.car.CarImageMapper;
 import pw.react.backend.dto.mapper.car.CarMapper;
+import pw.react.backend.dto.mapper.car.CarSearchCriteriaMapper;
+import pw.react.backend.dto.request.car.CarSearchParams;
 import pw.react.backend.dto.request.car.CreateCarRequestDto;
 import pw.react.backend.dto.request.car.UpdateCarRequestDto;
 import pw.react.backend.dto.response.car.CarImageResponseDto;
@@ -28,7 +30,6 @@ import pw.react.backend.dto.response.car.GetCarResponseDto;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.services.car.CarImageService;
 import pw.react.backend.services.car.CarService;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,8 +45,10 @@ public class CarController {
     private final CarService carService;
     private final CarMapper carMapper;
     private final CarFeatureMapper carFeatureMapper;
+    private final CarSearchCriteriaMapper carSearchCriteriaMapper;
     private final CarImageMapper carImageMapper;
     private final CarImageService carImageService;
+
 
     @PostMapping(path="")
     public ResponseEntity<CreateCarResponseDto> createCar(@RequestHeader HttpHeaders headers,
@@ -91,15 +94,29 @@ public class CarController {
     }
 
     @GetMapping("")
-    public ResponseEntity<List<GetCarResponseDto>> getAllCars(@RequestHeader HttpHeaders headers,
+    public ResponseEntity<List<GetCarResponseDto>> searchCars(@RequestHeader HttpHeaders headers,
+                                                              @ModelAttribute CarSearchParams searchParams,
                                                               @RequestParam(required = false) Integer page,
                                                               @RequestParam(required = false) Integer size)
+            throws BadRequestException
     {
         logHeaders(headers);
+
+        // TODO: think about usage.
+        // Captures query-param binding/conversion errors for @ModelAttribute;
+        // check hasErrors() and return 400.
+//        if (bindingResult.hasErrors()) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+//                    "Invalid parameters supplied");
+//        }
+
+        var carSearchCriteria = carSearchCriteriaMapper.toCarSearchCriteria(searchParams);
         if (page == null) {
-            return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getAll()));
+            return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getAll(carSearchCriteria)));
         }
-        return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getPage(page, size == null ? 0 : size)));
+        return ResponseEntity.ok(carMapper.toGetResponseDtoList(carService.getPage(page,
+                size == null ? 0 : size,
+                carSearchCriteria)));
     }
 
     @GetMapping("/{carId}/images")
@@ -109,6 +126,7 @@ public class CarController {
         logHeaders(headers);
         var images = carImageService.getAll(id);
 
+        // TODO: move this logic to the mapper. Add the possibility to retrieve GetCarImagesResponseDto together with GetCarResponseDto
         GetCarImagesResponseDto res = new GetCarImagesResponseDto();
         res.setImages(new ArrayList<>());
 
