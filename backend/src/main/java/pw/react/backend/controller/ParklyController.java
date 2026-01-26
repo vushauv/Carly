@@ -27,6 +27,7 @@ import static java.util.stream.Collectors.joining;
 @RequiredArgsConstructor
 public class ParklyController {
     //TODO: Implement searchCars so that it accepts certain parameters (optional?)
+    //TODO (TBD): Decide whether Parkly has to provide our BookingId, or their BookingId!
     //return car details (images!) instead of only the CarId
     public static final String PARKLY_PATH = "/parkly";
 
@@ -55,7 +56,7 @@ public class ParklyController {
         ParklyBookingResponse response = parklyService.createCarBooking(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-    //TODO (TBD): Decide whether Parkly has to provide our BookingId, or their BookingId!
+
     @DeleteMapping("/car-bookings/{externalBookingId}")
     public ResponseEntity<String> cancelCarBooking(
             @RequestHeader HttpHeaders headers,
