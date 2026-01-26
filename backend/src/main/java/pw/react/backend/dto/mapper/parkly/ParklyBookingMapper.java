@@ -1,4 +1,4 @@
-package pw.react.backend.dto.mapper;
+package pw.react.backend.dto.mapper.parkly;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

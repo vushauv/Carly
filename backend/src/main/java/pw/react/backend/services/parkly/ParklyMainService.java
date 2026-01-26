@@ -9,8 +9,8 @@ import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.domain.booking.BookingStatusDictionary;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.user.User;
-import pw.react.backend.dto.mapper.ParklyBookingMapper;
-import pw.react.backend.dto.mapper.ParklyCarMapper;
+import pw.react.backend.dto.mapper.parkly.ParklyBookingMapper;
+import pw.react.backend.dto.mapper.parkly.ParklyCarMapper;
 import pw.react.backend.dto.parkly.*;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.LocationRepository;
@@ -19,7 +19,6 @@ import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
 import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.services.car.CarService;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 

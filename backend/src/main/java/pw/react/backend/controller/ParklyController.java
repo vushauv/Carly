@@ -8,17 +8,15 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import pw.react.backend.controller.path.PathResolver;
-import pw.react.backend.domain.car.Car;
 import pw.react.backend.dto.mapper.car.CarMapper;
 import pw.react.backend.dto.mapper.car.CarSearchCriteriaMapper;
 import pw.react.backend.dto.parkly.*;
-import pw.react.backend.dto.mapper.ParklyCarMapper;
+import pw.react.backend.dto.mapper.parkly.ParklyCarMapper;
 import pw.react.backend.dto.request.car.CarSearchParams;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.services.car.CarService;
 import pw.react.backend.services.parkly.ParklyService;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.stream.Collectors.joining;

@@ -8,7 +8,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import pw.react.backend.controller.path.PathResolver;
 import pw.react.backend.domain.booking.Booking;
-import pw.react.backend.dto.mapper.BookingMapper;
+import pw.react.backend.dto.mapper.booking.BookingMapper;
 import pw.react.backend.dto.request.booking.BookingSearchCriteria;
 import pw.react.backend.dto.request.booking.CreateBookingRequest;
 import pw.react.backend.dto.request.booking.UpdateBookingRequest;
