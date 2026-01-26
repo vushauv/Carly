@@ -7,4 +7,5 @@ public enum CarFeatureType
     FUEL_TYPE,
     MODEL,
     STATUS;
+    // TODO: Add Price as a carFeature - return to the end user on Get;
 }

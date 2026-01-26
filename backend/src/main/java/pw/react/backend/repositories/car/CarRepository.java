@@ -28,9 +28,10 @@ public interface CarRepository extends JpaRepository<Car, Integer> {
         from Car c
         join c.featureLinks l
         join l.carFeature f
-        where f in :features
+        where c.isEnabled = true 
+                and f in :features 
         group by c.carId
-        having count(distinct f) = :featureCount
+        having count(f) = :featureCount
         """)
     List<Integer> findCarIdsMatchingAllFeatures(@Param("features") Collection<CarFeature> features,
                                                 @Param("featureCount") int featureCount);

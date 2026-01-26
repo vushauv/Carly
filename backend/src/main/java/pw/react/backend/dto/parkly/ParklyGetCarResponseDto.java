@@ -17,3 +17,4 @@ public class ParklyGetCarResponseDto
 }
 
 // TODO: add List<String> urls for carImages to the DTO.
+// TODO: the price of the car should be returned as pricePerDay * numberOfDays
