@@ -89,7 +89,7 @@ public class ParklyController {
     // SearchParams are the same
     @GetMapping("/cars")
     public ResponseEntity<List<ParklyGetCarResponseDto>> searchCars(@RequestHeader HttpHeaders headers,
-                                                                    @ModelAttribute CarSearchParams searchParams,
+                                                                    @Valid @ModelAttribute CarSearchParams searchParams,
                                                                     @RequestParam(required = false) Integer page,
                                                                     @RequestParam(required = false) Integer size)
             throws BadRequestException

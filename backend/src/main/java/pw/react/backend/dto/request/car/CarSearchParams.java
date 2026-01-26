@@ -1,5 +1,7 @@
 package pw.react.backend.dto.request.car;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import pw.react.backend.domain.enums.CarAvailabilityStatus;
@@ -8,8 +10,8 @@ import pw.react.backend.domain.enums.CarAvailabilityStatus;
 @Setter
 public class CarSearchParams {
     private CarFeatureFilters features;
-    private DateRange date;
     // Will be resolved by Converter
-    private CarAvailabilityStatus availability;
+    private CarAvailabilityStatus availability = CarAvailabilityStatus.AVAILABLE;
+    private DateRange date;
 }
 

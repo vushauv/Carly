@@ -93,22 +93,16 @@ public class CarController {
         return ResponseEntity.ok(carMapper.toGetResponseDto(car));
     }
 
+
+
     @GetMapping("")
     public ResponseEntity<List<GetCarResponseDto>> searchCars(@RequestHeader HttpHeaders headers,
-                                                              @ModelAttribute CarSearchParams searchParams,
+                                                              @Valid @ModelAttribute CarSearchParams searchParams,
                                                               @RequestParam(required = false) Integer page,
                                                               @RequestParam(required = false) Integer size)
             throws BadRequestException
     {
         logHeaders(headers);
-
-        // TODO: think about usage.
-        // Captures query-param binding/conversion errors for @ModelAttribute;
-        // check hasErrors() and return 400.
-//        if (bindingResult.hasErrors()) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-//                    "Invalid parameters supplied");
-//        }
 
         var carSearchCriteria = carSearchCriteriaMapper.toCarSearchCriteria(searchParams);
         if (page == null) {

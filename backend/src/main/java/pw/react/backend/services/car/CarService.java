@@ -8,17 +8,24 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import pw.react.backend.domain.booking.BookingStatusDictionary;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.car.CarFeatureDictionary;
 import pw.react.backend.domain.car.CarToFeatureLink;
+import pw.react.backend.domain.enums.BookingStatus;
+import pw.react.backend.domain.enums.CarAvailabilityStatus;
 import pw.react.backend.dto.request.car.CarSearchParams;
+import pw.react.backend.dto.request.car.DateRange;
 import pw.react.backend.exceptions.ResourceNotFoundException;
+import pw.react.backend.repositories.booking.BookingRepository;
 import pw.react.backend.repositories.car.CarFeatureDictionaryRepository;
 import pw.react.backend.repositories.car.CarFeatureRepository;
 import pw.react.backend.repositories.car.CarRepository;
 import pw.react.backend.services.car.model.CarSearchCriteria;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,6 +38,7 @@ public class CarService implements ICarService {
     private final CarRepository carRepository;
     private final CarFeatureRepository carFeatureRepository;
     private final CarFeatureDictionaryRepository carFeatureDictionaryRepository;
+    private final BookingRepository bookingRepository;
 
     @Override
     @Transactional
@@ -65,20 +73,89 @@ public class CarService implements ICarService {
         return carRepository.save(car);
     }
 
-    // TODO: Add filtering by availability based on dates
+    @Override
+    public Car getById(Integer carId) throws ResourceNotFoundException
+    {
+        var car = carRepository.findByIdWithFeatures(carId);
+        return car.orElseThrow(() -> new ResourceNotFoundException("Car with id " + carId + " was not found."));
+    }
+
+    // TODO: refactor
     @Override
     public List<Car> getAll(CarSearchCriteria searchCriteria) throws BadRequestException
     {
-        if(searchCriteria == null
-                || searchCriteria.getCarFeatures() == null
-                || searchCriteria.getCarFeatures().isEmpty())
-            return carRepository.findAll();
-        var requestedCarFeatures = searchCriteria.getCarFeatures();
+        var dateRange = searchCriteria.getDateRange();
+        boolean hasDate = dateRange != null && dateRange.getTo() != null;
 
+        List<Integer> availableCarIds = null;
+        if(hasDate)
+        {
+            availableCarIds = this.searchCarsByAvailability(searchCriteria);
+            if(availableCarIds.isEmpty())
+                return List.of();
+            if(searchCriteria.getCarFeatures() == null || searchCriteria.getCarFeatures().isEmpty())
+                return carRepository.findByCarIdInOrderByCarIdAsc(availableCarIds);
+        }
+
+        if(searchCriteria.getCarFeatures() == null || searchCriteria.getCarFeatures().isEmpty())
+            return carRepository.findAllByOrderByCarIdAsc();
+
+        var filteredCarIds = this.searchCarsByFeatures(searchCriteria, availableCarIds);
+        if(filteredCarIds.isEmpty()) return List.of();
+
+        return carRepository.findByCarIdInOrderByCarIdAsc(filteredCarIds);
+    }
+
+    @Override
+    public List<Car> getPage(int page, int size, CarSearchCriteria searchCriteria)
+            throws BadRequestException
+    {
+        int defaultPageSize = 10;
+        int pageSize = (size <= 0) ? defaultPageSize : size;
+
+        var dateRange = searchCriteria.getDateRange();
+        boolean hasDate = dateRange != null && dateRange.getTo() != null;
+
+        List<Integer> availableCarIds = null;
+        if(hasDate)
+        {
+            availableCarIds = this.searchCarsByAvailability(searchCriteria);
+            if(availableCarIds.isEmpty())
+                return List.of();
+            if(searchCriteria.getCarFeatures() == null || searchCriteria.getCarFeatures().isEmpty())
+                return carRepository.findByCarIdInOrderByCarIdAsc(availableCarIds, PageRequest.of(page, pageSize)).getContent();
+        }
+
+        if(searchCriteria.getCarFeatures() == null || searchCriteria.getCarFeatures().isEmpty())
+            return carRepository.findAllByOrderByCarIdAsc(PageRequest.of(page, pageSize)).getContent();
+
+        var filteredCarIds = this.searchCarsByFeatures(searchCriteria, availableCarIds);
+        if(filteredCarIds.isEmpty()) return List.of();
+
+        return carRepository.findByCarIdInOrderByCarIdAsc(filteredCarIds, PageRequest.of(page, pageSize)).getContent();
+    }
+
+    private DateRange normaliseDates(DateRange dateRange)
+        throws BadRequestException
+    {
+        var from = dateRange.getFrom();
+        var to = dateRange.getTo();
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+
+        if (from == null || from.isBefore(todayStart)) from = todayStart;
+        if (!to.isAfter(from)) throw new BadRequestException("'to' must be after 'from'");
+        return new DateRange(from, to);
+    }
+
+    private List<Integer> searchCarsByFeatures(CarSearchCriteria searchCriteria,
+                                               List<Integer> availableCarIds)
+            throws BadRequestException
+    {
+        var requestedCarFeatures = searchCriteria.getCarFeatures();
         // Resolves dictionary Types
         var typedFeatures = resolveFeatureTypesByName(requestedCarFeatures);
         // Checks for duplicates in query params
-        checkDuplicateFeatureTypes(typedFeatures);
+        this.checkDuplicateFeatureTypes(typedFeatures);
 
         int initialCount = requestedCarFeatures.size();
         var resolved = resolveFeature(typedFeatures);
@@ -87,24 +164,37 @@ public class CarService implements ICarService {
         // if some features were not found - then no such car exists
         if(resolvedCount != initialCount) return List.of();
 
-        var carIds = carRepository.findCarIdsMatchingAllFeatures(resolved, resolvedCount);
-        if(carIds.isEmpty()) return List.of();
-
-        return carRepository.findByCarIdIn(carIds);
+        if(availableCarIds != null) {
+            return carRepository.findCarIdsMatchingAllFeaturesWithin(
+                    availableCarIds,
+                    resolved,
+                    resolvedCount);
+        }else{
+            return carRepository.findCarIdsMatchingAllFeatures(
+                    resolved,
+                    resolvedCount);
+        }
     }
 
-    @Override
-    public Car getById(Integer carId) throws ResourceNotFoundException
-    {
-        var car = carRepository.findByIdWithFeatures(carId);
-        return car.orElseThrow(() -> new ResourceNotFoundException("Car with id " + carId + " was not found."));
-    }
 
-    @Override
-    public List<Car> getPage(int page, int size, CarSearchCriteria searchCriteria)
+    private List<Integer> searchCarsByAvailability(CarSearchCriteria searchCriteria)
+        throws BadRequestException
     {
-        int defaultPageSize = 10;
-        return carRepository.findAll(PageRequest.of(page, size == 0  ? defaultPageSize : size)).getContent();
+        var dateRange = this.normaliseDates(searchCriteria.getDateRange());
+        var from = dateRange.getFrom();
+        var to = dateRange.getTo();
+
+        if(searchCriteria.getAvailabilityStatus().equals(CarAvailabilityStatus.AVAILABLE))
+            return carRepository.filterAvailableCarIds(
+                from,
+                to,
+                BookingStatus.CANCELLED.getCode());
+        else
+            return carRepository.filterRentedCarIds(
+                    from,
+                    to,
+                    BookingStatus.CANCELLED.getCode());
+
     }
 
     private CarFeature resolveOrCreateFeature(CarFeature reqFeature) throws BadRequestException

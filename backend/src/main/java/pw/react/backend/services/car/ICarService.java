@@ -16,5 +16,5 @@ public interface ICarService {
     Car create(List<CarFeature> requestedCarFeatures) throws ResourceNotFoundException, BadRequestException;
     List<Car> getAll(CarSearchCriteria searchCriteria) throws BadRequestException;
     Car getById(Integer carId) throws ResourceNotFoundException;
-    List<Car> getPage(int page, int size, CarSearchCriteria searchCriteria);
+    List<Car> getPage(int page, int size, CarSearchCriteria searchCriteria) throws BadRequestException;
 }
