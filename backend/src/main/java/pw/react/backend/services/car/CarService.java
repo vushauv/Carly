@@ -9,10 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import pw.react.backend.domain.booking.BookingStatusDictionary;
-import pw.react.backend.domain.car.Car;
-import pw.react.backend.domain.car.CarFeature;
-import pw.react.backend.domain.car.CarFeatureDictionary;
-import pw.react.backend.domain.car.CarToFeatureLink;
+import pw.react.backend.domain.car.*;
 import pw.react.backend.domain.enums.BookingStatus;
 import pw.react.backend.domain.enums.CarAvailabilityStatus;
 import pw.react.backend.domain.enums.CarFeatureType;
@@ -20,10 +17,8 @@ import pw.react.backend.dto.request.car.CarSearchParams;
 import pw.react.backend.dto.request.car.DateRange;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.booking.BookingRepository;
-import pw.react.backend.repositories.car.CarFeatureDictionaryRepository;
-import pw.react.backend.repositories.car.CarFeatureRepository;
-import pw.react.backend.repositories.car.CarRepository;
-import pw.react.backend.repositories.car.CarToFeatureLinkRepository;
+import pw.react.backend.repositories.car.*;
+import pw.react.backend.repositories.car.models.CarImageUrlRow;
 import pw.react.backend.services.car.model.CarSearchCriteria;
 import pw.react.backend.utils.DateUtils;
 
@@ -38,12 +33,14 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+// TODO: Consider decomposing a service into multiple classes
 public class CarService implements ICarService {
 
     private final CarRepository carRepository;
     private final CarFeatureRepository carFeatureRepository;
     private final CarFeatureDictionaryRepository carFeatureDictionaryRepository;
     private final CarToFeatureLinkRepository carToFeatureLinkRepository;
+    private final CarImageRepository carImageRepository;
 
     @Override
     @Transactional
@@ -157,6 +154,17 @@ public class CarService implements ICarService {
                         .orElse(null);
 
         return price == null ? null : price.multiply(BigDecimal.valueOf(this.calculateDayDifference(dateRange)));
+    }
+
+    public Map<Integer, List<Integer>> linkCarImages(List<Car> cars)
+    {
+        var carIds = cars.stream().map(Car::getCarId).toList();
+        if (carIds.isEmpty()) return Map.of();
+
+        return carImageRepository.findImageByCarIds(carIds).stream()
+                .collect(Collectors.groupingBy(CarImageUrlRow::getCarId,
+                        Collectors.mapping(CarImageUrlRow::getImageId, Collectors.toList())));
+
     }
 
     private long calculateDayDifference(DateRange dateRange)

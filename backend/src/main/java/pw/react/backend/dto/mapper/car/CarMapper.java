@@ -1,27 +1,57 @@
 package pw.react.backend.dto.mapper.car;
 
+import lombok.RequiredArgsConstructor;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
+import org.springframework.stereotype.Component;
 import pw.react.backend.domain.car.Car;
+import pw.react.backend.dto.mapper.car.image.CarImageUrlMapper;
 import pw.react.backend.dto.response.car.CreateCarResponseDto;
 import pw.react.backend.dto.response.car.GetCarResponseDto;
 
 import java.util.List;
+import java.util.Map;
 
-@Mapper(componentModel = "spring",
-        unmappedTargetPolicy = ReportingPolicy.IGNORE,
-        uses = CarFeatureMapper.class
-)
-public interface CarMapper {
+@Component
+@RequiredArgsConstructor
+public class CarMapper{
+    private final CarFeatureMapper carFeatureMapper;
+    private final CarImageUrlMapper carImageUrlMapper;
+
     // OUT mappings:
-    List<GetCarResponseDto> toGetResponseDtoList(List<Car> cars);
+    public List<GetCarResponseDto> toGetResponseDtoList(List<Car> cars, Map<Integer, List<Integer>> imageUrlsByCarId)
+    {
+        if (cars == null || cars.isEmpty()) return List.of();
 
-    // Will implicitly use CarFeatureMapper
-    @Mapping(target = "carFeatures", source = "featureLinks", qualifiedByName = "mapFeatureLinks")
-    GetCarResponseDto toGetResponseDto(Car car);
+        return cars.stream()
+                .map(car -> {
+                    Integer carId = car.getCarId();
+                    List<Integer> imageIds =
+                            imageUrlsByCarId.getOrDefault(carId, List.of());
 
-    CreateCarResponseDto toCreateResponseDto(Car car);
+                    return toGetResponseDto(car, carId, imageIds);
+                })
+                .toList();
+    }
 
-    // IN mappings:
+    public GetCarResponseDto toGetResponseDto(Car car, int carId, List<Integer> imageIds)
+    {
+        var dto = new GetCarResponseDto();
+        dto.setCarId(car.getCarId());
+
+        dto.setCarFeatures(carFeatureMapper.mapFeatureLinks(car.getFeatureLinks()));
+        dto.setUrls(imageIds.stream().map((imageId) -> carImageUrlMapper.mapUrl(carId, imageId))
+                .toList());
+        return dto;
+    }
+
+    public CreateCarResponseDto toCreateResponseDto(Car car)
+    {
+        var dto = new CreateCarResponseDto();
+        dto.setCarId(car.getCarId());
+        return dto;
+    }
 }
+

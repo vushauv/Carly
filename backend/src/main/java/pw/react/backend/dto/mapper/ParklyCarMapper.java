@@ -1,23 +1,45 @@
 package pw.react.backend.dto.mapper;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.ReportingPolicy;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.dto.mapper.car.CarFeatureMapper;
+import pw.react.backend.dto.mapper.car.image.CarImageUrlMapper;
 import pw.react.backend.dto.parkly.ParklyGetCarResponseDto;
 
 import java.util.List;
+import java.util.Map;
 
-@Mapper(
-        componentModel = "spring",
-        unmappedTargetPolicy = ReportingPolicy.IGNORE,
-        uses = CarFeatureMapper.class
-)
-public interface ParklyCarMapper {
+@Component
+@RequiredArgsConstructor
+public class ParklyCarMapper {
+    private final CarFeatureMapper carFeatureMapper;
+    private final CarImageUrlMapper carImageUrlMapper;
+
     // OUT mappings:
-    List<ParklyGetCarResponseDto> toParklyGetResponseDtoList(List<Car> cars);
+    public List<ParklyGetCarResponseDto> toGetResponseDtoList(List<Car> cars, Map<Integer, List<Integer>> imageUrlsByCarId)
+    {
+        if (cars == null || cars.isEmpty()) return List.of();
 
-    @Mapping(target = "carFeatures", source = "featureLinks", qualifiedByName = "mapFeatureLinks")
-    ParklyGetCarResponseDto toParklyGetResponseDto(Car car);
+        return cars.stream()
+                .map(car -> {
+                    Integer carId = car.getCarId();
+                    List<Integer> imageIds =
+                            imageUrlsByCarId.getOrDefault(carId, List.of());
+
+                    return toGetResponseDto(car, carId, imageIds);
+                })
+                .toList();
+    }
+
+    public ParklyGetCarResponseDto toGetResponseDto(Car car, int carId, List<Integer> imageIds)
+    {
+        var dto = new ParklyGetCarResponseDto();
+        dto.setCarId(car.getCarId());
+
+        dto.setCarFeatures(carFeatureMapper.mapFeatureLinks(car.getFeatureLinks()));
+        dto.setUrls(imageIds.stream().map((imageId) -> carImageUrlMapper.mapUrl(carId, imageId))
+                .toList());
+        return dto;
+    }
 }

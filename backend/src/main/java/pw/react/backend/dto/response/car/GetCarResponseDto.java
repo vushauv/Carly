@@ -15,5 +15,5 @@ public class GetCarResponseDto
 {
     private Integer carId;
     private List<CarFeatureDto> carFeatures;
+    private List<String> urls;
 }
-// TODO: add the List<String> urls for CarImages to the DTO.

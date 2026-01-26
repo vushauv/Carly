@@ -17,6 +17,5 @@ public class ParklyGetCarResponseDto
 {
     private Integer carId;
     private List<CarFeatureDto> carFeatures;
+    private List<String> urls;
 }
-
-// TODO: add List<String> urls for carImages to the DTO.

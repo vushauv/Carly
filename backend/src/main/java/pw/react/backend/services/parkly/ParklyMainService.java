@@ -21,6 +21,7 @@ import pw.react.backend.services.car.CarService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -137,8 +138,12 @@ public class ParklyMainService implements ParklyService {
         if (booking.getCar() != null) {
             carWithFeatures = carService.getById(booking.getCar().getCarId());
         }
-
-        return parklyBookingMapper.toDetails(booking, carWithFeatures);
+        // TODO: Added lines: test if works correcty!!
+        Map<Integer, List<Integer>> imageUrlsByCarId = null;
+        if(carWithFeatures != null) {
+            imageUrlsByCarId = carService.linkCarImages(List.of(carWithFeatures));
+        }
+        return parklyBookingMapper.toDetails(booking, carWithFeatures, imageUrlsByCarId);
     }
 
     private ParklyBookingResponse toResponse(Booking booking, BookingStatusDictionary status) {

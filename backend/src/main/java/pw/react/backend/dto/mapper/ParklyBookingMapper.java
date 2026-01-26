@@ -6,13 +6,19 @@ import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.dto.parkly.ParklyBookingDetailsResponse;
 
+import java.util.List;
+import java.util.Map;
+
 @Component
 @RequiredArgsConstructor
 public class ParklyBookingMapper {
-
     private final ParklyCarMapper parklyCarMapper;
 
-    public ParklyBookingDetailsResponse toDetails(Booking booking, Car carWithFeatures) {
+    // TODO: MODIFIED - test whether works
+    public ParklyBookingDetailsResponse toDetails(Booking booking,
+                                                  Car carWithFeatures,
+                                                  Map<Integer, List<Integer>> imageUrlsByCarId) {
+
         ParklyBookingDetailsResponse r = new ParklyBookingDetailsResponse();
         r.setBookingId(booking.getBookingId());
         r.setExternalBookingId(booking.getProviderExternalBookingId());
@@ -21,7 +27,9 @@ public class ParklyBookingMapper {
         r.setDateTo(booking.getCarBookingDateTo());
 
         if (carWithFeatures != null) {
-            r.setCar(parklyCarMapper.toParklyGetResponseDto(carWithFeatures));
+            r.setCar(parklyCarMapper.toGetResponseDto(carWithFeatures,
+                    carWithFeatures.getCarId(),
+                    imageUrlsByCarId.get(carWithFeatures.getCarId())));
         }
 
         return r;

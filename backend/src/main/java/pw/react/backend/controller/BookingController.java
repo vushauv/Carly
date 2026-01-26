@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import pw.react.backend.controller.path.PathResolver;
 import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.dto.mapper.BookingMapper;
 import pw.react.backend.dto.request.booking.BookingSearchCriteria;
@@ -27,7 +28,7 @@ import static java.util.stream.Collectors.joining;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class BookingController {
 
-    public static final String BOOKINGS_PATH = "/bookings";
+    public static final String BOOKINGS_PATH = PathResolver.Booking.Base;
 
     private final BookingService bookingService;
     private final BookingMapper bookingMapper;

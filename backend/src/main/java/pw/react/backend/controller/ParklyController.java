@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import pw.react.backend.controller.path.PathResolver;
+import pw.react.backend.domain.car.Car;
 import pw.react.backend.dto.mapper.car.CarMapper;
 import pw.react.backend.dto.mapper.car.CarSearchCriteriaMapper;
 import pw.react.backend.dto.parkly.*;
@@ -28,8 +30,9 @@ import static java.util.stream.Collectors.joining;
 public class ParklyController {
     //TODO: Implement searchCars so that it accepts certain parameters (optional?)
     //TODO (TBD): Decide whether Parkly has to provide our BookingId, or their BookingId!
+    //TODO: Add validation for parkly by userId
     //return car details (images!) instead of only the CarId
-    public static final String PARKLY_PATH = "/parkly";
+    public static final String PARKLY_PATH = PathResolver.Parkly.Base;
 
     private final ParklyService parklyService;
     private final CarService carService;
@@ -38,7 +41,7 @@ public class ParklyController {
     private final CarMapper carMapper;
 
     // Parkly integration for interacting with bookings
-    @GetMapping("/car-bookings/{externalBookingId}")
+    @GetMapping(PathResolver.Parkly.CarBookings + "/{externalBookingId}")
     public ResponseEntity<ParklyBookingDetailsResponse> getCarBooking(
             @RequestHeader HttpHeaders headers,
             @PathVariable Long externalBookingId
@@ -47,7 +50,7 @@ public class ParklyController {
         return ResponseEntity.ok(parklyService.getCarBookingByExternalBookingId(externalBookingId));
     }
 
-    @PostMapping("/car-bookings")
+    @PostMapping(PathResolver.Parkly.CarBookings)
     public ResponseEntity<ParklyBookingResponse> createCarBooking(
             @RequestHeader HttpHeaders headers,
             @Valid @RequestBody ParklyCreateCarBookingRequest request
@@ -57,7 +60,7 @@ public class ParklyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @DeleteMapping("/car-bookings/{externalBookingId}")
+    @DeleteMapping(PathResolver.Parkly.CarBookings + "/{externalBookingId}")
     public ResponseEntity<String> cancelCarBooking(
             @RequestHeader HttpHeaders headers,
             @PathVariable Long externalBookingId
@@ -74,7 +77,7 @@ public class ParklyController {
     }
 
     // Parkly integration for retrieving cars
-    @GetMapping("/cars/{carId}")
+    @GetMapping(PathResolver.Parkly.Cars + "/{carId}")
     public ResponseEntity<ParklyGetCarResponseDto> getCar(@RequestHeader HttpHeaders headers,
                                                           @PathVariable Integer carId)
             throws ResourceNotFoundException
@@ -82,12 +85,12 @@ public class ParklyController {
         logHeaders(headers);
 
         var car = carService.getById(carId);
-        var response = parklyCarMapper.toParklyGetResponseDto(car);
-        return ResponseEntity.ok(response);
+        var imageUrlsByCarId = carService.linkCarImages(List.of(car));
+        return ResponseEntity.ok(parklyCarMapper.toGetResponseDto(car, carId, imageUrlsByCarId.get(carId)));
     }
 
     // SearchParams are the same
-    @GetMapping("/cars")
+    @GetMapping(PathResolver.Parkly.Cars)
     public ResponseEntity<List<ParklyGetCarResponseDto>> searchCars(@RequestHeader HttpHeaders headers,
                                                                     @Valid @ModelAttribute CarSearchParams searchParams,
                                                                     @RequestParam(required = false) Integer page,
@@ -98,11 +101,15 @@ public class ParklyController {
 
         var carSearchCriteria = carSearchCriteriaMapper.toCarSearchCriteria(searchParams);
         if (page == null) {
-            return ResponseEntity.ok(parklyCarMapper.toParklyGetResponseDtoList(carService.getAll(carSearchCriteria)));
+            var cars = carService.getAll(carSearchCriteria);
+            var imageUrlsByCarId = carService.linkCarImages(cars);
+            return ResponseEntity.ok(parklyCarMapper.toGetResponseDtoList(cars, imageUrlsByCarId));
         }
-        return ResponseEntity.ok(parklyCarMapper.toParklyGetResponseDtoList(carService.getPage(page,
+        var cars = carService.getPage(page,
                 size == null ? 0 : size,
-                carSearchCriteria)));
+                carSearchCriteria);
+        var imageUrlsByCarId = carService.linkCarImages(cars);
+        return ResponseEntity.ok(parklyCarMapper.toGetResponseDtoList(cars, imageUrlsByCarId));
     }
 
     private void logHeaders(HttpHeaders headers) {
