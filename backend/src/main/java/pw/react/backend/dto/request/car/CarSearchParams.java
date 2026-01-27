@@ -12,6 +12,7 @@ public class CarSearchParams {
     private CarFeatureFilters features;
     // Will be resolved by Converter
     private CarAvailabilityStatus availability = CarAvailabilityStatus.AVAILABLE;
+    @Valid
     private DateRange date;
 }
 

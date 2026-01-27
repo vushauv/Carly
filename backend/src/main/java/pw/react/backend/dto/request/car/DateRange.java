@@ -8,6 +8,7 @@ import lombok.Setter;
 import pw.react.backend.utils.JsonDateDeserializer;
 import pw.react.backend.utils.JsonDateSerializer;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -15,10 +16,11 @@ import java.time.LocalDateTime;
 public class DateRange {
     @JsonDeserialize(using = JsonDateDeserializer.class)
     @JsonSerialize(using = JsonDateSerializer.class)
-    private LocalDateTime from;
+    private LocalDateTime from = LocalDate.now().atStartOfDay();
 
     @JsonDeserialize(using = JsonDateDeserializer.class)
     @JsonSerialize(using = JsonDateSerializer.class)
+    @NotNull
     private LocalDateTime to;
 
     public DateRange(){}

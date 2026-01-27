@@ -177,11 +177,8 @@ public class CarService implements ICarService {
     private DateRange normaliseDates(DateRange dateRange)
         throws BadRequestException
     {
-        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
-
-        if (dateRange.getFrom() == null
-                || dateRange.getFrom().isBefore(todayStart)) dateRange.setFrom(todayStart);
-        if (!dateRange.getTo().isAfter(dateRange.getFrom())) throw new BadRequestException("'to' must be after 'from'");
+        if (!dateRange.getTo().isAfter(dateRange.getFrom()))
+            throw new BadRequestException("'to' must be after 'from'");
         return dateRange;
     }
 

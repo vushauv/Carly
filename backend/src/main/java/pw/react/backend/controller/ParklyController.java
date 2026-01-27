@@ -8,15 +8,15 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import pw.react.backend.controller.path.PathResolver;
-import pw.react.backend.dto.mapper.car.CarMapper;
 import pw.react.backend.dto.mapper.car.CarSearchCriteriaMapper;
 import pw.react.backend.dto.parkly.*;
 import pw.react.backend.dto.mapper.parkly.ParklyCarMapper;
-import pw.react.backend.dto.request.car.CarSearchParams;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.services.car.CarService;
 import pw.react.backend.services.parkly.ParklyService;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static java.util.stream.Collectors.joining;
@@ -36,7 +36,6 @@ public class ParklyController {
     private final CarService carService;
     private final ParklyCarMapper parklyCarMapper;
     private final CarSearchCriteriaMapper carSearchCriteriaMapper;
-    private final CarMapper carMapper;
 
     // Parkly integration for interacting with bookings
     @GetMapping(PathResolver.Parkly.CarBookings + "/{externalBookingId}")
@@ -90,12 +89,17 @@ public class ParklyController {
     // SearchParams are the same
     @GetMapping(PathResolver.Parkly.Cars)
     public ResponseEntity<List<ParklyGetCarResponseDto>> searchCars(@RequestHeader HttpHeaders headers,
-                                                                    @Valid @ModelAttribute CarSearchParams searchParams,
+                                                                    @Valid @ModelAttribute ParklyCarSearchParams searchParams,
                                                                     @RequestParam(required = false) Integer page,
                                                                     @RequestParam(required = false) Integer size)
             throws BadRequestException
     {
         logHeaders(headers);
+
+        // Checks if the date is valid
+        var date = searchParams.getDate();
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        if(date.getFrom().isBefore(todayStart)) date.setFrom(todayStart);
 
         var carSearchCriteria = carSearchCriteriaMapper.toCarSearchCriteria(searchParams);
         if (page == null) {

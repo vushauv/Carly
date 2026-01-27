@@ -6,6 +6,7 @@ import org.mapstruct.ReportingPolicy;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.car.CarFeatureDictionary;
 import pw.react.backend.domain.enums.CarFeatureType;
+import pw.react.backend.dto.parkly.ParklyCarSearchParams;
 import pw.react.backend.dto.request.car.CarFeatureFilters;
 import pw.react.backend.dto.request.car.CarSearchParams;
 import pw.react.backend.services.car.model.CarSearchCriteria;
@@ -25,6 +26,14 @@ public interface CarSearchCriteriaMapper {
             source = "availability")
     CarSearchCriteria toCarSearchCriteria(CarSearchParams carSearchParams);
 
+    @Mapping(target = "carFeatures",
+            source = "features")
+    @Mapping(target = "dateRange",
+             source = "date")
+    @Mapping(target = "availabilityStatus",
+            constant = "AVAILABLE")
+    CarSearchCriteria toCarSearchCriteria(ParklyCarSearchParams carSearchParams);
+
     default List<CarFeature> searchParamsToFeatureList(CarFeatureFilters featureFilters) {
         if(featureFilters == null) return List.of();
 
@@ -37,6 +46,7 @@ public interface CarSearchCriteriaMapper {
 
         return carFeatures;
     }
+
 
     private void addFeature(List<CarFeature> carFeatures, String dictName, String value)
     {
