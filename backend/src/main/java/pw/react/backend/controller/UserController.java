@@ -15,7 +15,7 @@ import pw.react.backend.dto.request.RegisterUserRequest;
 import pw.react.backend.dto.request.UpdateUserRequest;
 import pw.react.backend.dto.response.GetUserIDResponse;
 import pw.react.backend.dto.response.GetUserInfoResponse;
-import pw.react.backend.services.UserService;
+import pw.react.backend.services.user.UserService;
 
 import java.util.List;
 

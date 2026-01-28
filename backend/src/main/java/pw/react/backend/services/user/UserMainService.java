@@ -1,4 +1,4 @@
-package pw.react.backend.services;
+package pw.react.backend.services.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -6,11 +6,7 @@ import org.springframework.stereotype.Service;
 import pw.react.backend.domain.user.User;
 import pw.react.backend.domain.user.UserTypeDictionary;
 import pw.react.backend.dto.mapper.UserMapper;
-import pw.react.backend.dto.request.LoginUserRequest;
-import pw.react.backend.dto.request.RegisterUserRequest;
 import pw.react.backend.dto.request.UpdateUserRequest;
-import pw.react.backend.dto.response.GetUserInfoResponse;
-import pw.react.backend.dto.response.GetUserIDResponse;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.repositories.user.UserTypeDictionaryRepository;
