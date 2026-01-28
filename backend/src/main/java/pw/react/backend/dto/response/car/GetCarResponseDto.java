@@ -13,3 +13,5 @@ public class GetCarResponseDto
     private Integer carId;
     private List<CarFeatureDto> carFeatures;
 }
+// TODO: the price of the car should be returned as pricePerDay * numberOfDays
+// TODO: add the List<String> urls for CarImages to the DTO.

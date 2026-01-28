@@ -7,17 +7,25 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import pw.react.backend.domain.booking.BookingStatusDictionary;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.Location;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.car.CarFeatureDictionary;
 import pw.react.backend.domain.car.CarToFeatureLink;
+import pw.react.backend.domain.enums.CarFeatureType;
+import pw.react.backend.domain.enums.CarFuelType;
+import pw.react.backend.domain.enums.CarStatus;
+import pw.react.backend.domain.enums.UserRole;
+import pw.react.backend.domain.user.User;
 import pw.react.backend.domain.user.UserTypeDictionary;
 import pw.react.backend.repositories.LocationRepository;
 import pw.react.backend.repositories.car.CarFeatureDictionaryRepository;
 import pw.react.backend.repositories.car.CarFeatureRepository;
 import pw.react.backend.repositories.car.CarRepository;
+import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.repositories.user.UserTypeDictionaryRepository;
+import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -33,18 +41,135 @@ public class DataSeeder implements ApplicationRunner {
     private final LocationRepository locationRepository;
     private final CarFeatureRepository carFeatureRepository;
     private final CarFeatureDictionaryRepository carFeatureDictionaryRepository;
+    private final BookingStatusDictionaryRepository bookingStatusDictionaryRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
         log.info("DataSeeder running. Active profiles: {}", String.join(",", args.getSourceArgs()));
 
+        // 1) Locations
+        upsertLocation("Warsaw Central", new BigDecimal("52.2297"), new BigDecimal("21.0122"));
+        upsertLocation("Krakow Main", new BigDecimal("50.0647"), new BigDecimal("19.9450"));
+        upsertLocation("Gdansk Old Town", new BigDecimal("54.3520"), new BigDecimal("18.6466"));
 
-        // 1) User types
+        // ===============================================================================================
+        //                                  Booking statuses
+        // ===============================================================================================
+        BookingStatusDictionary created =
+                upsertBookingStatus("CREATED", "Created", "Booking created");
+
+        BookingStatusDictionary cancelled =
+                upsertBookingStatus("CANCELLED", "Cancelled", "Booking cancelled");
+
+        BookingStatusDictionary completed =
+                upsertBookingStatus("COMPLETED", "Completed", "Booking completed");
+
+        // ===============================================================================================
+        //                                  Users & UserTypes
+        // ===============================================================================================
+
         upsertUserType("CUSTOMER", "Customer", "Standard end user");
         upsertUserType("SYSTEM", "System", "System / integration user");
         upsertUserType("SUPER_ADMIN", "Super Admin", "All permissions");
         upsertUserType("ADMIN", "Admin", "Administrative user");
+
+        UserTypeDictionary superAdminType = userTypeDictionaryRepository.findByName("SUPER_ADMIN")
+                .orElseThrow(() -> new IllegalStateException("SUPER_ADMIN user type missing"));
+        UserTypeDictionary systemType = userTypeDictionaryRepository.findByName("SYSTEM")
+                .orElseThrow(() -> new IllegalStateException("SYSTEM user type missing"));
+        UserTypeDictionary customerType = userTypeDictionaryRepository.findByName("CUSTOMER")
+                .orElseThrow(() -> new IllegalStateException("CUSTOMER user type missing"));
+        // 1) Systems
+        upsertUserByEmail(
+                "carly@pw.edu.pl",
+                "Carly",
+                "System",
+                systemType,
+                null,
+                null
+        );
+        upsertUserByEmail(
+                "parkly@pw.edu.pl",
+                "Parkly",
+                "System",
+                systemType,
+                null,
+                null
+        );
+        upsertUserByEmail(
+                "flatly@pw.edu.pl",
+                "Flatly",
+                "System",
+                systemType,
+                null,
+                null
+        );
+        // 2) SuperAdmins
+        upsertUserByEmail(
+                "oleh.shuptar.stud@pw.edu.pl",
+                "Oleh",
+                "Shuptar",
+                superAdminType,
+                null,
+                111111111L
+        );
+        upsertUserByEmail(
+                "vasili.vushau.stud@pw.edu.pl",
+                "Vasili",
+                "Vushau",
+                superAdminType,
+                null,
+                222222222L
+        );
+        upsertUserByEmail(
+                "stanislaw.zielinski.stud@pw.edu.pl",
+                "Stanisław",
+                "Zieliński",
+                superAdminType,
+                null,
+                333333333L
+        );
+        upsertUserByEmail(
+                "wojciech.sendek.stud@pw.edu.pl",
+                "Wojtek",
+                "Sendek",
+                superAdminType,
+                "ass",
+                444444444L
+        );
+        // 3) Example customers (to avoid FK mistakes when creating test data)
+        upsertUserByEmail(
+                "DT@family.com",
+                "Dominic",
+                "Toretto",
+                customerType,
+                null,
+                987654321L
+        );
+        upsertUserByEmail(
+                "BB@shire.gov",
+                "Bilbo",
+                "Baggins",
+                customerType,
+                null,
+                999999999L
+        );
+        upsertUserByEmail(
+                "JS@blackpearl.org",
+                "Jack",
+                "Sparrow",
+                customerType,
+                null,
+                123456789L
+        );
+
+        // 1) User types
+        upsertUserType(UserRole.CUSTOMER.name(), "Customer", "Standard end user");
+        upsertUserType(UserRole.SYSTEM.name(), "System", "System / integration user");
+        upsertUserType(UserRole.SUPER_ADMIN.name(), "Super Admin", "All permissions");
+        upsertUserType(UserRole.ADMIN.name(), "Admin", "Administrative user");
 
         // 2) Locations
         upsertLocation("Warsaw Central", new BigDecimal("52.2297"), new BigDecimal("21.0122"));
@@ -52,17 +177,19 @@ public class DataSeeder implements ApplicationRunner {
         upsertLocation("Gdansk Old Town", new BigDecimal("54.3520"), new BigDecimal("18.6466"));
 
         // 3) Car Feature Dictionaries
-        CarFeatureDictionary fuelType = upsertCarFeatureDictionary("FUEL_TYPE");
-        CarFeatureDictionary brand = upsertCarFeatureDictionary("BRAND");
-        CarFeatureDictionary color = upsertCarFeatureDictionary("COLOR");
-        CarFeatureDictionary status = upsertCarFeatureDictionary("STATUS");
-        CarFeatureDictionary model = upsertCarFeatureDictionary("MODEL");
+        CarFeatureDictionary fuelType = upsertCarFeatureDictionary(CarFeatureType.FUEL_TYPE.name());
+        CarFeatureDictionary brand = upsertCarFeatureDictionary(CarFeatureType.BRAND.name());
+        CarFeatureDictionary color = upsertCarFeatureDictionary(CarFeatureType.COLOR.name());
+        CarFeatureDictionary status = upsertCarFeatureDictionary(CarFeatureType.STATUS.name());
+        CarFeatureDictionary model = upsertCarFeatureDictionary(CarFeatureType.MODEL.name());
 
         // 4) Car feature values (canonical, shared)
-        CarFeature fuelGas = upsertCarFeature(fuelType, "GAS");
-        CarFeature fuelDiesel = upsertCarFeature(fuelType, "DIESEL");
-        CarFeature fuelElectric = upsertCarFeature(fuelType, "ELECTRIC");
+        CarFeature fuelGas = upsertCarFeature(fuelType, CarFuelType.GAS.name());
+        CarFeature fuelDiesel = upsertCarFeature(fuelType, CarFuelType.DIESEL.name());
+        CarFeature fuelElectric = upsertCarFeature(fuelType, CarFuelType.ELECTRIC.name());
+        CarFeature fuelHybrid = upsertCarFeature(fuelType, CarFuelType.HYBRID.name());
 
+        // Dynamic letters
         CarFeature brandBmw = upsertCarFeature(brand, "BMW");
         CarFeature brandAudi = upsertCarFeature(brand, "AUDI");
         CarFeature brandToyota = upsertCarFeature(brand, "TOYOTA");
@@ -71,8 +198,9 @@ public class DataSeeder implements ApplicationRunner {
         CarFeature colorWhite = upsertCarFeature(color, "WHITE");
         CarFeature colorRed = upsertCarFeature(color, "RED");
 
-        CarFeature statusAvailable = upsertCarFeature(status, "AVAILABLE");
-        CarFeature statusRented = upsertCarFeature(status, "RENTED");
+        CarFeature statusActive = upsertCarFeature(status, CarStatus.ACTIVE.name());
+        CarFeature statusInactive = upsertCarFeature(status, CarStatus.INACTIVE.name());
+        CarFeature statusUnderRepair = upsertCarFeature(status, CarStatus.UNDER_REPAIR.name());
 
         CarFeature modelSeries3 = upsertCarFeature(model, "SERIES_3");
         CarFeature modelA4 = upsertCarFeature(model, "A4");
@@ -84,13 +212,13 @@ public class DataSeeder implements ApplicationRunner {
         // 6) Attach features to cars
         attachFeaturesToCars(
                 List.of(
-                        fuelGas, brandBmw, modelSeries3, colorBlack, statusAvailable
+                        fuelGas, brandBmw, modelSeries3, colorBlack, statusActive
                 ),
                 List.of(
-                        fuelDiesel, brandAudi, modelA4, colorWhite, statusAvailable
+                        fuelDiesel, brandAudi, modelA4, colorWhite, statusInactive
                 ),
                 List.of(
-                        fuelElectric, brandToyota, modelCorolla, colorRed, statusRented
+                        fuelElectric, brandToyota, modelCorolla, colorRed, statusUnderRepair
                 )
         );
         log.info("DataSeeder finished.");
@@ -111,6 +239,31 @@ public class DataSeeder implements ApplicationRunner {
         return userTypeDictionaryRepository.save(e);
     }
 
+    private User upsertUserByEmail(
+            String email,
+            String firstName,
+            String lastName,
+            UserTypeDictionary userType,
+            String password,
+            Long contactNumber
+    ) {
+        User u = userRepository.findByEmail(email).orElseGet(User::new);
+
+        u.setEmail(email);
+        u.setFirstName(firstName);
+        u.setLastName(lastName);
+        u.setUserType(userType);
+
+        // optional fields
+        u.setPassword(password);
+        u.setContactNumber(contactNumber);
+
+        // audit flag
+        u.setEnabled(true);
+
+        return userRepository.save(u);
+    }
+
     private Location upsertLocation(String locationName, BigDecimal latitude, BigDecimal longitude) {
         Location e = locationRepository.findByLocationName(locationName)
                 .orElseGet(Location::new);
@@ -124,6 +277,23 @@ public class DataSeeder implements ApplicationRunner {
 
 
         return locationRepository.save(e);
+    }
+
+    private BookingStatusDictionary upsertBookingStatus(
+            String name,
+            String displayName,
+            String description
+    ) {
+        BookingStatusDictionary e =
+                bookingStatusDictionaryRepository.findByName(name)
+                        .orElseGet(BookingStatusDictionary::new);
+
+        e.setName(name);
+        e.setDisplayName(displayName);
+        e.setDescription(description);
+        e.setEnabled(true);
+
+        return bookingStatusDictionaryRepository.save(e);
     }
 
     private void ensureCarsExist(int targetCount) {
