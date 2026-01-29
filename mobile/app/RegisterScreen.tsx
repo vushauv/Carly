@@ -1,0 +1,218 @@
+import { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Image,
+  useWindowDimensions,
+  ScrollView,
+} from "react-native";
+import { useRouter } from "expo-router";
+
+const isValidEmail = (value: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+
+
+export default function RegisterScreen() {
+  const router = useRouter();
+
+  const [firstName, setFirstName] = useState("");
+  const [secondName, setSecondName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+  const [isEmailValid, setIsEmailValid] = useState(true);
+
+  const { width } = useWindowDimensions();
+  const logoWidth = width * 0.5;
+
+
+  const onRegisterPress = () => {
+    const payload = {
+      firstName,
+      secondName: secondName || null,
+      lastName,
+      email,
+      password,
+      contactNumber,
+    };
+    setIsEmailValid(isValidEmail(email));
+    //doesn't do anything yet
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.page}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        <Image
+          source={require("../assets/images/carly-logo.png")}
+          style={[styles.logo, { width: logoWidth, height: logoWidth * 0.4 }]}
+          resizeMode="contain"
+        />
+
+        <View style={styles.card}>
+          <Text style={styles.title}>Create account</Text>
+
+          <Text style={styles.label}>First Name</Text>
+          <TextInput
+            value={firstName}
+            onChangeText={setFirstName}
+            placeholder="First Name*"
+            autoCapitalize="words"
+            style={styles.input}
+          />
+          <Text style={styles.label}>Second Name</Text>
+          <TextInput
+            value={secondName}
+            onChangeText={setSecondName}
+            placeholder="Second Name"
+            autoCapitalize="words"
+            style={styles.input}
+          />
+          <Text style={styles.label}>Last Name</Text>
+          <TextInput
+            value={lastName}
+            onChangeText={setLastName}
+            placeholder="Last Name*"
+            autoCapitalize="words"
+            style={styles.input}
+          />
+
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email*"
+            autoCapitalize="none"
+            style={styles.input}
+          />
+
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password*"
+            autoCapitalize="none"
+            secureTextEntry
+            style={styles.input}
+          />
+
+          <Text style={styles.label}>Contact Number</Text>
+          <TextInput
+            value={contactNumber}
+            onChangeText={setContactNumber}
+            placeholder="Contact Number*"
+            keyboardType="phone-pad"
+            style={styles.input}
+          />
+
+          <Pressable style={styles.button} onPress={onRegisterPress}>
+            <Text style={styles.buttonText}>Register</Text>
+          </Pressable>
+
+          <Pressable onPress={() => router.back()}>
+            <Text style={styles.linkText}>Back to login</Text>
+          </Pressable>
+          {!isEmailValid && email.length > 0 && (
+            <Text style={styles.errorText}>
+              Please enter a valid email address
+            </Text>
+          )}
+        </View>
+      </ScrollView>
+
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 20,
+    backgroundColor: "#F9FAFB",
+  },
+  card: {
+    padding: 20,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    gap: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#1F2937",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  label: {
+    color: "#4B5563",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  input: {
+    height: 46,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    backgroundColor: "#F3F4F6",
+    color: "#111827",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  button: {
+    height: 46,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F2C94C",
+    marginTop: 6,
+  },
+  buttonText: {
+    fontWeight: "700",
+    fontSize: 16,
+    color: "#111827",
+  },
+  linkText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#F2C94C",
+    textAlign: "center",
+    marginTop: 10,
+  },
+  errorText: {
+    fontSize: 12,
+    color: "#EF4444",
+    marginTop: -6,
+    textAlign: "center",
+  },
+  logo: {
+    width: 140,
+    height: 60,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingVertical: 20,
+  },
+
+
+});
+
