@@ -25,6 +25,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { CarCard, CarColor, CarSearchFilters, FuelType } from "../../lib/models";
 import { dislikeCar, getSearchLookups, likeCar, searchCars } from "../../lib/carlyApi";
 import { addDislikedCarId, addLikedCar, getDislikedCarIds, getLikedCarIds } from "../../lib/storage";
+import CarCardView from "../components/CarCardView";
+
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -284,7 +286,8 @@ function Chip({ label }: { label: string }) {
 
 function CarCardContent({ car }: { car: CarCard }) {
   const images = useMemo(() => {
-    const base = car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id)}/900/600`;
+    const base =
+      car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id)}/900/600`;
     return [
       base,
       `https://picsum.photos/seed/${encodeURIComponent(car.id + "_2")}/900/600`,
@@ -292,53 +295,19 @@ function CarCardContent({ car }: { car: CarCard }) {
     ];
   }, [car.id, car.imageUrl]);
 
-  const [imgIndex, setImgIndex] = useState(0);
-
   return (
-    <View style={styles.cardInner}>
-      <View style={styles.carouselWrap}>
-        <ScrollView
-          horizontal
-          pagingEnabled
-          directionalLockEnabled
-          showsHorizontalScrollIndicator={false}
-          onScroll={(e) => {
-            const x = e.nativeEvent.contentOffset.x;
-            const w = e.nativeEvent.layoutMeasurement.width || 1;
-            setImgIndex(Math.round(x / w));
-          }}
-          scrollEventThrottle={16}
-        >
-          {images.map((uri) => (
-            <Image key={uri} source={{ uri }} style={styles.cardImage} />
-          ))}
-        </ScrollView>
-
-        <View style={styles.dotsRow}>
-          {images.map((_, i) => (
-            <View key={i} style={[styles.dot, i === imgIndex && styles.dotActive]} />
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.cardBody}>
-        <Text style={styles.cardTitle}>{car.title}</Text>
-        {car.subtitle ? <Text style={styles.cardSubtitle}>{car.subtitle}</Text> : null}
-
-        <View style={styles.metaRow}>
-          <Text style={styles.metaText}>🎨 {car.color}</Text>
-          <Text style={styles.metaText}>⭐ {car.rating?.toFixed(1) ?? "—"}</Text>
-        </View>
-
-        <View style={styles.priceRow}>
-          <Text style={styles.priceText}>
-            {car.pricePerDay} {car.currency} / day
-          </Text>
-        </View>
-      </View>
-    </View>
+    <CarCardView
+      title={car.title}
+      subtitle={car.subtitle}
+      images={images}
+      metaLeft={`🎨 ${car.color}`}
+      metaRight={`⭐ ${car.rating?.toFixed(1) ?? "—"}`}
+      footerLeft={`${car.pricePerDay} ${car.currency} / day`}
+      imageHeight={200}
+    />
   );
 }
+
 
 function ActionButton({
   variant,
@@ -613,51 +582,12 @@ const styles = StyleSheet.create({
 
   deck: { flex: 1, justifyContent: "center", alignItems: "center" },
 
+  // Outer wrapper for the deck cards (CarCardView handles inner visuals)
   card: {
     width: "100%",
-    borderRadius: 18,
-    overflow: "hidden",
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 18,
-    elevation: 3,
   },
   cardBehind: { position: "absolute", top: 12, transform: [{ scale: 0.98 }], opacity: 0.9 },
   cardFront: { position: "absolute", top: 0 },
-
-  cardInner: { backgroundColor: "#fff" },
-  cardImage: { width: SCREEN_WIDTH - 32, height: 220, backgroundColor: "#E5E7EB" },
-
-  carouselWrap: { position: "relative" },
-  dotsRow: {
-    position: "absolute",
-    bottom: 10,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 6,
-  },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.55)",
-  },
-  dotActive: {
-    backgroundColor: "rgba(255,255,255,0.95)",
-  },
-
-  cardBody: { padding: 14 },
-  cardTitle: { fontSize: 20, fontWeight: "800", color: "#111827" },
-  cardSubtitle: { marginTop: 4, color: "#6B7280", fontWeight: "600" },
-
-  metaRow: { marginTop: 10, flexDirection: "row", justifyContent: "space-between" },
-  metaText: { color: "#111827", fontWeight: "700" },
-
-  priceRow: { marginTop: 12 },
-  priceText: { fontSize: 18, fontWeight: "900", color: "#111827" },
 
   toast: {
     position: "absolute",
@@ -741,3 +671,4 @@ const styles = StyleSheet.create({
   modalBtnText: { fontWeight: "900", color: "#fff" },
   modalBtnTextGhost: { color: "#111827" },
 });
+

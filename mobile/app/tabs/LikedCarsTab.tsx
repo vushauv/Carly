@@ -15,7 +15,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { Calendar } from "react-native-calendars";
 
@@ -23,6 +23,7 @@ import type { FlatCard } from "../../lib/models";
 import type { LikedCar } from "../../lib/storage";
 import { clearLikedCars, getLikedCars, removeLikedCar } from "../../lib/storage";
 import { bookFlat, getPartnerFlatsForPeriod } from "../../lib/carlyApi";
+import CarCardView from "../components/CarCardView";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -46,6 +47,8 @@ export default function LikedCarsTab() {
   const [flatIndex, setFlatIndex] = useState(0);
   const [flatImgIndex, setFlatImgIndex] = useState<Record<string, number>>({}); // per flat id
 
+  const insets = useSafeAreaInsets();
+
   const load = useCallback(async () => {
     const items = await getLikedCars();
     setLiked(items);
@@ -58,7 +61,7 @@ export default function LikedCarsTab() {
   useFocusEffect(
     useCallback(() => {
       void load();
-      return () => {};
+      return () => { };
     }, [load])
   );
 
@@ -201,38 +204,28 @@ export default function LikedCarsTab() {
             </Pressable>
 
             {liked.map((c) => (
-              <View key={c.id} style={styles.card}>
-                <Image
-                  source={{ uri: c.imageUrl || "https://picsum.photos/900/600" }}
-                  style={styles.image}
-                />
+              <CarCardView
+                key={c.id}
+                title={c.title}
+                subtitle={c.subtitle}
+                images={[c.imageUrl || "https://picsum.photos/900/600"]}
+                metaLeft={`⛽ ${c.fuelType}`}
+                metaRight={`🎨 ${c.color}`}
+                footerLeft={`${c.pricePerDay} ${c.currency} / day`}
+                footerRight={
+                  <View style={styles.actionsInline}>
+                    <Pressable style={styles.bookBtn} onPress={() => openCarBooking(c)}>
+                      <Text style={styles.bookBtnText}>Book</Text>
+                    </Pressable>
 
-                <View style={styles.body}>
-                  <Text style={styles.carTitle}>{c.title}</Text>
-                  {c.subtitle ? <Text style={styles.subtitle}>{c.subtitle}</Text> : null}
-
-                  <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>⛽ {c.fuelType}</Text>
-                    <Text style={styles.metaText}>🎨 {c.color}</Text>
+                    <Pressable style={styles.removeBtn} onPress={() => onRemove(c.id)}>
+                      <Text style={styles.removeBtnText}>Remove</Text>
+                    </Pressable>
                   </View>
+                }
+                imageHeight={200}
+              />
 
-                  <View style={styles.bottomRow}>
-                    <Text style={styles.price}>
-                      {c.pricePerDay} {c.currency} / day
-                    </Text>
-
-                    <View style={styles.actionsInline}>
-                      <Pressable style={styles.bookBtn} onPress={() => openCarBooking(c)}>
-                        <Text style={styles.bookBtnText}>Book</Text>
-                      </Pressable>
-
-                      <Pressable style={styles.removeBtn} onPress={() => onRemove(c.id)}>
-                        <Text style={styles.removeBtnText}>Remove</Text>
-                      </Pressable>
-                    </View>
-                  </View>
-                </View>
-              </View>
             ))}
           </>
         )}
@@ -240,10 +233,11 @@ export default function LikedCarsTab() {
 
       {/* Full-screen flow modal */}
       <Modal visible={modalOpen} transparent={false} animationType="slide" onRequestClose={closeFlow}>
-        <SafeAreaView style={styles.flowSafe} edges={["top", "bottom"]}>
+        <SafeAreaView style={[styles.flowSafe, { paddingTop: insets.top, paddingBottom: insets.bottom }]} edges={[]}>
+
           <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
             {/* Header */}
-            <View style={styles.flowHeader}>
+            <View style={[styles.flowHeader, { paddingTop: 6 }]}>
               <Text style={styles.flowTitle}>
                 {step === "bookCar" && "Book car"}
                 {step === "carSuccess" && "Promo a partner"}
@@ -273,8 +267,8 @@ export default function LikedCarsTab() {
                     markedDates={
                       dateFrom
                         ? {
-                            [dateFrom]: { selected: true, selectedColor: "#111827" },
-                          }
+                          [dateFrom]: { selected: true, selectedColor: "#111827" },
+                        }
                         : {}
                     }
                   />
@@ -292,8 +286,8 @@ export default function LikedCarsTab() {
                     markedDates={
                       dateTo
                         ? {
-                            [dateTo]: { selected: true, selectedColor: "#111827" },
-                          }
+                          [dateTo]: { selected: true, selectedColor: "#111827" },
+                        }
                         : {}
                     }
                   />
@@ -314,29 +308,31 @@ export default function LikedCarsTab() {
             ) : null}
 
             {step === "carSuccess" ? (
-              <ScrollView contentContainerStyle={styles.flowContent} showsVerticalScrollIndicator={false}>
-                <Text style={styles.successText}>
-                  You have made a successful booking of {car?.title ?? "car"} from {dateFrom} to {dateTo}
-                </Text>
-
-                <Pressable
-                  style={[styles.actionBtn, styles.actionPrimary]}
-                  onPress={() => Alert.alert("Not implemented", "See my bookings")}
-                >
-                  <Text style={styles.actionText}>See my bookings</Text>
-                </Pressable>
-
-                <View style={styles.partnerBox}>
-                  <Text style={styles.partnerTitle}>
-                    Would you like to rent a flat in these days from our partners? 🥳🙏
+              <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+                <ScrollView contentContainerStyle={styles.flowContent} showsVerticalScrollIndicator={false}>
+                  <Text style={styles.successText}>
+                    You have made a successful booking of {car?.title ?? "car"} from {dateFrom} to {dateTo}
                   </Text>
-                  <Pressable style={[styles.actionBtn, styles.actionPrimary]} onPress={openBrowseFlats}>
-                    <Text style={styles.actionText}>Browse flats</Text>
-                  </Pressable>
-                </View>
 
-                <View style={{ height: 20 }} />
-              </ScrollView>
+                  <Pressable
+                    style={[styles.actionBtn, styles.actionPrimary]}
+                    onPress={() => Alert.alert("Not implemented", "See my bookings")}
+                  >
+                    <Text style={styles.actionText}>See my bookings</Text>
+                  </Pressable>
+
+                  <View style={styles.partnerBox}>
+                    <Text style={styles.partnerTitle}>
+                      Would you like to rent a flat in these days from our partners? 🥳🙏
+                    </Text>
+                    <Pressable style={[styles.actionBtn, styles.actionPrimary]} onPress={openBrowseFlats}>
+                      <Text style={styles.actionText}>Browse flats</Text>
+                    </Pressable>
+                  </View>
+
+                  <View style={{ height: 20 }} />
+                </ScrollView>
+              </SafeAreaView>
             ) : null}
 
             {step === "browseFlats" ? (
@@ -498,28 +494,8 @@ const styles = StyleSheet.create({
   },
   clearBtnText: { fontWeight: "900", color: "#111827" },
 
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 18,
-    elevation: 3,
-  },
-  image: { width: "100%", height: 180, backgroundColor: "#E5E7EB" },
-  body: { padding: 14 },
-
-  carTitle: { fontSize: 18, fontWeight: "900", color: "#111827" },
-  subtitle: { marginTop: 4, color: "#6B7280", fontWeight: "600" },
-
-  metaRow: { marginTop: 10, flexDirection: "row", justifyContent: "space-between" },
-  metaText: { color: "#111827", fontWeight: "800" },
-
-  bottomRow: { marginTop: 12 },
-  price: { fontSize: 16, fontWeight: "900", color: "#111827" },
-
-  actionsInline: { marginTop: 10, flexDirection: "row", gap: 10 },
+  // Footer actions that you pass into CarCardView
+  actionsInline: { flexDirection: "row", gap: 10 },
 
   bookBtn: {
     backgroundColor: "#FEF9C3",
@@ -631,3 +607,4 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 });
+

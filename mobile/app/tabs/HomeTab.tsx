@@ -1,15 +1,9 @@
 // app/tabs/HomeTab.tsx
 import React, { useMemo, useState } from "react";
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {useRouter} from "expo-router";
+import { useRouter } from "expo-router";
+import CarCardView from "../components/CarCardView";
 
 type BookingStatus = "current" | "history";
 
@@ -104,16 +98,14 @@ export default function HomeTab() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-      {/* Header (same style vibe as SearchTab) */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Home</Text>
 
-        <Pressable style={styles.profileButton} onPress={() => { }}>
+        <Pressable style={styles.profileButton} onPress={() => {}}>
           <Text style={styles.profileButtonText}>Profile settings</Text>
         </Pressable>
       </View>
 
-      {/* Segmented (Current / History) */}
       <View style={styles.segmentWrap}>
         <Text style={styles.sectionLabel}>View bookings:</Text>
 
@@ -138,15 +130,17 @@ export default function HomeTab() {
         </View>
       </View>
 
-      {/* List */}
       <ScrollView
         style={styles.body}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       >
         {bookings.map((b) => (
-          <BookingCard key={b.id} booking={b}
-          onSeeMore={() => router.push(`../booking/${b.id}`)}/>
+          <BookingCard
+            key={b.id}
+            booking={b}
+            onSeeMore={() => router.push(`../booking/${b.id}`)}
+          />
         ))}
 
         {bookings.length === 0 ? (
@@ -159,45 +153,55 @@ export default function HomeTab() {
   );
 }
 
-function BookingCard({ booking, onSeeMore }: { booking: Booking, onSeeMore: () => void }) {
+function BookingCard({ booking, onSeeMore }: { booking: Booking; onSeeMore: () => void }) {
   return (
     <View style={styles.card}>
-      {/* If BOTH exist: Car section + divider + Flat section */}
       {booking.car && booking.flat ? (
         <>
-          <BookingSection
-            title="Car"
+          <CarCardView
+            title={`${booking.car.brand} ${booking.car.model}`}
+            subtitle={`Plate: ${booking.car.plate}`}
             images={booking.car.images}
-            metaLines={[
-              `brand: ${booking.car.brand} • ${booking.car.model} • ${booking.car.plate}`,
-            ]}
+            fallbackSource={require("../../assets/images/no-images.png")}
+            metaLeft={"🚗 Car"}
+            metaRight={""}
+            imageHeight={200}
           />
 
           <View style={styles.sectionDivider} />
 
-          <BookingSection
-            title="Flat"
+          <CarCardView
+            title={booking.flat.address}
+            subtitle={"Flat"}
             images={booking.flat.images}
-            metaLines={[`address: ${booking.flat.address}`]}
+            fallbackSource={require("../../assets/images/no-images.png")}
+            metaLeft={"🏠 Flat"}
+            metaRight={""}
+            imageHeight={200}
           />
         </>
       ) : booking.car ? (
-        <BookingSection
-          title="Car"
+        <CarCardView
+          title={`${booking.car.brand} ${booking.car.model}`}
+          subtitle={`Plate: ${booking.car.plate}`}
           images={booking.car.images}
-          metaLines={[
-            `brand: ${booking.car.brand} • ${booking.car.model} • ${booking.car.plate}`,
-          ]}
+          fallbackSource={require("../../assets/images/no-images.png")}
+          metaLeft={"🚗 Car"}
+          metaRight={""}
+          imageHeight={200}
         />
       ) : booking.flat ? (
-        <BookingSection
-          title="Flat"
+        <CarCardView
+          title={booking.flat.address}
+          subtitle={"Flat"}
           images={booking.flat.images}
-          metaLines={[`address: ${booking.flat.address}`]}
+          fallbackSource={require("../../assets/images/no-images.png")}
+          metaLeft={"🏠 Flat"}
+          metaRight={""}
+          imageHeight={200}
         />
       ) : null}
 
-      {/* Booking-level info (dates + rating + actions) */}
       <View style={styles.bottomInfo}>
         <View style={styles.bottomRow}>
           <Text style={styles.metaText}>
@@ -225,83 +229,6 @@ function BookingCard({ booking, onSeeMore }: { booking: Booking, onSeeMore: () =
   );
 }
 
-function BookingSection({
-  title,
-  images,
-  metaLines,
-}: {
-  title: "Car" | "Flat";
-  images: string[]; // 0..2
-  metaLines: string[];
-}) {
-  const [previewWidth, setPreviewWidth] = useState(0);
-  const [imgIndex, setImgIndex] = useState(0);
-
-  const hasRemoteImages = images.length > 0;
-  const slidesCount = hasRemoteImages ? images.length : 1;
-
-  return (
-    <View style={styles.sectionWrap}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-
-      <View
-        style={styles.previewWrap}
-        onLayout={(e) => setPreviewWidth(e.nativeEvent.layout.width)}
-      >
-        {hasRemoteImages ? (
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={(e) => {
-              const x = e.nativeEvent.contentOffset.x;
-              const w = e.nativeEvent.layoutMeasurement.width || 1;
-              const next = Math.round(x / w);
-              if (next !== imgIndex) setImgIndex(next);
-            }}
-            scrollEventThrottle={16}
-          >
-            {images.map((uri) => (
-              <Image
-                key={uri}
-                source={{ uri }}
-                style={[styles.previewImage, { width: previewWidth || 1 }]}
-                resizeMode="cover"
-              />
-            ))}
-          </ScrollView>
-        ) : (
-          <Image
-            source={require("../../assets/images/no-images.png")}
-            style={[styles.previewImage, { width: previewWidth || 1 }]}
-            resizeMode="contain"
-          />
-        )}
-
-        {slidesCount > 1 ? (
-          <View style={styles.dotsRow}>
-            {Array.from({ length: slidesCount }).map((_, i) => (
-              <View key={i} style={[styles.dot, i === imgIndex && styles.dotActive]} />
-            ))}
-          </View>
-        ) : null}
-      </View>
-
-      <Text style={styles.pageIndicator}>
-        {imgIndex + 1}/{slidesCount}
-      </Text>
-
-      {metaLines.map((line) => (
-        <Text key={line} style={styles.metaText}>
-          {line}
-        </Text>
-      ))}
-    </View>
-  );
-}
-
-
-
 function Stars({ value }: { value: number }) {
   const n = Math.max(0, Math.min(5, Math.floor(value)));
   const out = "★★★★★☆☆☆☆☆".slice(5 - n, 10 - n);
@@ -309,36 +236,17 @@ function Stars({ value }: { value: number }) {
 }
 
 const styles = StyleSheet.create({
-  /* ---------- Screen ---------- */
-  safe: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
+  safe: { flex: 1, backgroundColor: "#F9FAFB" },
 
-  body: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-
-  list: {
-    paddingBottom: 20,
-    gap: 14,
-  },
-
-  /* ---------- Header ---------- */
   header: {
     paddingHorizontal: 16,
-    paddingTop: 6,
-    paddingBottom: 10,
+    paddingTop: 10,
+    paddingBottom: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#111827",
-  },
+  headerTitle: { fontSize: 22, fontWeight: "900", color: "#111827" },
 
   profileButton: {
     backgroundColor: "#111827",
@@ -346,49 +254,26 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
   },
-  profileButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-  },
+  profileButtonText: { color: "#fff", fontWeight: "800" },
 
-  /* ---------- Segmented control ---------- */
-  segmentWrap: {
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-    gap: 8,
-  },
-  sectionLabel: {
-    color: "#6B7280",
-    fontWeight: "600",
-    textAlign: "center",
-  },
+  segmentWrap: { paddingHorizontal: 16, paddingBottom: 10, gap: 8 },
+  sectionLabel: { color: "#6B7280", fontWeight: "700" },
   segment: {
     flexDirection: "row",
-    alignSelf: "center",
-    backgroundColor: "#FFFFFF",
     borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
     overflow: "hidden",
+    backgroundColor: "#E5E7EB",
   },
-  segmentBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  segmentBtnActive: {
-    backgroundColor: "#FEF9C3",
-  },
-  segmentText: {
-    fontWeight: "700",
-    color: "#111827",
-  },
-  segmentTextActive: {
-    color: "#111827",
-  },
+  segmentBtn: { flex: 1, paddingVertical: 10, alignItems: "center" },
+  segmentBtnActive: { backgroundColor: "#111827" },
+  segmentText: { fontWeight: "800", color: "#111827" },
+  segmentTextActive: { color: "#fff" },
 
-  /* ---------- Booking card ---------- */
+  body: { flex: 1, paddingHorizontal: 16 },
+  list: { paddingBottom: 16, gap: 12 },
+
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#fff",
     borderRadius: 18,
     padding: 14,
     gap: 12,
@@ -400,83 +285,19 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  /* ---------- Sections (Car / Flat) ---------- */
-  sectionWrap: {
-    gap: 10,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: "#111827",
-  },
   sectionDivider: {
     height: 1,
     backgroundColor: "#E5E7EB",
+    marginVertical: 2,
   },
 
-  /* ---------- Image preview ---------- */
-  previewWrap: {
-    borderRadius: 14,
-    overflow: "hidden",
-    backgroundColor: "#ffffff",
-  },
-  previewImage: {
-    height: 210,
-    backgroundColor: "#ffffff",
-  },
+  bottomInfo: { gap: 10 },
+  bottomRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  metaText: { color: "#6B7280", fontWeight: "700" },
+  stars: { fontWeight: "900", color: "#111827" },
 
-  dotsRow: {
-    position: "absolute",
-    bottom: 10,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 6,
-  },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.6)",
-  },
-  dotActive: {
-    backgroundColor: "#FFFFFF",
-  },
-
-  pageIndicator: {
-    textAlign: "center",
-    color: "#F2C94C",
-    fontWeight: "800",
-  },
-
-  /* ---------- Meta ---------- */
-  metaText: {
-    color: "#111827",
-    fontWeight: "600",
-  },
-
-  /* ---------- Bottom area ---------- */
-  bottomInfo: {
-    gap: 10,
-    marginTop: 2,
-  },
-  bottomRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  cardActions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  linkText: {
-    color: "#6B7280",
-    fontWeight: "600",
-    textDecorationLine: "underline",
-  },
+  cardActions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  linkText: { fontWeight: "900", color: "#111827" },
 
   cancelBtn: {
     backgroundColor: "#FEE2E2",
@@ -484,28 +305,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 14,
   },
-  cancelBtnText: {
-    fontWeight: "800",
-    color: "#111827",
-  },
+  cancelBtnText: { fontWeight: "900", color: "#991B1B" },
 
-  /* ---------- Rating ---------- */
-  stars: {
-    color: "#F2C94C",
-    fontWeight: "900",
-    letterSpacing: 1,
-  },
-
-  /* ---------- Empty state ---------- */
-  emptyWrap: {
-    paddingTop: 40,
-    alignItems: "center",
-  },
-  mutedText: {
-    color: "#6B7280",
-    fontWeight: "600",
-  },
+  emptyWrap: { paddingVertical: 24, alignItems: "center" },
+  mutedText: { color: "#6B7280", fontWeight: "700" },
 });
-
-
-
