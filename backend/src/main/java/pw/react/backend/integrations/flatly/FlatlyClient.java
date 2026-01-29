@@ -131,9 +131,6 @@ public class FlatlyClient {
             FlatlyBookingDto b = new FlatlyBookingDto();
             b.setId(flatBookingId);
             b.setStatus("CONFIRMED");
-            b.setCreatedVia("PARTNER_API");
-            b.setCreatedBySystem("CARLY");
-            b.setPartnerBookingRef("mock-partner-ref");
             return ResponseEntity.ok(b);
         }
 

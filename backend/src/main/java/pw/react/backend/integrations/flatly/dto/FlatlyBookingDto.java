@@ -1,9 +1,11 @@
 package pw.react.backend.integrations.flatly.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -11,24 +13,42 @@ import java.time.LocalDateTime;
 public class FlatlyBookingDto {
 
     private Integer id;
+
+    @JsonProperty("flat_id")
     private Integer flatId;
+
+    @JsonProperty("user_id")
     private Integer userId;
 
-    //TODO: make Flatly store the period as 2 seperate columns...
-    private LocalDateTime periodStart;
-    private LocalDateTime periodEnd;
+    @JsonProperty("source_ref")
+    private Integer sourceRef;
 
-    private String status; // PENDING|CONFIRMED|CANCELLED|REJECTED
-    private String createdVia; // OWN_MOBILE|OWN_ADMIN|PARTNER_API
-    private String createdBySystem;
-    private String partnerBookingRef;
+    @JsonProperty("check_in_date")
+    private LocalDate checkInDate;
 
-    private BigDecimal priceTotal;
+    @JsonProperty("check_out_date")
+    private LocalDate checkOutDate;
+
+    @JsonProperty("guests_count")
+    private Integer guestsCount;
+
+    @JsonProperty("price_per_night")
+    private BigDecimal pricePerNight;
+
+    @JsonProperty("total_price")
+    private BigDecimal totalPrice;
+
     private String currency;
+    private String status;
 
-    private LocalDateTime cancelledAt;
-    private String cancelReason;
+    private String comment;
 
+    @JsonProperty("created_at")
     private LocalDateTime createdAt;
+
+    @JsonProperty("updated_at")
     private LocalDateTime updatedAt;
+
+    @JsonProperty("cancelled_at")
+    private LocalDateTime cancelledAt;
 }

@@ -1,6 +1,5 @@
 package pw.react.backend.controller;
 
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,8 +12,6 @@ import pw.react.backend.services.flatly.FlatlyService;
 import pw.react.backend.integrations.flatly.dto.FlatlyFlatDto;
 import java.util.List;
 import java.time.LocalDateTime;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import pw.react.backend.integrations.flatly.dto.FlatlyFlatDto;
 import pw.react.backend.integrations.flatly.dto.FlatlyBookingDto;
 
 
@@ -30,7 +27,7 @@ public class FlatlyController {
     public ResponseEntity<BookingResponse> createFlatlyBooking(@Valid @RequestBody CreateFlatlyBookingRequest request) {
         Booking booking = flatlyService.createFlatBookingInFlatly(request);
         BookingResponse response = new BookingResponse();
-        response.setId(booking.getProviderExternalBookingId());
+        response.setId(booking.getProviderExternalBookingId()); //TODO: return our or Flatly's bookingId
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -42,8 +39,8 @@ public class FlatlyController {
         return ResponseEntity.ok("Flatly booking is already cancelled for bookingId=" + bookingId);
     }
 
-    @GetMapping("/bookings/available")
-    public ResponseEntity<List<FlatlyFlatDto>> getAvailableBookings(
+    @GetMapping("/flats/available")
+    public ResponseEntity<List<FlatlyFlatDto>> getAvailableFlats(
             @RequestParam(name = "dateFrom") LocalDateTime dateFrom,
             @RequestParam(name = "dateTo") LocalDateTime dateTo
     ) {
@@ -61,6 +58,5 @@ public class FlatlyController {
     public ResponseEntity<FlatlyBookingDto> getFlatBookingDetails(@PathVariable Integer flatBookingId) {
         return ResponseEntity.ok(flatlyService.getFlatBookingDetails(flatBookingId));
     }
-
 }
 
