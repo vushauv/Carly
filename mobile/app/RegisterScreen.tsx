@@ -8,7 +8,8 @@ import {
   Platform,
   StyleSheet,
   Image,
-  useWindowDimensions
+  useWindowDimensions,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -20,9 +21,12 @@ const isValidEmail = (value: string) =>
 export default function RegisterScreen() {
   const router = useRouter();
 
+  const [firstName, setFirstName] = useState("");
+  const [secondName, setSecondName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
   const [isEmailValid, setIsEmailValid] = useState(true);
 
   const { width } = useWindowDimensions();
@@ -30,6 +34,14 @@ export default function RegisterScreen() {
 
 
   const onRegisterPress = () => {
+    const payload = {
+      firstName,
+      secondName: secondName || null,
+      lastName,
+      email,
+      password,
+      contactNumber,
+    };
     setIsEmailValid(isValidEmail(email));
     //doesn't do anything yet
   };
@@ -39,46 +51,87 @@ export default function RegisterScreen() {
       style={styles.page}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Image
-        source={require("../assets/images/carly-logo.png")}
-        style={[styles.logo, { width: logoWidth, height: logoWidth * 0.4 }]}
-        resizeMode="contain"
-      />
-      <View style={styles.card}>
-        <Text style={styles.title}>Create account</Text>
-
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Enter email"
-          autoCapitalize="none"
-          style={styles.input}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        <Image
+          source={require("../assets/images/carly-logo.png")}
+          style={[styles.logo, { width: logoWidth, height: logoWidth * 0.4 }]}
+          resizeMode="contain"
         />
 
-        <Text style={styles.label}>Password</Text>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Enter password"
-          autoCapitalize="none"
-          secureTextEntry
-          style={styles.input}
-        />
+        <View style={styles.card}>
+          <Text style={styles.title}>Create account</Text>
 
-        <Pressable style={styles.button} onPress={onRegisterPress}>
-          <Text style={styles.buttonText}>Register</Text>
-        </Pressable>
+          <Text style={styles.label}>First Name</Text>
+          <TextInput
+            value={firstName}
+            onChangeText={setFirstName}
+            placeholder="First Name*"
+            autoCapitalize="words"
+            style={styles.input}
+          />
+          <Text style={styles.label}>Second Name</Text>
+          <TextInput
+            value={secondName}
+            onChangeText={setSecondName}
+            placeholder="Second Name"
+            autoCapitalize="words"
+            style={styles.input}
+          />
+          <Text style={styles.label}>Last Name</Text>
+          <TextInput
+            value={lastName}
+            onChangeText={setLastName}
+            placeholder="Last Name*"
+            autoCapitalize="words"
+            style={styles.input}
+          />
 
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.linkText}>Back to login</Text>
-        </Pressable>
-        {!isEmailValid && email.length > 0 && (
-          <Text style={styles.errorText}>
-            Please enter a valid email address
-          </Text>
-        )}
-      </View>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email*"
+            autoCapitalize="none"
+            style={styles.input}
+          />
+
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password*"
+            autoCapitalize="none"
+            secureTextEntry
+            style={styles.input}
+          />
+
+          <Text style={styles.label}>Contact Number</Text>
+          <TextInput
+            value={contactNumber}
+            onChangeText={setContactNumber}
+            placeholder="Contact Number*"
+            keyboardType="phone-pad"
+            style={styles.input}
+          />
+
+          <Pressable style={styles.button} onPress={onRegisterPress}>
+            <Text style={styles.buttonText}>Register</Text>
+          </Pressable>
+
+          <Pressable onPress={() => router.back()}>
+            <Text style={styles.linkText}>Back to login</Text>
+          </Pressable>
+          {!isEmailValid && email.length > 0 && (
+            <Text style={styles.errorText}>
+              Please enter a valid email address
+            </Text>
+          )}
+        </View>
+      </ScrollView>
+
     </KeyboardAvoidingView>
   );
 }
@@ -153,6 +206,11 @@ const styles = StyleSheet.create({
     height: 60,
     alignSelf: "center",
     marginBottom: 16,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingVertical: 20,
   },
 
 
