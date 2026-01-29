@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {useRouter} from "expo-router";
 
 type BookingStatus = "current" | "history";
 
@@ -93,6 +94,7 @@ const MOCK_BOOKINGS: Booking[] = [
 ];
 
 export default function HomeTab() {
+  const router = useRouter();
   const [selected, setSelected] = useState<BookingStatus>("current");
 
   const bookings = useMemo(
@@ -143,7 +145,8 @@ export default function HomeTab() {
         showsVerticalScrollIndicator={false}
       >
         {bookings.map((b) => (
-          <BookingCard key={b.id} booking={b} />
+          <BookingCard key={b.id} booking={b}
+          onSeeMore={() => router.push(`../booking/${b.id}`)}/>
         ))}
 
         {bookings.length === 0 ? (
@@ -156,7 +159,7 @@ export default function HomeTab() {
   );
 }
 
-function BookingCard({ booking }: { booking: Booking }) {
+function BookingCard({ booking, onSeeMore }: { booking: Booking, onSeeMore: () => void }) {
   return (
     <View style={styles.card}>
       {/* If BOTH exist: Car section + divider + Flat section */}
@@ -207,7 +210,7 @@ function BookingCard({ booking }: { booking: Booking }) {
         </View>
 
         <View style={styles.cardActions}>
-          <Pressable onPress={() => {}}>
+          <Pressable onPress={onSeeMore}>
             <Text style={styles.linkText}>see more</Text>
           </Pressable>
 
