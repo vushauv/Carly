@@ -1,7 +1,7 @@
 import { Text } from "react-native";
 
 
-export default function GalleryView() {
+export default function LikedCarsTab() {
 
   return (
     <Text>

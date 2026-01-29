@@ -1,10 +1,11 @@
-import { Text } from "react-native";
+import { Pressable, Text } from "react-native";
 
-export default function PhotoView() {
+export default function SearchTab() {
 
   return (
     <Text>
       this is SearchTab
     </Text>
+    
   );
 }

@@ -4,41 +4,35 @@ import {
   Text,
   TextInput,
   Pressable,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
   Image,
   useWindowDimensions
 } from "react-native";
 import { useRouter } from "expo-router";
-
 
 const isValidEmail = (value: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 
 
-
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isEmailValid, setIsEmailValid] = useState(true);
 
-  const {width} = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const logoWidth = width * 0.5;
 
 
-
-  const onLoginPress = () => {
+  const onRegisterPress = () => {
     setIsEmailValid(isValidEmail(email));
-    // no logic yet, we need to validate that in the future
-    if (isValidEmail(email))
-      router.replace("/tabs/SearchTab");
+    //doesn't do anything yet
   };
-
-
 
   return (
     <KeyboardAvoidingView
@@ -47,11 +41,11 @@ export default function LoginScreen() {
     >
       <Image
         source={require("../assets/images/carly-logo.png")}
-        style={[styles.logo, {width: logoWidth, height: logoWidth * 0.4}]}
+        style={[styles.logo, { width: logoWidth, height: logoWidth * 0.4 }]}
         resizeMode="contain"
       />
       <View style={styles.card}>
-        
+        <Text style={styles.title}>Create account</Text>
 
         <Text style={styles.label}>Email</Text>
         <TextInput
@@ -71,24 +65,19 @@ export default function LoginScreen() {
           secureTextEntry
           style={styles.input}
         />
-        <Pressable style={styles.button} onPress={onLoginPress}>
-          <Text style={styles.buttonText}>Log in</Text>
-        </Pressable>
-        <Text style={styles.hintText}>
-          Not registered yet?
-        </Text>
-        <Pressable onPress={() => router.push("/RegisterScreen")}>
-          <Text style={styles.linkText}>
-            Sign Up
-          </Text>
+
+        <Pressable style={styles.button} onPress={onRegisterPress}>
+          <Text style={styles.buttonText}>Register</Text>
         </Pressable>
 
+        <Pressable onPress={() => router.back()}>
+          <Text style={styles.linkText}>Back to login</Text>
+        </Pressable>
         {!isEmailValid && email.length > 0 && (
           <Text style={styles.errorText}>
             Please enter a valid email address
           </Text>
         )}
-
       </View>
     </KeyboardAvoidingView>
   );
@@ -112,6 +101,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
+  title: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#1F2937",
+    textAlign: "center",
+    marginBottom: 8,
+  },
   label: {
     color: "#4B5563",
     fontSize: 14,
@@ -132,39 +128,33 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#F2C94C",
-    marginTop: 4,
+    marginTop: 6,
   },
   buttonText: {
     fontWeight: "700",
     fontSize: 16,
     color: "#111827",
   },
-  hintText: {
-    fontSize: 13,
-    color: "#6B7280",
-    textAlign: "center",
-    marginTop: 6,
-  },
   linkText: {
     fontSize: 14,
     fontWeight: "600",
     color: "#F2C94C",
     textAlign: "center",
-    marginTop: 2,
+    marginTop: 10,
   },
   errorText: {
     fontSize: 12,
     color: "#EF4444",
     marginTop: -6,
     textAlign: "center",
-
   },
   logo: {
-  width: 140,
-  height: 60,
-  alignSelf: "center",
-  marginBottom: 16,
-},
+    width: 140,
+    height: 60,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
 
 
 });
+
