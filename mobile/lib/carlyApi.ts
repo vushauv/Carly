@@ -108,7 +108,7 @@ export async function searchCars(filters: CarSearchFilters & { __page?: number }
   const page = filters.__page ?? 0;
   const seed = JSON.stringify({ ...filters, __page: page });
 
-  const base = makeMockCars(seed, 30);
+  const base = makeMockCars(seed, 150);
   const filtered = applyFilters(base, filters);
 
   await sleep(220);
