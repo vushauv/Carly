@@ -10,14 +10,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.car.CarFeature;
+import pw.react.backend.domain.car.CarFeatureDictionary;
 import pw.react.backend.domain.car.CarToFeatureLink;
+import pw.react.backend.dto.request.car.CarSearchParams;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.car.CarFeatureDictionaryRepository;
 import pw.react.backend.repositories.car.CarFeatureRepository;
 import pw.react.backend.repositories.car.CarRepository;
+import pw.react.backend.services.car.model.CarSearchCriteria;
 
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -62,10 +65,32 @@ public class CarService implements ICarService {
         return carRepository.save(car);
     }
 
-    // TODO: Add filtering here
+    // TODO: Add filtering by availability based on dates
     @Override
-    public List<Car> getAll() {
-        return carRepository.findAll();
+    public List<Car> getAll(CarSearchCriteria searchCriteria) throws BadRequestException
+    {
+        if(searchCriteria == null
+                || searchCriteria.getCarFeatures() == null
+                || searchCriteria.getCarFeatures().isEmpty())
+            return carRepository.findAll();
+        var requestedCarFeatures = searchCriteria.getCarFeatures();
+
+        // Resolves dictionary Types
+        var typedFeatures = resolveFeatureTypesByName(requestedCarFeatures);
+        // Checks for duplicates in query params
+        checkDuplicateFeatureTypes(typedFeatures);
+
+        int initialCount = requestedCarFeatures.size();
+        var resolved = resolveFeature(typedFeatures);
+        int resolvedCount = resolved.size();
+
+        // if some features were not found - then no such car exists
+        if(resolvedCount != initialCount) return List.of();
+
+        var carIds = carRepository.findCarIdsMatchingAllFeatures(resolved, resolvedCount);
+        if(carIds.isEmpty()) return List.of();
+
+        return carRepository.findByCarIdIn(carIds);
     }
 
     @Override
@@ -76,7 +101,7 @@ public class CarService implements ICarService {
     }
 
     @Override
-    public List<Car> getPage(int page, int size)
+    public List<Car> getPage(int page, int size, CarSearchCriteria searchCriteria)
     {
         int defaultPageSize = 10;
         return carRepository.findAll(PageRequest.of(page, size == 0  ? defaultPageSize : size)).getContent();
@@ -136,9 +161,48 @@ public class CarService implements ICarService {
         var seen = new HashSet<Short>();
 
         for(var reqFeature : requestedCarFeatures) {
-            Short dictId = reqFeature.getDictionary().getCarFeatureDictionaryId();
-            if(!seen.add(dictId)) throw new BadRequestException("Duplicate dictionary type with id " +dictId + " found.");
+            var dictId = reqFeature.getDictionary().getCarFeatureDictionaryId();
+            var name = reqFeature.getDictionary().getName();
+            if(!seen.add(dictId)) throw new BadRequestException("Duplicate feature type with id " +dictId + " and name " + name + " found.");
         }
+    }
+
+    private List<CarFeature> resolveFeatureTypesByName(List<CarFeature> requestedCarFeatures) throws IllegalArgumentException
+    {
+        // The filtering is client-side because the number of distinct feature types is small
+        Set<String> names = requestedCarFeatures
+                .stream()
+                .map(f -> f.getDictionary().getName())
+                .collect(Collectors.toSet());
+
+        Map<String, CarFeatureDictionary> dictionaryMap =
+                carFeatureDictionaryRepository.findByNameIn(names)
+                .stream()
+                .collect(Collectors.toMap(CarFeatureDictionary::getName, dictionary -> dictionary));
+
+        for (var feature : requestedCarFeatures) {
+            var dictId = feature.getDictionary().getCarFeatureDictionaryId();
+            var name = feature.getDictionary().getName();
+            var resolved = dictionaryMap.get(name);
+            if (resolved == null) {
+                throw new IllegalArgumentException("Unknown feature type with name " + name);
+            }
+            feature.setDictionary(resolved);
+        }
+        return requestedCarFeatures;
+    }
+
+    private List<CarFeature> resolveFeature(List<CarFeature> requestedCarFeatures)
+    {
+        // has M+1 query problem: likely inefficient.
+        // TODO: refactor
+        var resolvedList = new ArrayList<CarFeature>();
+        for(var feature: requestedCarFeatures) {
+            var dictId = feature.getDictionary().getCarFeatureDictionaryId();
+            var resolved = carFeatureRepository.findFeatureBy(dictId, feature.getValue());
+            resolved.ifPresent(resolvedList::add);
+        }
+        return resolvedList;
     }
 }
 

@@ -53,6 +53,7 @@ public class ControllerExceptionHandler {
                 );
     }
 
+
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ExceptionDetails> noHandlerFoundException(Exception ex, ServletWebRequest request) {
         log.error("NoHandlerFoundException: {}", ex.getMessage());
@@ -92,4 +93,5 @@ public class ControllerExceptionHandler {
                         request.getRequest().getServletPath()
                 ));
     }
+//exception handlers to be added here!!!!!!!!!!
 }

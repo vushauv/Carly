@@ -4,13 +4,19 @@ package pw.react.backend.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import pw.react.backend.dto.mapper.car.CarMapper;
+import pw.react.backend.dto.mapper.car.CarSearchCriteriaMapper;
 import pw.react.backend.dto.parkly.*;
 import pw.react.backend.dto.mapper.ParklyCarMapper;
+import pw.react.backend.dto.request.car.CarSearchParams;
+import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.services.car.CarService;
 import pw.react.backend.services.parkly.ParklyService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.stream.Collectors.joining;
@@ -21,34 +27,24 @@ import static java.util.stream.Collectors.joining;
 @RequiredArgsConstructor
 public class ParklyController {
     //TODO: Implement searchCars so that it accepts certain parameters (optional?)
+    //TODO (TBD): Decide whether Parkly has to provide our BookingId, or their BookingId!
     //return car details (images!) instead of only the CarId
     public static final String PARKLY_PATH = "/parkly";
 
     private final ParklyService parklyService;
     private final CarService carService;
     private final ParklyCarMapper parklyCarMapper;
+    private final CarSearchCriteriaMapper carSearchCriteriaMapper;
+    private final CarMapper carMapper;
 
-    private void logHeaders(HttpHeaders headers) {
-        log.info("Partner request headers {}",
-                headers.entrySet().stream()
-                        .map(e -> e.getKey() + "->[" + String.join(",", e.getValue()) + "]")
-                        .collect(joining(","))
-        );
-    }
-
-    @GetMapping("/cars")
-    public ResponseEntity<List<ParklyCarResponse>> searchCars(
+    // Parkly integration for interacting with bookings
+    @GetMapping("/car-bookings/{externalBookingId}")
+    public ResponseEntity<ParklyBookingDetailsResponse> getCarBooking(
             @RequestHeader HttpHeaders headers,
-            @Valid ParklySearchCarsRequest request
+            @PathVariable Long externalBookingId
     ) {
         logHeaders(headers);
-        // Reuse CarService to fetch cars (filtering by availability can be added later)
-        var cars = carService.getAll();
-        var responses = cars.stream()
-                .map(parklyCarMapper::toParklyCarResponse)
-                .toList();
-
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(parklyService.getCarBookingByExternalBookingId(externalBookingId));
     }
 
     @PostMapping("/car-bookings")
@@ -60,7 +56,7 @@ public class ParklyController {
         ParklyBookingResponse response = parklyService.createCarBooking(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-    //TODO (TBD): Decide whether Parkly has to provide our BookingId, or their BookingId!
+
     @DeleteMapping("/car-bookings/{externalBookingId}")
     public ResponseEntity<String> cancelCarBooking(
             @RequestHeader HttpHeaders headers,
@@ -77,27 +73,44 @@ public class ParklyController {
         return ResponseEntity.ok(String.format("Booking with externalBookingId=%d cancelled.", externalBookingId));
     }
 
+    // Parkly integration for retrieving cars
     @GetMapping("/cars/{carId}")
-    public ResponseEntity<ParklyCarResponse> getCar(
-            @RequestHeader HttpHeaders headers,
-            @PathVariable Integer carId
-    ) {
+    public ResponseEntity<ParklyGetCarResponseDto> getCar(@RequestHeader HttpHeaders headers,
+                                                          @PathVariable Integer carId)
+            throws ResourceNotFoundException
+    {
         logHeaders(headers);
 
         var car = carService.getById(carId);
-        var response = parklyCarMapper.toParklyCarResponse(car);
-
+        var response = parklyCarMapper.toParklyGetResponseDto(car);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/car-bookings/{externalBookingId}")
-    public ResponseEntity<ParklyBookingDetailsResponse> getCarBooking(
-            @RequestHeader HttpHeaders headers,
-            @PathVariable Integer externalBookingId
-    ) {
+    // SearchParams are the same
+    @GetMapping("/cars")
+    public ResponseEntity<List<ParklyGetCarResponseDto>> searchCars(@RequestHeader HttpHeaders headers,
+                                                                    @ModelAttribute CarSearchParams searchParams,
+                                                                    @RequestParam(required = false) Integer page,
+                                                                    @RequestParam(required = false) Integer size)
+            throws BadRequestException
+    {
         logHeaders(headers);
-        return ResponseEntity.ok(parklyService.getCarBookingByExternalBookingId(externalBookingId));
+
+        var carSearchCriteria = carSearchCriteriaMapper.toCarSearchCriteria(searchParams);
+        if (page == null) {
+            return ResponseEntity.ok(parklyCarMapper.toParklyGetResponseDtoList(carService.getAll(carSearchCriteria)));
+        }
+        return ResponseEntity.ok(parklyCarMapper.toParklyGetResponseDtoList(carService.getPage(page,
+                size == null ? 0 : size,
+                carSearchCriteria)));
     }
 
+    private void logHeaders(HttpHeaders headers) {
+        log.info("Partner request headers {}",
+                headers.entrySet().stream()
+                        .map(e -> e.getKey() + "->[" + String.join(",", e.getValue()) + "]")
+                        .collect(joining(","))
+        );
+    }
 }
 

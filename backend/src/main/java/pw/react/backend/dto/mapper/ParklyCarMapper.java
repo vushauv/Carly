@@ -1,31 +1,23 @@
 package pw.react.backend.dto.mapper;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 import pw.react.backend.domain.car.Car;
-import pw.react.backend.dto.mapper.car.CarMapper;
-import pw.react.backend.dto.parkly.ParklyCarResponse;
-import pw.react.backend.repositories.car.CarImageRepository;
+import pw.react.backend.dto.mapper.car.CarFeatureMapper;
+import pw.react.backend.dto.parkly.ParklyGetCarResponseDto;
 
-import java.util.stream.Collectors;
+import java.util.List;
 
-@Component
-@RequiredArgsConstructor
-public class ParklyCarMapper {
-    private final CarImageRepository carImageRepository;
-    private final CarMapper carMapper;
+@Mapper(
+        componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        uses = CarFeatureMapper.class
+)
+public interface ParklyCarMapper {
+    // OUT mappings:
+    List<ParklyGetCarResponseDto> toParklyGetResponseDtoList(List<Car> cars);
 
-    public ParklyCarResponse toParklyCarResponse(Car car) {
-        var response = new ParklyCarResponse();
-        response.setCarId(car.getCarId());
-
-        // Map features using existing CarMapper logic
-        var getCarDto = carMapper.toGetResponseDto(car);
-        response.setCarFeatures(getCarDto.getCarFeatures());
-
-        // Load image urls
-        var images = carImageRepository.findByCar_CarId(car.getCarId());
-        response.setImageUrls(images.stream().map(img -> img.getUrl()).collect(Collectors.toList()));
-        return response;
-    }
+    @Mapping(target = "carFeatures", source = "featureLinks", qualifiedByName = "mapFeatureLinks")
+    ParklyGetCarResponseDto toParklyGetResponseDto(Car car);
 }

@@ -2,7 +2,6 @@ package pw.react.backend.services.parkly;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pw.react.backend.domain.Location;
@@ -20,6 +19,7 @@ import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
 import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.services.car.CarService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -44,19 +44,6 @@ public class ParklyMainService implements ParklyService {
     private final ParklyBookingMapper parklyBookingMapper;
 
     private final CarService carService;
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ParklyCarResponse> searchAvailableCars(ParklySearchCarsRequest request) {
-
-         var page = request.getPage() == null ? 0 : request.getPage();
-         var size = request.getSize() == null ? 10 : request.getSize();
-
-        return carService.getPage(page, size).stream()
-                .filter(Car::isEnabled)
-                .map(parklyCarMapper::toParklyCarResponse)
-                .toList();
-    }
 
     @Override
     @Transactional
