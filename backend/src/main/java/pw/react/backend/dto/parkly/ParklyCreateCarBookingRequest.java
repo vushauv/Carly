@@ -16,7 +16,7 @@ public class ParklyCreateCarBookingRequest {
 
     // Parkly booking reference (for idempotency)
     @NotNull(message = "External booking id is mandatory")
-    private Long externalBookingId;
+    private Integer externalBookingId;
 
     @NotNull(message = "Car id is mandatory")
     private Integer carId;

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class ParklyBookingDetailsResponse {
 
     private Integer bookingId;
-    private Long externalBookingId;
+    private Integer externalBookingId;
     private String status;
 
     private LocalDateTime dateFrom;

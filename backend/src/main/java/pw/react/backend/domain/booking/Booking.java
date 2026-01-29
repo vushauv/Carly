@@ -48,7 +48,7 @@ public class Booking extends Auditable {
     private BookingStatusDictionary carBookingStatus;
 
     @Column(name = "ProviderExternalBookingId")
-    private Long providerExternalBookingId;
+    private Integer providerExternalBookingId;
 
     @Column(name = "CarBookingDateFrom")
     private LocalDateTime carBookingDateFrom;
