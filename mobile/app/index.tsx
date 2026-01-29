@@ -1,170 +1,129 @@
-import { useState } from "react";
 import {
   View,
   Text,
   TextInput,
-  Pressable,
-  StyleSheet,
+  TouchableOpacity,
+  Image,
   KeyboardAvoidingView,
   Platform,
-  Image,
-  useWindowDimensions
+  StyleSheet,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-
-
-const isValidEmail = (value: string) =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-
-
-
+import { useState } from "react";
 
 export default function LoginScreen() {
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isEmailValid, setIsEmailValid] = useState(true);
-
-  const {width} = useWindowDimensions();
-  const logoWidth = width * 0.5;
-
-
-
-  const onLoginPress = () => {
-    setIsEmailValid(isValidEmail(email));
-    // no logic yet, we need to validate that in the future
-    if (isValidEmail(email))
-      router.replace("/tabs/SearchTab");
-  };
-
-
 
   return (
-    <KeyboardAvoidingView
-      style={styles.page}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <Image
-        source={require("../assets/images/carly-logo.png")}
-        style={[styles.logo, {width: logoWidth, height: logoWidth * 0.4}]}
-        resizeMode="contain"
-      />
-      <View style={styles.card}>
-        
+    <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <View style={styles.page}>
+          <Image
+            source={require("../assets/images/carly-logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
 
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Enter email"
-          autoCapitalize="none"
-          style={styles.input}
-        />
+          <View style={styles.card}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter email"
+              value={email}
+              onChangeText={setEmail}
+            />
 
-        <Text style={styles.label}>Password</Text>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Enter password"
-          autoCapitalize="none"
-          secureTextEntry
-          style={styles.input}
-        />
-        <Pressable style={styles.button} onPress={onLoginPress}>
-          <Text style={styles.buttonText}>Log in</Text>
-        </Pressable>
-        <Text style={styles.hintText}>
-          Not registered yet?
-        </Text>
-        <Pressable onPress={() => router.push("/RegisterScreen")}>
-          <Text style={styles.linkText}>
-            Sign Up
-          </Text>
-        </Pressable>
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter password"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
 
-        {!isEmailValid && email.length > 0 && (
-          <Text style={styles.errorText}>
-            Please enter a valid email address
-          </Text>
-        )}
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => {
+                router.replace("/tabs/SearchTab");
+              }}
+            >
+              <Text style={styles.buttonText}>Log in</Text>
+            </TouchableOpacity>
 
-      </View>
-    </KeyboardAvoidingView>
+            <Text style={styles.footerText}>Not registered yet?</Text>
+            <TouchableOpacity onPress={() => router.push("/RegisterScreen")}>
+              <Text style={styles.signUp}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
+  },
   page: {
     flex: 1,
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "#F9FAFB",
-  },
-  card: {
-    padding: 20,
-    borderRadius: 16,
-    backgroundColor: "#FFFFFF",
-    gap: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
-  },
-  label: {
-    color: "#4B5563",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  input: {
-    height: 46,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    backgroundColor: "#F3F4F6",
-    color: "#111827",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  button: {
-    height: 46,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F2C94C",
-    marginTop: 4,
-  },
-  buttonText: {
-    fontWeight: "700",
-    fontSize: 16,
-    color: "#111827",
-  },
-  hintText: {
-    fontSize: 13,
-    color: "#6B7280",
-    textAlign: "center",
-    marginTop: 6,
-  },
-  linkText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#F2C94C",
-    textAlign: "center",
-    marginTop: 2,
-  },
-  errorText: {
-    fontSize: 12,
-    color: "#EF4444",
-    marginTop: -6,
-    textAlign: "center",
-
   },
   logo: {
-  width: 140,
-  height: 60,
-  alignSelf: "center",
-  marginBottom: 16,
-},
-
-
+    width: 220,
+    height: 90,
+    alignSelf: "center",
+    marginBottom: 24,
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 6,
+    color: "#374151",
+  },
+  input: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 16,
+  },
+  button: {
+    backgroundColor: "#FACC15",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  buttonText: {
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  footerText: {
+    marginTop: 16,
+    textAlign: "center",
+    color: "#6B7280",
+  },
+  signUp: {
+    textAlign: "center",
+    color: "#FACC15",
+    fontWeight: "600",
+    marginTop: 4,
+  },
 });

@@ -1,22 +1,10 @@
-import { View, Text, Pressable } from "react-native";
-import { useRouter } from "expo-router";
-
+import { Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeTab() {
-  const router = useRouter();
-
-  const onLogoutPress = () => {
-    // later: clear auth state / token here
-    router.replace("/");
-  };
-
   return (
-    <View>
-      <Text>This is HomeTab</Text>
-
-      <Pressable onPress={onLogoutPress}>
-        <Text>Log out</Text>
-      </Pressable>
-    </View>
+    <SafeAreaView style={{ flex: 1, padding: 16 }}>
+      <Text>this is HomeTab</Text>
+    </SafeAreaView>
   );
 }
