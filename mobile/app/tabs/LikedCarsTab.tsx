@@ -2,6 +2,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  ActivityIndicator,
+  Dimensions,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -11,46 +13,38 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { Calendar } from "react-native-calendars";
+
+import type { FlatCard } from "../../lib/models";
 import type { LikedCar } from "../../lib/storage";
 import { clearLikedCars, getLikedCars, removeLikedCar } from "../../lib/storage";
+import { bookFlat, getPartnerFlatsForPeriod } from "../../lib/carlyApi";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+type FlowStep = "none" | "bookCar" | "carSuccess" | "browseFlats" | "flatSuccess";
 
 export default function LikedCarsTab() {
   const [liked, setLiked] = useState<LikedCar[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Booking modal state
-  const [bookingOpen, setBookingOpen] = useState(false);
-  const [bookingCar, setBookingCar] = useState<LikedCar | null>(null);
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  // Flow state
+  const [step, setStep] = useState<FlowStep>("none");
+  const [car, setCar] = useState<LikedCar | null>(null);
 
-    function todayISO(): string {
-    // local date, YYYY-MM-DD
-    const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-    }
+  // car booking dates
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
 
-    function addDaysISO(iso: string, days: number): string {
-    const [y, m, d] = iso.split("-").map(Number);
-    const dt = new Date(y, (m ?? 1) - 1, d ?? 1);
-    dt.setDate(dt.getDate() + days);
-    const yyyy = dt.getFullYear();
-    const mm = String(dt.getMonth() + 1).padStart(2, "0");
-    const dd = String(dt.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-    }
-
-    const minFrom = useMemo(() => todayISO(), []);
-    const minTo = useMemo(() => (dateFrom ? addDaysISO(dateFrom, 1) : addDaysISO(minFrom, 1)), [dateFrom, minFrom]);
+  // partner flats
+  const [flatsLoading, setFlatsLoading] = useState(false);
+  const [flats, setFlats] = useState<FlatCard[]>([]);
+  const [flatIndex, setFlatIndex] = useState(0);
+  const [flatImgIndex, setFlatImgIndex] = useState<Record<string, number>>({}); // per flat id
 
   const load = useCallback(async () => {
     const items = await getLikedCars();
@@ -61,7 +55,6 @@ export default function LikedCarsTab() {
     void load();
   }, [load]);
 
-  // ✅ This is the important fix: refresh when tab becomes active
   useFocusEffect(
     useCallback(() => {
       void load();
@@ -88,20 +81,52 @@ export default function LikedCarsTab() {
     await load();
   }
 
-  function openBooking(car: LikedCar) {
-    setBookingCar(car);
+  // -----------------------
+  // Date validation helpers
+  // -----------------------
+  function todayISO(): string {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function addDaysISO(iso: string, days: number): string {
+    const [y, m, d] = iso.split("-").map(Number);
+    const dt = new Date(y, (m ?? 1) - 1, d ?? 1);
+    dt.setDate(dt.getDate() + days);
+    const yyyy = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, "0");
+    const dd = String(dt.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  const minFrom = useMemo(() => todayISO(), []);
+  const minTo = useMemo(
+    () => (dateFrom ? addDaysISO(dateFrom, 1) : addDaysISO(minFrom, 1)),
+    [dateFrom, minFrom]
+  );
+
+  function openCarBooking(c: LikedCar) {
+    setCar(c);
     setDateFrom("");
     setDateTo("");
-    setBookingOpen(true);
+    setStep("bookCar");
   }
 
-  function closeBooking() {
-    setBookingOpen(false);
-    setBookingCar(null);
+  function closeFlow() {
+    setStep("none");
+    setCar(null);
+    setDateFrom("");
+    setDateTo("");
+    setFlats([]);
+    setFlatIndex(0);
+    setFlatImgIndex({});
   }
 
-  function confirmBooking() {
-    if (!bookingCar) return;
+  function confirmCarBooking() {
+    if (!car) return;
 
     if (!dateFrom || dateFrom < minFrom) {
       Alert.alert("Invalid Date From", "Date From must be today or later.");
@@ -112,14 +137,43 @@ export default function LikedCarsTab() {
       return;
     }
 
-
-    // For now: no backend call. Just show the payload so we can wire it later.
-    Alert.alert(
-      "Booking (not implemented)",
-      `Car: ${bookingCar.title}\nFrom: ${dateFrom}\nTo: ${dateTo}`
-    );
-    closeBooking();
+    // "Car booked" – success step
+    setStep("carSuccess");
   }
+
+  async function openBrowseFlats() {
+    if (!dateFrom || !dateTo) {
+      Alert.alert("Missing dates", "Book a car first (dates are required).");
+      return;
+    }
+    setStep("browseFlats");
+    setFlatsLoading(true);
+    try {
+      const res = await getPartnerFlatsForPeriod(dateFrom, dateTo);
+      setFlats(res);
+      setFlatIndex(0);
+      setFlatImgIndex({});
+    } catch (e: any) {
+      Alert.alert("Failed to load flats", e?.message ?? "Unknown error");
+      setFlats([]);
+    } finally {
+      setFlatsLoading(false);
+    }
+  }
+
+  async function onBookFlat() {
+    const f = flats[flatIndex];
+    if (!f) return;
+
+    try {
+      await bookFlat(f.id, dateFrom, dateTo);
+      setStep("flatSuccess");
+    } catch (e: any) {
+      Alert.alert("Booking failed", e?.message ?? "Unknown error");
+    }
+  }
+
+  const modalOpen = step !== "none";
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -146,33 +200,33 @@ export default function LikedCarsTab() {
               <Text style={styles.clearBtnText}>Clear all</Text>
             </Pressable>
 
-            {liked.map((car) => (
-              <View key={car.id} style={styles.card}>
+            {liked.map((c) => (
+              <View key={c.id} style={styles.card}>
                 <Image
-                  source={{ uri: car.imageUrl || "https://picsum.photos/900/600" }}
+                  source={{ uri: c.imageUrl || "https://picsum.photos/900/600" }}
                   style={styles.image}
                 />
 
                 <View style={styles.body}>
-                  <Text style={styles.carTitle}>{car.title}</Text>
-                  {car.subtitle ? <Text style={styles.subtitle}>{car.subtitle}</Text> : null}
+                  <Text style={styles.carTitle}>{c.title}</Text>
+                  {c.subtitle ? <Text style={styles.subtitle}>{c.subtitle}</Text> : null}
 
                   <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>⛽ {car.fuelType}</Text>
-                    <Text style={styles.metaText}>🎨 {car.color}</Text>
+                    <Text style={styles.metaText}>⛽ {c.fuelType}</Text>
+                    <Text style={styles.metaText}>🎨 {c.color}</Text>
                   </View>
 
                   <View style={styles.bottomRow}>
                     <Text style={styles.price}>
-                      {car.pricePerDay} {car.currency} / day
+                      {c.pricePerDay} {c.currency} / day
                     </Text>
 
                     <View style={styles.actionsInline}>
-                      <Pressable style={styles.bookBtn} onPress={() => openBooking(car)}>
+                      <Pressable style={styles.bookBtn} onPress={() => openCarBooking(c)}>
                         <Text style={styles.bookBtnText}>Book</Text>
                       </Pressable>
 
-                      <Pressable style={styles.removeBtn} onPress={() => onRemove(car.id)}>
+                      <Pressable style={styles.removeBtn} onPress={() => onRemove(c.id)}>
                         <Text style={styles.removeBtnText}>Remove</Text>
                       </Pressable>
                     </View>
@@ -184,81 +238,223 @@ export default function LikedCarsTab() {
         )}
       </ScrollView>
 
-      {/* Booking modal */}
-      <Modal visible={bookingOpen} transparent={false} animationType="slide" onRequestClose={closeBooking}>
-        <SafeAreaView style={styles.bookSafe} edges={["top", "bottom"]}>
+      {/* Full-screen flow modal */}
+      <Modal visible={modalOpen} transparent={false} animationType="slide" onRequestClose={closeFlow}>
+        <SafeAreaView style={styles.flowSafe} edges={["top", "bottom"]}>
           <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-            <View style={styles.bookHeader}>
-              <Text style={styles.bookTitle}>Book car</Text>
-              <Pressable onPress={closeBooking}>
-                <Text style={styles.bookClose}>Close</Text>
+            {/* Header */}
+            <View style={styles.flowHeader}>
+              <Text style={styles.flowTitle}>
+                {step === "bookCar" && "Book car"}
+                {step === "carSuccess" && "Promo a partner"}
+                {step === "browseFlats" && "Booking a flat"}
+                {step === "flatSuccess" && "Promo a partner"}
+              </Text>
+
+              <Pressable onPress={closeFlow}>
+                <Text style={styles.flowClose}>Close</Text>
               </Pressable>
             </View>
 
-            <ScrollView
-              contentContainerStyle={styles.bookContent}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-            >
-              <Text style={styles.bookCarTitle}>{bookingCar?.title ?? ""}</Text>
+            {/* Content */}
+            {step === "bookCar" ? (
+              <ScrollView contentContainerStyle={styles.flowContent} showsVerticalScrollIndicator={false}>
+                <Text style={styles.flowCarTitle}>{car?.title ?? ""}</Text>
 
-              <Text style={styles.fieldLabel}>Date From</Text>
-              <View style={styles.calendarWrap}>
-              <Calendar
-                minDate={minFrom}
-                onDayPress={(day) => {
-                  const picked = day.dateString; // YYYY-MM-DD
-                  setDateFrom(picked);
-
-                  // enforce dateTo > dateFrom (if existing dateTo is invalid, clear it)
-                  if (dateTo && dateTo <= addDaysISO(picked, 0)) {
-                    setDateTo("");
-                  }
-                }}
-                markedDates={{
-                  ...(dateFrom
-                    ? {
-                        [dateFrom]: { selected: true, selectedColor: "#111827" },
-                      }
-                    : {}),
-                }}
-              />
-            </View>
-
-              <Text style={styles.fieldLabel}>Date To</Text>
-              <View style={styles.calendarWrap}>
-              <Calendar
-                minDate={minTo}
-                onDayPress={(day) => {
-                  const picked = day.dateString; // YYYY-MM-DD
-
-                  // guard: must be strictly greater than dateFrom and future
-                  if (dateFrom && picked <= dateFrom) return;
-
-                  setDateTo(picked);
-                }}
-                markedDates={{
-                  ...(dateTo
-                    ? {
-                        [dateTo]: { selected: true, selectedColor: "#111827" },
-                      }
-                    : {}),
-                }}
-              />
+                <Text style={styles.fieldLabel}>From</Text>
+                <View style={styles.calendarWrap}>
+                  <Calendar
+                    minDate={minFrom}
+                    onDayPress={(day) => {
+                      const picked = day.dateString;
+                      setDateFrom(picked);
+                      if (dateTo && dateTo <= picked) setDateTo("");
+                    }}
+                    markedDates={
+                      dateFrom
+                        ? {
+                            [dateFrom]: { selected: true, selectedColor: "#111827" },
+                          }
+                        : {}
+                    }
+                  />
                 </View>
 
-              <View style={styles.bookActions}>
-                <Pressable style={[styles.modalBtn, styles.modalBtnGhost]} onPress={closeBooking}>
-                  <Text style={[styles.modalBtnText, styles.modalBtnTextGhost]}>Cancel</Text>
+                <Text style={styles.fieldLabel}>To</Text>
+                <View style={styles.calendarWrap}>
+                  <Calendar
+                    minDate={minTo}
+                    onDayPress={(day) => {
+                      const picked = day.dateString;
+                      if (dateFrom && picked <= dateFrom) return;
+                      setDateTo(picked);
+                    }}
+                    markedDates={
+                      dateTo
+                        ? {
+                            [dateTo]: { selected: true, selectedColor: "#111827" },
+                          }
+                        : {}
+                    }
+                  />
+                </View>
+
+                <View style={styles.flowActions}>
+                  <Pressable style={[styles.actionBtn, styles.actionGhost]} onPress={closeFlow}>
+                    <Text style={[styles.actionText, styles.actionGhostText]}>Cancel</Text>
+                  </Pressable>
+
+                  <Pressable style={[styles.actionBtn, styles.actionPrimary]} onPress={confirmCarBooking}>
+                    <Text style={styles.actionText}>Book</Text>
+                  </Pressable>
+                </View>
+
+                <View style={{ height: 20 }} />
+              </ScrollView>
+            ) : null}
+
+            {step === "carSuccess" ? (
+              <ScrollView contentContainerStyle={styles.flowContent} showsVerticalScrollIndicator={false}>
+                <Text style={styles.successText}>
+                  You have made a successful booking of {car?.title ?? "car"} from {dateFrom} to {dateTo}
+                </Text>
+
+                <Pressable
+                  style={[styles.actionBtn, styles.actionPrimary]}
+                  onPress={() => Alert.alert("Not implemented", "See my bookings")}
+                >
+                  <Text style={styles.actionText}>See my bookings</Text>
                 </Pressable>
 
-                <Pressable style={[styles.modalBtn, styles.modalBtnPrimary]} onPress={confirmBooking}>
-                  <Text style={styles.modalBtnText}>Continue</Text>
-                </Pressable>
+                <View style={styles.partnerBox}>
+                  <Text style={styles.partnerTitle}>
+                    Would you like to rent a flat in these days from our partners? 🥳🙏
+                  </Text>
+                  <Pressable style={[styles.actionBtn, styles.actionPrimary]} onPress={openBrowseFlats}>
+                    <Text style={styles.actionText}>Browse flats</Text>
+                  </Pressable>
+                </View>
+
+                <View style={{ height: 20 }} />
+              </ScrollView>
+            ) : null}
+
+            {step === "browseFlats" ? (
+              <View style={{ flex: 1 }}>
+                {flatsLoading ? (
+                  <View style={styles.center}>
+                    <ActivityIndicator />
+                    <Text style={styles.muted}>Loading flats…</Text>
+                  </View>
+                ) : flats.length === 0 ? (
+                  <View style={styles.center}>
+                    <Text style={styles.muted}>No flats returned.</Text>
+                    <Pressable style={[styles.actionBtn, styles.actionPrimary]} onPress={openBrowseFlats}>
+                      <Text style={styles.actionText}>Retry</Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <>
+                    {/* Flats pager */}
+                    <ScrollView
+                      horizontal
+                      pagingEnabled
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ paddingBottom: 90 }}
+                      onScroll={(e) => {
+                        const x = e.nativeEvent.contentOffset.x;
+                        const w = e.nativeEvent.layoutMeasurement.width || 1;
+                        setFlatIndex(Math.round(x / w));
+                      }}
+                      scrollEventThrottle={16}
+                    >
+                      {flats.map((f) => (
+                        <View key={f.id} style={{ width: SCREEN_WIDTH, paddingHorizontal: 16 }}>
+                          <View style={styles.flatCard}>
+                            {/* Flat images carousel */}
+                            <View style={styles.flatCarouselWrap}>
+                              <ScrollView
+                                horizontal
+                                pagingEnabled
+                                directionalLockEnabled
+                                showsHorizontalScrollIndicator={false}
+                                onScroll={(e) => {
+                                  const x = e.nativeEvent.contentOffset.x;
+                                  const w = e.nativeEvent.layoutMeasurement.width || 1;
+                                  const idx = Math.round(x / w);
+                                  setFlatImgIndex((prev) => ({ ...prev, [f.id]: idx }));
+                                }}
+                                scrollEventThrottle={16}
+                              >
+                                {f.imageUrls.map((u) => (
+                                  <Image key={u} source={{ uri: u }} style={styles.flatImage} />
+                                ))}
+                              </ScrollView>
+
+                              <View style={styles.dotsRow}>
+                                {f.imageUrls.map((_, i) => (
+                                  <View
+                                    key={i}
+                                    style={[
+                                      styles.dot,
+                                      (flatImgIndex[f.id] ?? 0) === i && styles.dotActive,
+                                    ]}
+                                  />
+                                ))}
+                              </View>
+                            </View>
+
+                            <View style={styles.flatBody}>
+                              <Text style={styles.flatTitle}>{f.title}</Text>
+                              <Text style={styles.flatSub}>
+                                {f.addressLine}, {f.city}
+                              </Text>
+
+                              <View style={styles.flatMetaRow}>
+                                <Text style={styles.flatMeta}>⭐ {f.rating?.toFixed(1) ?? "—"}</Text>
+                                <Text style={styles.flatMeta}>
+                                  {f.pricePerNight} {f.currency} / night
+                                </Text>
+                              </View>
+
+                              <Text style={styles.flatHint}>
+                                Dates fixed by car booking: {dateFrom} → {dateTo}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      ))}
+                    </ScrollView>
+
+                    <View style={styles.flowActionsFixed}>
+                      <Pressable style={[styles.actionBtn, styles.actionGhost]} onPress={() => setStep("carSuccess")}>
+                        <Text style={[styles.actionText, styles.actionGhostText]}>Back</Text>
+                      </Pressable>
+                      <Pressable style={[styles.actionBtn, styles.actionPrimary]} onPress={onBookFlat}>
+                        <Text style={styles.actionText}>Book</Text>
+                      </Pressable>
+                    </View>
+                  </>
+                )}
               </View>
+            ) : null}
 
-              <View style={{ height: 40 }} />
-            </ScrollView>
+            {step === "flatSuccess" ? (
+              <ScrollView contentContainerStyle={styles.flowContent} showsVerticalScrollIndicator={false}>
+                <Text style={styles.successText}>
+                  You have made a successful booking of flat for {dateFrom} to {dateTo}
+                </Text>
+
+                <Pressable
+                  style={[styles.actionBtn, styles.actionPrimary]}
+                  onPress={() => Alert.alert("Not implemented", "See my bookings")}
+                >
+                  <Text style={styles.actionText}>See my bookings</Text>
+                </Pressable>
+
+                <View style={{ height: 20 }} />
+              </ScrollView>
+            ) : null}
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
@@ -341,56 +537,97 @@ const styles = StyleSheet.create({
   },
   removeBtnText: { fontWeight: "900", color: "#991B1B" },
 
-  // Modal
-  modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)" },
-  modalSheet: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    maxHeight: "82%",
-  },
-  modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  modalTitle: { fontSize: 18, fontWeight: "900", color: "#111827" },
-  modalClose: { fontWeight: "800", color: "#111827" },
-
-  modalCarTitle: { marginTop: 8, fontWeight: "900", color: "#111827", fontSize: 16 },
-
-  fieldLabel: { marginTop: 14, marginBottom: 6, color: "#374151", fontWeight: "800" },
-  input: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
-
-  modalActions: { marginTop: 18, flexDirection: "row", gap: 10 },
-  modalBtn: { flex: 1, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
-  modalBtnPrimary: { backgroundColor: "#111827" },
-  modalBtnGhost: { backgroundColor: "#F3F4F6" },
-  modalBtnText: { fontWeight: "900", color: "#fff" },
-  modalBtnTextGhost: { color: "#111827" },
-
-  bookSafe: { flex: 1, backgroundColor: "#F9FAFB" },
-
-  bookHeader: {
+  // Flow
+  flowSafe: { flex: 1, backgroundColor: "#F9FAFB" },
+  flowHeader: {
     paddingHorizontal: 16,
     paddingTop: 6,
     paddingBottom: 10,
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "center",
   },
-  bookTitle: { fontSize: 18, fontWeight: "900", color: "#111827" },
-  bookClose: { fontWeight: "900", color: "#111827" },
+  flowTitle: { fontSize: 18, fontWeight: "900", color: "#111827" },
+  flowClose: { fontWeight: "900", color: "#111827" },
 
-  bookContent: { paddingHorizontal: 16, paddingBottom: 16 },
+  flowContent: { paddingHorizontal: 16, paddingBottom: 16 },
 
-  bookCarTitle: { marginTop: 8, fontWeight: "900", color: "#111827", fontSize: 20 },
+  flowCarTitle: { marginTop: 8, fontWeight: "900", color: "#111827", fontSize: 20 },
 
-  bookActions: { marginTop: 18, flexDirection: "row", gap: 10 },
+  fieldLabel: { marginTop: 14, marginBottom: 6, color: "#374151", fontWeight: "800" },
 
-  calendarWrap: { marginTop: 8, borderRadius: 14, overflow: "hidden", backgroundColor: "#fff" },
+  calendarWrap: { borderRadius: 14, overflow: "hidden", backgroundColor: "#fff" },
 
+  flowActions: { marginTop: 18, flexDirection: "row", gap: 10 },
 
+  actionBtn: { flex: 1, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
+  actionPrimary: { backgroundColor: "#111827" },
+  actionGhost: { backgroundColor: "#F3F4F6" },
+  actionText: { fontWeight: "900", color: "#fff" },
+  actionGhostText: { color: "#111827" },
+
+  successText: { marginTop: 12, marginBottom: 16, fontWeight: "900", color: "#065F46" },
+
+  partnerBox: {
+    marginTop: 16,
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+    gap: 10,
+  },
+  partnerTitle: { fontWeight: "900", color: "#111827" },
+
+  center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 10 },
+  muted: { color: "#6B7280", fontWeight: "700" },
+
+  // Flat cards
+  flatCard: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
+    elevation: 3,
+    marginTop: 6,
+  },
+  flatCarouselWrap: { position: "relative" },
+  flatImage: { width: SCREEN_WIDTH - 32, height: 240, backgroundColor: "#E5E7EB" },
+
+  dotsRow: {
+    position: "absolute",
+    bottom: 10,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.55)",
+  },
+  dotActive: { backgroundColor: "rgba(255,255,255,0.95)" },
+
+  flatBody: { padding: 14 },
+  flatTitle: { fontSize: 18, fontWeight: "900", color: "#111827" },
+  flatSub: { marginTop: 4, color: "#6B7280", fontWeight: "700" },
+  flatMetaRow: { marginTop: 10, flexDirection: "row", justifyContent: "space-between" },
+  flatMeta: { fontWeight: "900", color: "#111827" },
+  flatHint: { marginTop: 10, color: "#9CA3AF", fontWeight: "700" },
+
+  flowActionsFixed: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+    flexDirection: "row",
+    gap: 10,
+  },
 });

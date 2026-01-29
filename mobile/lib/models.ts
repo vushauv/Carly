@@ -1,3 +1,5 @@
+// lib/models.ts
+
 export type FuelType = "gas" | "diesel" | "electric" | "hybrid";
 
 export type CarColor =
@@ -13,8 +15,8 @@ export type CarColor =
   | "brown";
 
 export type PriceRange = {
-  min: number; // always present in this app (default 0)
-  max: number; // always present in this app (default 500)
+  min: number;
+  max: number;
 };
 
 export type CarSearchFilters = {
@@ -27,23 +29,36 @@ export type CarSearchFilters = {
 
 export type CarCard = {
   id: string;
+  title: string;
+  subtitle?: string;
 
-  // Display
-  title: string; // e.g. "Volkswagen Passat"
-  subtitle?: string; // e.g. "Diesel • blue"
-
-  // Car attributes (subset for now)
   brand: string;
   model: string;
   fuelType: FuelType;
   color: CarColor;
 
-  // Pricing
   currency: "PLN" | "EUR" | "USD";
   pricePerDay: number;
 
-  // Optional
-  rating?: number; // 0..5
-  imageUrl?: string; // https URL
-  raw?: unknown; // backend DTO later
+  rating?: number;
+  imageUrl?: string;
+  raw?: unknown;
+};
+
+// --------------------
+// Flatly partner models
+// --------------------
+export type FlatCard = {
+  id: string;
+
+  title: string; // e.g. "Cozy Studio"
+  addressLine: string; // e.g. "Sesame Street 123"
+  city: string;
+
+  currency: "PLN" | "EUR" | "USD";
+  pricePerNight: number;
+
+  rating?: number;
+  imageUrls: string[]; // swipable images
+  raw?: unknown;
 };
