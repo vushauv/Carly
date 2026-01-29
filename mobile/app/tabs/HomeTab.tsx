@@ -1,12 +1,14 @@
-import { useMemo, useState } from "react";
+// app/tabs/HomeTab.tsx
+import React, { useMemo, useState } from "react";
 import {
-  View,
-  Text,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
-  Image,
+  Text,
+  View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type BookingStatus = "current" | "history";
 
@@ -22,15 +24,14 @@ type Flat = {
   images: string[];
 };
 
-
 type Booking = {
   id: string;
   status: BookingStatus;
-  startDate: string; // "YYYY-MM-DD"
-  endDate: string;   // "YYYY-MM-DD"
+  startDate: string;
+  endDate: string;
   car?: Car;
   flat?: Flat;
-  rating?: number; // 1..5 (history only)
+  rating?: number;
 };
 
 const MOCK_BOOKINGS: Booking[] = [
@@ -43,11 +44,10 @@ const MOCK_BOOKINGS: Booking[] = [
       brand: "VW",
       model: "Golf",
       plate: "WZ 12345",
-      images: ["https://picsum.photos/400/250", "https://picsum.photos/401/250"],
-    },
-    flat: {
-      address: "Sesame Street 123",
-      images: [],
+      images: [
+        "https://picsum.photos/seed/car_b1_1/900/600",
+        "https://picsum.photos/seed/car_b1_2/900/600",
+      ],
     },
   },
   {
@@ -55,15 +55,28 @@ const MOCK_BOOKINGS: Booking[] = [
     status: "current",
     startDate: "2026-03-03",
     endDate: "2026-03-07",
-    car: { brand: "BMW", model: "X1", plate: "WX 99887", images: [] },
-    flat: { address: "Sesame Street 123", images: ["https://picsum.photos/400/250"] },
+    car: {
+      brand: "BMW",
+      model: "X1",
+      plate: "WX 99887",
+      images: [],
+    },
+    flat: {
+      address: "Sesame Street 123",
+      images: ["https://picsum.photos/seed/flat_b2_1/900/600"],
+    },
   },
   {
     id: "b3",
     status: "history",
     startDate: "2025-12-12",
     endDate: "2025-12-18",
-    car: { brand: "VW", model: "Polo", plate: "WA 55221", images: [] },
+    car: {
+      brand: "VW",
+      model: "Polo",
+      plate: "WA 55221",
+      images: ["https://picsum.photos/seed/car_b3_1/900/600"],
+    },
     rating: 5,
   },
   {
@@ -71,7 +84,10 @@ const MOCK_BOOKINGS: Booking[] = [
     status: "history",
     startDate: "2025-11-01",
     endDate: "2025-11-04",
-    flat: { address: "Baker Street 221B", images: [] },
+    flat: {
+      address: "Baker Street 221B",
+      images: [],
+    },
     rating: 4,
   },
 ];
@@ -85,294 +101,408 @@ export default function HomeTab() {
   );
 
   return (
-    <View style={styles.page}>
+    <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+      {/* Header (same style vibe as SearchTab) */}
       <View style={styles.header}>
-        <Text style={styles.username}>username</Text>
+        <Text style={styles.headerTitle}>Home</Text>
 
         <Pressable style={styles.profileButton} onPress={() => { }}>
           <Text style={styles.profileButtonText}>Profile settings</Text>
         </Pressable>
+      </View>
 
+      {/* Segmented (Current / History) */}
+      <View style={styles.segmentWrap}>
         <Text style={styles.sectionLabel}>View bookings:</Text>
 
         <View style={styles.segment}>
           <Pressable
-            style={[
-              styles.segmentBtn,
-              selected === "current" && styles.segmentBtnActive,
-            ]}
+            style={[styles.segmentBtn, selected === "current" && styles.segmentBtnActive]}
             onPress={() => setSelected("current")}
           >
-            <Text
-              style={[
-                styles.segmentText,
-                selected === "current" && styles.segmentTextActive,
-              ]}
-            >
+            <Text style={[styles.segmentText, selected === "current" && styles.segmentTextActive]}>
               current
             </Text>
           </Pressable>
 
           <Pressable
-            style={[
-              styles.segmentBtn,
-              selected === "history" && styles.segmentBtnActive,
-            ]}
+            style={[styles.segmentBtn, selected === "history" && styles.segmentBtnActive]}
             onPress={() => setSelected("history")}
           >
-            <Text
-              style={[
-                styles.segmentText,
-                selected === "history" && styles.segmentTextActive,
-              ]}
-            >
+            <Text style={[styles.segmentText, selected === "history" && styles.segmentTextActive]}>
               history
             </Text>
           </Pressable>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+      {/* List */}
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+      >
         {bookings.map((b) => (
-          <BookingCard
-            key={b.id}
-            booking={b}
-            onCancel={() => { }}
-            onSeeMore={() => { }}
-          />
+          <BookingCard key={b.id} booking={b} />
         ))}
 
-        {bookings.length === 0 && (
-          <Text style={styles.emptyText}>No bookings to show.</Text>
-        )}
+        {bookings.length === 0 ? (
+          <View style={styles.emptyWrap}>
+            <Text style={styles.mutedText}>No bookings to show.</Text>
+          </View>
+        ) : null}
       </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function BookingCard({ booking }: { booking: Booking }) {
+  return (
+    <View style={styles.card}>
+      {/* If BOTH exist: Car section + divider + Flat section */}
+      {booking.car && booking.flat ? (
+        <>
+          <BookingSection
+            title="Car"
+            images={booking.car.images}
+            metaLines={[
+              `brand: ${booking.car.brand} • ${booking.car.model} • ${booking.car.plate}`,
+            ]}
+          />
+
+          <View style={styles.sectionDivider} />
+
+          <BookingSection
+            title="Flat"
+            images={booking.flat.images}
+            metaLines={[`address: ${booking.flat.address}`]}
+          />
+        </>
+      ) : booking.car ? (
+        <BookingSection
+          title="Car"
+          images={booking.car.images}
+          metaLines={[
+            `brand: ${booking.car.brand} • ${booking.car.model} • ${booking.car.plate}`,
+          ]}
+        />
+      ) : booking.flat ? (
+        <BookingSection
+          title="Flat"
+          images={booking.flat.images}
+          metaLines={[`address: ${booking.flat.address}`]}
+        />
+      ) : null}
+
+      {/* Booking-level info (dates + rating + actions) */}
+      <View style={styles.bottomInfo}>
+        <View style={styles.bottomRow}>
+          <Text style={styles.metaText}>
+            {booking.startDate} - {booking.endDate}
+          </Text>
+
+          {booking.status === "history" && typeof booking.rating === "number" ? (
+            <Stars value={booking.rating} />
+          ) : null}
+        </View>
+
+        <View style={styles.cardActions}>
+          <Pressable onPress={() => {}}>
+            <Text style={styles.linkText}>see more</Text>
+          </Pressable>
+
+          {booking.status === "current" ? (
+            <Pressable style={styles.cancelBtn} onPress={() => {}}>
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
     </View>
   );
 }
 
-function BookingCard({
-  booking,
-  onCancel,
-  onSeeMore,
+function BookingSection({
+  title,
+  images,
+  metaLines,
 }: {
-  booking: Booking;
-  onCancel: () => void;
-  onSeeMore: () => void;
+  title: "Car" | "Flat";
+  images: string[]; // 0..2
+  metaLines: string[];
 }) {
-  const title =
-    booking.car && booking.flat
-      ? "Car + Flat"
-      : booking.car
-        ? "Car"
-        : booking.flat
-          ? "Flat"
-          : "Booking";
+  const [previewWidth, setPreviewWidth] = useState(0);
+  const [imgIndex, setImgIndex] = useState(0);
 
-  const previewImages =
-    booking.car?.images?.length ? booking.car.images :
-      booking.flat?.images?.length ? booking.flat.images :
-        [];
-
+  const hasRemoteImages = images.length > 0;
+  const slidesCount = hasRemoteImages ? images.length : 1;
 
   return (
-    <View style={styles.card}>
-      <View style={styles.cardTopRow}>
-        <Text style={styles.cardTitle}>{title}</Text>
-        {booking.status === "history" && typeof booking.rating === "number" ? (
-          <Stars value={booking.rating} />
-        ) : null}
-      </View>
+    <View style={styles.sectionWrap}>
+      <Text style={styles.sectionTitle}>{title}</Text>
 
-      <View style={styles.previewBox}>
-        {previewImages.length > 0 ? (
-          <Image
-            source={{ uri: previewImages[0] }}
-            style={styles.previewImage}
-            resizeMode="cover"
-          />
+      <View
+        style={styles.previewWrap}
+        onLayout={(e) => setPreviewWidth(e.nativeEvent.layout.width)}
+      >
+        {hasRemoteImages ? (
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={(e) => {
+              const x = e.nativeEvent.contentOffset.x;
+              const w = e.nativeEvent.layoutMeasurement.width || 1;
+              const next = Math.round(x / w);
+              if (next !== imgIndex) setImgIndex(next);
+            }}
+            scrollEventThrottle={16}
+          >
+            {images.map((uri) => (
+              <Image
+                key={uri}
+                source={{ uri }}
+                style={[styles.previewImage, { width: previewWidth || 1 }]}
+                resizeMode="cover"
+              />
+            ))}
+          </ScrollView>
         ) : (
           <Image
             source={require("../../assets/images/no-images.png")}
-            style={styles.previewImage}
+            style={[styles.previewImage, { width: previewWidth || 1 }]}
             resizeMode="contain"
           />
         )}
-      </View>
 
-
-      <Text style={styles.pageIndicator}>1/8</Text>
-
-      {booking.car ? (
-        <Text style={styles.metaText}>
-          brand: {booking.car.brand} • {booking.car.model} • {booking.car.plate}
-        </Text>
-      ) : null}
-
-      {booking.flat ? (
-        <Text style={styles.metaText}>address: {booking.flat.address}</Text>
-      ) : null}
-
-      <Text style={styles.metaText}>
-        {booking.startDate} - {booking.endDate}
-      </Text>
-
-      <View style={styles.cardActions}>
-        <Pressable onPress={onSeeMore}>
-          <Text style={styles.linkText}>see more</Text>
-        </Pressable>
-
-        {booking.status === "current" ? (
-          <Pressable style={styles.cancelBtn} onPress={onCancel}>
-            <Text style={styles.cancelBtnText}>Cancel</Text>
-          </Pressable>
+        {slidesCount > 1 ? (
+          <View style={styles.dotsRow}>
+            {Array.from({ length: slidesCount }).map((_, i) => (
+              <View key={i} style={[styles.dot, i === imgIndex && styles.dotActive]} />
+            ))}
+          </View>
         ) : null}
       </View>
+
+      <Text style={styles.pageIndicator}>
+        {imgIndex + 1}/{slidesCount}
+      </Text>
+
+      {metaLines.map((line) => (
+        <Text key={line} style={styles.metaText}>
+          {line}
+        </Text>
+      ))}
     </View>
   );
 }
 
+
+
 function Stars({ value }: { value: number }) {
-  const full = Math.max(0, Math.min(5, Math.floor(value)));
-  const stars = "★★★★★☆☆☆☆☆".slice(5 - full, 10 - full); // simple 5-star string
-  return <Text style={styles.stars}>{stars}</Text>;
+  const n = Math.max(0, Math.min(5, Math.floor(value)));
+  const out = "★★★★★☆☆☆☆☆".slice(5 - n, 10 - n);
+  return <Text style={styles.stars}>{out}</Text>;
 }
 
 const styles = StyleSheet.create({
-  page: {
+  /* ---------- Screen ---------- */
+  safe: {
     flex: 1,
     backgroundColor: "#F9FAFB",
+  },
+
+  body: {
+    flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 12,
   },
+
+  list: {
+    paddingBottom: 20,
+    gap: 14,
+  },
+
+  /* ---------- Header ---------- */
   header: {
-    gap: 10,
-    paddingBottom: 12,
+    paddingHorizontal: 16,
+    paddingTop: 6,
+    paddingBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  username: {
-    fontSize: 16,
-    fontWeight: "600",
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "700",
     color: "#111827",
-    textAlign: "center",
   },
+
   profileButton: {
-    alignSelf: "center",
+    backgroundColor: "#111827",
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
+    paddingVertical: 8,
+    borderRadius: 999,
   },
   profileButtonText: {
+    color: "#FFFFFF",
     fontWeight: "600",
-    color: "#111827",
+  },
+
+  /* ---------- Segmented control ---------- */
+  segmentWrap: {
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    gap: 8,
   },
   sectionLabel: {
+    color: "#6B7280",
+    fontWeight: "600",
     textAlign: "center",
-    color: "#4B5563",
-    fontWeight: "500",
   },
   segment: {
     flexDirection: "row",
     alignSelf: "center",
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: "#E5E7EB",
     overflow: "hidden",
   },
   segmentBtn: {
-    paddingHorizontal: 18,
+    paddingHorizontal: 20,
     paddingVertical: 10,
   },
   segmentBtnActive: {
-    backgroundColor: "#F2C94C",
+    backgroundColor: "#FEF9C3",
   },
   segmentText: {
+    fontWeight: "700",
     color: "#111827",
-    fontWeight: "600",
   },
   segmentTextActive: {
     color: "#111827",
   },
-  list: {
-    paddingBottom: 18,
-    gap: 12,
-  },
+
+  /* ---------- Booking card ---------- */
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 14,
+    gap: 12,
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    gap: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 14,
+    elevation: 3,
   },
-  cardTopRow: {
+
+  /* ---------- Sections (Car / Flat) ---------- */
+  sectionWrap: {
+    gap: 10,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#111827",
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: "#E5E7EB",
+  },
+
+  /* ---------- Image preview ---------- */
+  previewWrap: {
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "#ffffff",
+  },
+  previewImage: {
+    height: 210,
+    backgroundColor: "#ffffff",
+  },
+
+  dotsRow: {
+    position: "absolute",
+    bottom: 10,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.6)",
+  },
+  dotActive: {
+    backgroundColor: "#FFFFFF",
+  },
+
+  pageIndicator: {
+    textAlign: "center",
+    color: "#F2C94C",
+    fontWeight: "800",
+  },
+
+  /* ---------- Meta ---------- */
+  metaText: {
+    color: "#111827",
+    fontWeight: "600",
+  },
+
+  /* ---------- Bottom area ---------- */
+  bottomInfo: {
+    gap: 10,
+    marginTop: 2,
+  },
+  bottomRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  cardTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  previewBox: {
-    borderWidth: 2,
-    borderColor: "#F2C94C",
-    borderRadius: 16,
-    paddingVertical: 26,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: 10,
-  },
-  previewText: {
-    color: "#6B7280",
-    fontWeight: "600",
-  },
-  pageIndicator: {
-    textAlign: "center",
-    color: "#F2C94C",
-    fontWeight: "700",
-  },
-  metaText: {
-    color: "#374151",
-  },
+
   cardActions: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 4,
   },
   linkText: {
     color: "#6B7280",
+    fontWeight: "600",
     textDecorationLine: "underline",
   },
+
   cancelBtn: {
-    backgroundColor: "#FAD7D7",
+    backgroundColor: "#FEE2E2",
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: 14,
   },
   cancelBtnText: {
-    fontWeight: "700",
+    fontWeight: "800",
     color: "#111827",
   },
+
+  /* ---------- Rating ---------- */
   stars: {
     color: "#F2C94C",
-    fontWeight: "800",
+    fontWeight: "900",
     letterSpacing: 1,
   },
-  emptyText: {
-    textAlign: "center",
-    color: "#6B7280",
-    marginTop: 20,
-  },
-  previewImage: {
-  width: "100%",
-  height: 140,
-  borderRadius: 12,
-},
 
+  /* ---------- Empty state ---------- */
+  emptyWrap: {
+    paddingTop: 40,
+    alignItems: "center",
+  },
+  mutedText: {
+    color: "#6B7280",
+    fontWeight: "600",
+  },
 });
+
+
+
