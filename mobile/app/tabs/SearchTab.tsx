@@ -1,4 +1,8 @@
 // app/tabs/SearchTab.tsx
+//npm i react-native-calendars
+//npx expo install @react-native-async-storage/async-storage
+//npx expo install @react-navigation/native
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -8,7 +12,6 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Modal,
-  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -24,8 +27,6 @@ import { dislikeCar, getSearchLookups, likeCar, searchCars } from "../../lib/car
 import { addDislikedCarId, addLikedCar, getDislikedCarIds, getLikedCarIds } from "../../lib/storage";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
-const SWIPE_OUT_DISTANCE = SCREEN_WIDTH * 1.2;
 
 const DEFAULT_FILTERS: CarSearchFilters = {
   priceRange: { min: 0, max: 500 },
@@ -55,25 +56,8 @@ export default function SearchTab() {
   const toastTextRef = useRef<string>("");
   const toastOpacity = useRef(new Animated.Value(0)).current;
 
-  // Card animation
-  const position = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
-
-  // Prevent card-swipe gesture while user is swiping image carousel
-  const carouselActiveRef = useRef(false);
-
   const currentCar = useMemo(() => cars[index] ?? null, [cars, index]);
   const nextCar = useMemo(() => cars[index + 1] ?? null, [cars, index]);
-
-  const rotate = position.x.interpolate({
-    inputRange: [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
-    outputRange: ["-10deg", "0deg", "10deg"],
-    extrapolate: "clamp",
-  });
-
-
-  const cardStyle = {
-    transform: [{ translateX: position.x }, { translateY: position.y }, { rotate }],
-  };
 
   function showToast(text: string) {
     toastTextRef.current = text;
@@ -153,90 +137,32 @@ export default function SearchTab() {
     await loadCars(filters, nextPage, "append");
   }
 
-  function resetPosition() {
-    position.setValue({ x: 0, y: 0 });
-  }
-
-  function animateSwipeOut(direction: "left" | "right", onDone: () => void) {
-    const toX = direction === "right" ? SWIPE_OUT_DISTANCE : -SWIPE_OUT_DISTANCE;
-
-    Animated.timing(position, {
-      toValue: { x: toX, y: 0 },
-      duration: 220,
-      useNativeDriver: true,
-    }).start(() => {
-      onDone();
-      resetPosition();
-    });
-  }
-
-  async function commitSwipe(direction: "left" | "right") {
+  async function handleAction(action: "dislike" | "like") {
     if (!currentCar || locked) return;
 
     setLocked(true);
     const car = currentCar;
     const carId = car.id;
 
-    // No more toast near image: show near bottom (styles.toast)
-    showToast(direction === "right" ? "Saved to Liked ✅" : "Skipped ❌");
+    showToast(action === "like" ? "Saved to Liked ✅" : "Skipped ❌");
 
-    animateSwipeOut(direction, async () => {
-      try {
-        if (direction === "right") {
-          await addLikedCar(car);
-          setLikedSet((prev) => new Set(prev).add(carId));
-          await likeCar(carId);
-        } else {
-          await addDislikedCarId(carId);
-          setDislikedSet((prev) => new Set(prev).add(carId));
-          await dislikeCar(carId);
-        }
-      } finally {
-        const nextIndex = index + 1;
-        setIndex(nextIndex);
-        setLocked(false);
-        void maybePrefetchMore(nextIndex);
+    try {
+      if (action === "like") {
+        await addLikedCar(car);
+        setLikedSet((prev) => new Set(prev).add(carId));
+        await likeCar(carId);
+      } else {
+        await addDislikedCarId(carId);
+        setDislikedSet((prev) => new Set(prev).add(carId));
+        await dislikeCar(carId);
       }
-    });
+    } finally {
+      const nextIndex = index + 1;
+      setIndex(nextIndex);
+      setLocked(false);
+      void maybePrefetchMore(nextIndex);
+    }
   }
-
-  const panResponder = useMemo(() => {
-    return PanResponder.create({
-     onStartShouldSetPanResponder: () => false, // never grab on touch start
-     onMoveShouldSetPanResponder: (_, g) => {
-       if (locked) return false;
-       if (carouselActiveRef.current) return false;
-
-       // only treat as card swipe if it's a *strong* horizontal intent
-       const dx = Math.abs(g.dx);
-       const dy = Math.abs(g.dy);
-
-       return dx > 18 && dx > dy * 1.4;
-     },
-      onPanResponderMove: (_, g) => {
-        position.setValue({ x: g.dx, y: 0 });
-      },
-      onPanResponderRelease: (_, g) => {
-        if (locked || carouselActiveRef.current) return;
-
-        if (g.dx > SWIPE_THRESHOLD) {
-          void commitSwipe("right");
-          return;
-        }
-        if (g.dx < -SWIPE_THRESHOLD) {
-          void commitSwipe("left");
-          return;
-        }
-
-        Animated.spring(position, {
-          toValue: { x: 0, y: 0 },
-          useNativeDriver: true,
-          friction: 6,
-        }).start();
-      },
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locked, index, currentCar]);
 
   const chips = useMemo(() => {
     const out: string[] = [];
@@ -300,31 +226,17 @@ export default function SearchTab() {
           </View>
         ) : (
           <>
-            {/* Deck */}
+            {/* Deck (static; only buttons advance) */}
             <View style={styles.deck}>
               {nextCar ? (
                 <View style={[styles.card, styles.cardBehind]}>
-                  <CarCardContent
-                    car={nextCar}
-                    onCarouselActiveChange={(active) => {
-                      // behind card doesn't really matter but keep consistent
-                      carouselActiveRef.current = active;
-                    }}
-                  />
+                  <CarCardContent key={nextCar.id} car={nextCar} />
                 </View>
               ) : null}
 
-              <Animated.View
-                {...panResponder.panHandlers}
-                style={[styles.card, styles.cardFront, cardStyle]}
-              >
-                <CarCardContent
-                  car={currentCar}
-                  onCarouselActiveChange={(active) => {
-                    carouselActiveRef.current = active;
-                  }}
-                />
-              </Animated.View>
+              <View style={[styles.card, styles.cardFront]}>
+                <CarCardContent key={currentCar.id} car={currentCar} />
+              </View>
             </View>
 
             {/* Toast near buttons (NOT above image) */}
@@ -336,8 +248,8 @@ export default function SearchTab() {
 
             {/* Actions */}
             <View style={styles.actionsRow}>
-              <ActionButton variant="dislike" disabled={locked} onPress={() => void commitSwipe("left")} />
-              <ActionButton variant="like" disabled={locked} onPress={() => void commitSwipe("right")} />
+              <ActionButton variant="dislike" disabled={locked} onPress={() => void handleAction("dislike")} />
+              <ActionButton variant="like" disabled={locked} onPress={() => void handleAction("like")} />
             </View>
 
             {prefetching ? <Text style={styles.prefetchText}>Loading more…</Text> : null}
@@ -370,14 +282,7 @@ function Chip({ label }: { label: string }) {
   );
 }
 
-function CarCardContent({
-  car,
-  onCarouselActiveChange,
-}: {
-  car: CarCard;
-  onCarouselActiveChange: (active: boolean) => void;
-}) {
-  // 3 images per car for now (mock). Later: backend returns array.
+function CarCardContent({ car }: { car: CarCard }) {
   const images = useMemo(() => {
     const base = car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id)}/900/600`;
     return [
@@ -395,13 +300,8 @@ function CarCardContent({
         <ScrollView
           horizontal
           pagingEnabled
+          directionalLockEnabled
           showsHorizontalScrollIndicator={false}
-          onScrollBeginDrag={() => onCarouselActiveChange(true)}
-          onScrollEndDrag={() => {
-            // allow card swipe again shortly after release
-            setTimeout(() => onCarouselActiveChange(false), 120);
-          }}
-          onMomentumScrollEnd={() => onCarouselActiveChange(false)}
           onScroll={(e) => {
             const x = e.nativeEvent.contentOffset.x;
             const w = e.nativeEvent.layoutMeasurement.width || 1;
@@ -492,7 +392,6 @@ function FiltersModal({
     setDraft((p) => ({ ...p, [key]: value }));
   }
 
-  // model options depend on brand
   const modelOptions = draft.brand ? modelsByBrand[draft.brand] ?? [] : [];
   const fuelOptions: (FuelType | "")[] = ["", "gas", "diesel", "electric", "hybrid"];
 
@@ -514,7 +413,6 @@ function FiltersModal({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 24 }}
           >
-            {/* Fuel */}
             <Text style={styles.fieldLabel}>Fuel type</Text>
             <View style={styles.optionRow}>
               {fuelOptions.map((opt) => {
@@ -533,7 +431,6 @@ function FiltersModal({
               })}
             </View>
 
-            {/* Brand */}
             <Text style={styles.fieldLabel}>Brand</Text>
             <View style={styles.optionRow}>
               <Pressable
@@ -563,13 +460,9 @@ function FiltersModal({
               })}
             </View>
 
-            {/* Model */}
             <Text style={styles.fieldLabel}>Model</Text>
             <View style={styles.optionRow}>
-              <Pressable
-                style={[styles.option, !draft.model && styles.optionActive]}
-                onPress={() => set("model", undefined)}
-              >
+              <Pressable style={[styles.option, !draft.model && styles.optionActive]} onPress={() => set("model", undefined)}>
                 <Text style={[styles.optionText, !draft.model && styles.optionTextActive]}>any</Text>
               </Pressable>
 
@@ -591,13 +484,9 @@ function FiltersModal({
               )}
             </View>
 
-            {/* Color */}
             <Text style={styles.fieldLabel}>Color</Text>
             <View style={styles.optionRow}>
-              <Pressable
-                style={[styles.option, !draft.color && styles.optionActive]}
-                onPress={() => set("color", undefined)}
-              >
+              <Pressable style={[styles.option, !draft.color && styles.optionActive]} onPress={() => set("color", undefined)}>
                 <Text style={[styles.optionText, !draft.color && styles.optionTextActive]}>any</Text>
               </Pressable>
 
@@ -615,7 +504,6 @@ function FiltersModal({
               })}
             </View>
 
-            {/* Price */}
             <Text style={styles.fieldLabel}>Price per day</Text>
             <View style={styles.priceInputsRow}>
               <TextInput
@@ -640,7 +528,6 @@ function FiltersModal({
               />
             </View>
 
-            {/* Actions */}
             <View style={styles.modalActions}>
               <Pressable style={[styles.modalBtn, styles.modalBtnGhost]} onPress={() => setDraft(DEFAULT_FILTERS)}>
                 <Text style={[styles.modalBtnText, styles.modalBtnTextGhost]}>Reset</Text>
@@ -658,7 +545,6 @@ function FiltersModal({
               </Pressable>
             </View>
 
-            {/* Extra spacer so keyboard never hides bottom buttons */}
             <View style={{ height: 180 }} />
           </ScrollView>
         </View>
