@@ -14,10 +14,8 @@ const FilterBarLayout = ({ children, onApply, onReset }: FilterBarProps) => {
       <div className={styles.searchCriteria}>{children}</div>
       <div className={styles.searchActions}>
         <div className={styles.buttons}>
-          <Button onClick={() => onApply()}>Apply</Button>
-          <Button onClick={() => onReset()} color="secondary">
-            Reset
-          </Button>
+          <Button onClick={() => onApply()} label="Apply"/>
+          <Button onClick={() => onReset()} label="Reset" color="secondary"/>
         </div>
       </div>
     </div>
