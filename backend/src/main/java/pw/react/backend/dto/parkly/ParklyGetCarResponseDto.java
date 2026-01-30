@@ -12,7 +12,6 @@ import java.util.List;
 // was introduce to make the integration contract more flexible later on
 @Getter
 @Setter
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ParklyGetCarResponseDto
 {
     private Integer carId;

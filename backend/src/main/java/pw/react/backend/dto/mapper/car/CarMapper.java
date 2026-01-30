@@ -42,8 +42,13 @@ public class CarMapper{
         dto.setCarId(car.getCarId());
 
         dto.setCarFeatures(carFeatureMapper.mapFeatureLinks(car.getFeatureLinks()));
-        dto.setUrls(imageIds.stream().map((imageId) -> carImageUrlMapper.mapUrl(carId, imageId))
+
+        if(imageIds != null)
+            dto.setUrls(imageIds.stream().map((imageId) -> carImageUrlMapper.mapUrl(carId, imageId))
                 .toList());
+        else
+            dto.setUrls(List.of());
+
         return dto;
     }
 
