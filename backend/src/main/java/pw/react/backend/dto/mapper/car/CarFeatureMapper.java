@@ -7,6 +7,7 @@ import org.mapstruct.ReportingPolicy;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.car.CarToFeatureLink;
 import pw.react.backend.dto.request.car.CarFeatureDto;
+import pw.react.backend.utils.converters.out.DisplayNameConverter;
 
 import java.util.List;
 import java.util.Set;
@@ -15,6 +16,8 @@ import java.util.Set;
 public interface CarFeatureMapper {
     // OUT mappings:
     @Mapping(target = "dictionaryId", source = "dictionary.carFeatureDictionaryId")
+    @Mapping(target = "name", source = "dictionary.name", qualifiedByName = "toDisplayName")
+    @Mapping(target = "value", source = "value", qualifiedByName = "toDisplayName")
     CarFeatureDto toCarFeatureDto(CarFeature carFeature);
     List<CarFeatureDto> toCarFeatureDtoList(List<CarFeature> carFeatures);
 
@@ -32,5 +35,11 @@ public interface CarFeatureMapper {
                 .map(CarToFeatureLink::getCarFeature)
                 .map(this::toCarFeatureDto)
                 .toList();
+    }
+
+    @Named("toDisplayName")
+    default String toDisplayName(String name) {
+        if (name == null) return null;
+        return DisplayNameConverter.toDisplayName(name);
     }
 }

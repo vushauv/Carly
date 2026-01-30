@@ -1,4 +1,4 @@
-package pw.react.backend.dto.mapper;
+package pw.react.backend.dto.mapper.user;
 
 import org.mapstruct.*;
 import pw.react.backend.domain.user.User;

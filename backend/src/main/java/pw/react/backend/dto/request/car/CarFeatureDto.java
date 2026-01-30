@@ -11,6 +11,9 @@ import lombok.Setter;
 public class CarFeatureDto {
     @NotNull(message = "DictionaryId is mandatory")
     private Short dictionaryId;
+
+    private String name;
+
     @NotBlank(message = "Value is mandatory")
     private String value;
 }

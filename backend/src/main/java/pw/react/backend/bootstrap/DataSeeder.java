@@ -25,6 +25,7 @@ import pw.react.backend.repositories.car.CarRepository;
 import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.repositories.user.UserTypeDictionaryRepository;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
+import pw.react.backend.utils.converters.out.DisplayNameConverter;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -61,22 +62,36 @@ public class DataSeeder implements ApplicationRunner {
         //                                  Booking statuses
         // ===============================================================================================
         BookingStatusDictionary created =
-                upsertBookingStatus(BookingStatus.CREATED.name(), "Created", "Booking created");
+                upsertBookingStatus(BookingStatus.CREATED.name(),
+                        DisplayNameConverter.toDisplayName(BookingStatus.CREATED.name()),
+                        "Booking created");
 
         BookingStatusDictionary completed =
-                upsertBookingStatus(BookingStatus.COMPLETED.name(), "Completed", "Booking completed");
+                upsertBookingStatus(BookingStatus.COMPLETED.name(),
+                        DisplayNameConverter.toDisplayName(BookingStatus.COMPLETED.name()),
+                        "Booking completed");
 
         BookingStatusDictionary cancelled =
-                upsertBookingStatus(BookingStatus.CANCELLED.name(), "Cancelled", "Booking cancelled");
+                upsertBookingStatus(BookingStatus.CANCELLED.name(),
+                        DisplayNameConverter.toDisplayName(BookingStatus.CANCELLED.name()),
+                        "Booking cancelled");
 
         // ===============================================================================================
         //                                  Users & UserTypes
         // ===============================================================================================
 
-        upsertUserType(UserRole.CUSTOMER.name(), "Customer", "Standard end user");
-        upsertUserType(UserRole.SYSTEM.name(), "System", "System / integration user");
-        upsertUserType(UserRole.SUPER_ADMIN.name(), "Super Admin", "All permissions");
-        upsertUserType(UserRole.ADMIN.name(), "Admin", "Administrative user");
+        upsertUserType(UserRole.CUSTOMER.name(),
+                DisplayNameConverter.toDisplayName(UserRole.CUSTOMER.name()),
+                "Standard end user");
+        upsertUserType(UserRole.SYSTEM.name(),
+                DisplayNameConverter.toDisplayName(UserRole.SYSTEM.name()),
+                "System / integration user");
+        upsertUserType(UserRole.SUPER_ADMIN.name(),
+                DisplayNameConverter.toDisplayName(UserRole.SUPER_ADMIN.name()),
+                "All permissions");
+        upsertUserType(UserRole.ADMIN.name(),
+                DisplayNameConverter.toDisplayName(UserRole.ADMIN.name()),
+                "Administrative user");
 
         UserTypeDictionary superAdminType = userTypeDictionaryRepository.findByName(UserRole.SUPER_ADMIN.name())
                 .orElseThrow(() -> new IllegalStateException(UserRole.SUPER_ADMIN.name() + " user type missing"));

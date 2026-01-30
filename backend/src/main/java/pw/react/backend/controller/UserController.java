@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pw.react.backend.controller.path.PathResolver;
 import pw.react.backend.domain.user.User;
-import pw.react.backend.dto.mapper.UserMapper;
+import pw.react.backend.dto.mapper.user.UserMapper;
 import pw.react.backend.dto.request.user.LoginUserRequest;
 import pw.react.backend.dto.request.user.RegisterUserRequest;
 import pw.react.backend.dto.request.user.UpdateUserRequest;
