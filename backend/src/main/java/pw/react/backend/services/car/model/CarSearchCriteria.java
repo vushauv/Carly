@@ -4,8 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.enums.CarAvailabilityStatus;
-import pw.react.backend.dto.request.car.CarFeatureFilters;
-import pw.react.backend.dto.request.car.DateRange;
+import pw.react.backend.dto.models.DateRange;
 
 import java.util.List;
 

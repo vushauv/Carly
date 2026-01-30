@@ -2,11 +2,12 @@ package pw.react.backend.dto.request.car;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import pw.react.backend.dto.models.BookingStatusDto;
+import pw.react.backend.dto.models.CarFeatureDto;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

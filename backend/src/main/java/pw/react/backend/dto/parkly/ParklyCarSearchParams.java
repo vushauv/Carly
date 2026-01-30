@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import pw.react.backend.dto.request.car.CarFeatureFilters;
-import pw.react.backend.dto.request.car.DateRange;
+import pw.react.backend.dto.models.DateRange;
 
 @Getter
 @Setter

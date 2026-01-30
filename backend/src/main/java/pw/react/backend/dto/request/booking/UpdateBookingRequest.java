@@ -21,6 +21,7 @@ public class UpdateBookingRequest {
     private Integer pickupLocationId;
     private Integer returnLocationId;
 
+    // TODO: this could be changed to accept enums
     private Short carBookingStatusId;
     private Short flatBookingStatusId;
 

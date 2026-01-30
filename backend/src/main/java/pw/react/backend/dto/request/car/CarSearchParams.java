@@ -1,10 +1,10 @@
 package pw.react.backend.dto.request.car;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import pw.react.backend.domain.enums.CarAvailabilityStatus;
+import pw.react.backend.dto.models.DateRange;
 
 @Getter
 @Setter

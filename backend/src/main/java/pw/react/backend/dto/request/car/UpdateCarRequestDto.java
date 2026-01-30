@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
+import pw.react.backend.dto.models.BookingStatusDto;
+import pw.react.backend.dto.models.CarFeatureDto;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

@@ -19,8 +19,8 @@ public class BookingStatusDictionary extends Auditable {
     @Column(name = "Name", nullable = false)
     private String name;
 
-    @Column(name = "DisplayName", nullable = false)
-    private String displayName;
+//    @Column(name = "DisplayName", nullable = false)
+//    private String displayName;
 
     @Column(name = "Description")
     private String description;

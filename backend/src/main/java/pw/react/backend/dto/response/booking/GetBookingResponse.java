@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
 import lombok.Setter;
+import pw.react.backend.dto.models.BookingStatusDto;
+import pw.react.backend.dto.models.LocationDto;
 import pw.react.backend.utils.JsonDateDeserializer;
 import pw.react.backend.utils.JsonDateSerializer;
 
@@ -18,11 +20,11 @@ public class GetBookingResponse {
     private Integer userId;
     private Integer carId;
 
-    private Integer pickupLocationId;
-    private Integer returnLocationId;
+    private LocationDto pickupLocation;
+    private LocationDto returnLocation;
 
-    private Short carBookingStatusId;
-    private Short flatBookingStatusId;
+    private BookingStatusDto carStatus;
+    private BookingStatusDto flatStatus;
 
     private Long providerExternalBookingId;
 

@@ -8,7 +8,7 @@ public final class PathResolver {
     }
 
     public static class Booking{
-        public static final String Base = "/bookings";
+        public static final String Base = Root + "/bookings";
     }
 
     public static class Flatly{

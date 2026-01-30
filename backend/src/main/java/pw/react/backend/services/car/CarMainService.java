@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import pw.react.backend.domain.car.*;
 import pw.react.backend.domain.enums.BookingStatus;
 import pw.react.backend.domain.enums.CarAvailabilityStatus;
-import pw.react.backend.dto.request.car.DateRange;
+import pw.react.backend.dto.models.DateRange;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.car.*;
 import pw.react.backend.repositories.car.models.CarImageUrlRow;

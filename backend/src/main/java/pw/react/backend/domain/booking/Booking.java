@@ -27,14 +27,17 @@ public class Booking extends Auditable {
     @JoinColumn(name = "UserId", nullable = false)
     private User user;
 
+    // TODO: must be non-nullable
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CarId")
     private Car car;
 
+    // TODO: must be non-nullable
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PickupLocationId")
     private Location pickupLocation;
 
+    // TODO: must be non-nullable
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ReturnLocationId")
     private Location returnLocation;
@@ -43,6 +46,7 @@ public class Booking extends Auditable {
     @JoinColumn(name = "FlatBookingStatusId")
     private BookingStatusDictionary flatBookingStatus;
 
+    // TODO: must be non-nullable
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "CarBookingStatusId")
     private BookingStatusDictionary carBookingStatus;
@@ -50,9 +54,11 @@ public class Booking extends Auditable {
     @Column(name = "ProviderExternalBookingId")
     private Integer providerExternalBookingId;
 
+    // TODO: must be non-nullable
     @Column(name = "CarBookingDateFrom")
     private LocalDateTime carBookingDateFrom;
 
+    // TODO: must be non-nullable
     @Column(name = "CarBookingDateTo")
     private LocalDateTime carBookingDateTo;
 }

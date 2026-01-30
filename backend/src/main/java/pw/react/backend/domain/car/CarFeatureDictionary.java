@@ -17,10 +17,6 @@ public class CarFeatureDictionary extends Auditable {
 
     @Column(name = "Name", nullable = false)
     private String name;
-
-    // No displayName, cause what if we change the format we want to present data to the frontend
-    // then by simply changing toDisplayName function we can change the behavior
-    // with displayName we would have to modify a column in all rows
 }
 
 

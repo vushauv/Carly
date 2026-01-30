@@ -63,17 +63,14 @@ public class DataSeeder implements ApplicationRunner {
         // ===============================================================================================
         BookingStatusDictionary created =
                 upsertBookingStatus(BookingStatus.CREATED.name(),
-                        DisplayNameConverter.toDisplayName(BookingStatus.CREATED.name()),
                         "Booking created");
 
         BookingStatusDictionary completed =
                 upsertBookingStatus(BookingStatus.COMPLETED.name(),
-                        DisplayNameConverter.toDisplayName(BookingStatus.COMPLETED.name()),
                         "Booking completed");
 
         BookingStatusDictionary cancelled =
                 upsertBookingStatus(BookingStatus.CANCELLED.name(),
-                        DisplayNameConverter.toDisplayName(BookingStatus.CANCELLED.name()),
                         "Booking cancelled");
 
         // ===============================================================================================
@@ -81,16 +78,12 @@ public class DataSeeder implements ApplicationRunner {
         // ===============================================================================================
 
         upsertUserType(UserRole.CUSTOMER.name(),
-                DisplayNameConverter.toDisplayName(UserRole.CUSTOMER.name()),
                 "Standard end user");
         upsertUserType(UserRole.SYSTEM.name(),
-                DisplayNameConverter.toDisplayName(UserRole.SYSTEM.name()),
                 "System / integration user");
         upsertUserType(UserRole.SUPER_ADMIN.name(),
-                DisplayNameConverter.toDisplayName(UserRole.SUPER_ADMIN.name()),
                 "All permissions");
         upsertUserType(UserRole.ADMIN.name(),
-                DisplayNameConverter.toDisplayName(UserRole.ADMIN.name()),
                 "Administrative user");
 
         UserTypeDictionary superAdminType = userTypeDictionaryRepository.findByName(UserRole.SUPER_ADMIN.name())
@@ -247,6 +240,9 @@ public class DataSeeder implements ApplicationRunner {
                 customer,
                 car2,
                 cancelled,
+                completed,
+                warsawCentral,
+                krakowMain,
                 todayStart,
                 todayStart.plusDays(1)
         ));
@@ -256,6 +252,9 @@ public class DataSeeder implements ApplicationRunner {
                 customer,
                 car3,
                 completed,
+                completed,
+                gdanskOldTown,
+                krakowMain,
                 todayStart.plusDays(1),
                 todayStart.plusDays(3)
         ));
@@ -265,6 +264,9 @@ public class DataSeeder implements ApplicationRunner {
                 customer,
                 car4,
                 created,
+                cancelled,
+                warsawCentral,
+                gdanskOldTown,
                 todayStart.plusDays(2),
                 todayStart.plusDays(5)
         ));
@@ -274,6 +276,9 @@ public class DataSeeder implements ApplicationRunner {
                 customer,
                 car5,
                 completed,
+                created,
+                warsawCentral,
+                krakowMain,
                 todayStart.minusDays(10),
                 todayStart.minusDays(7)
         ));
@@ -284,6 +289,9 @@ public class DataSeeder implements ApplicationRunner {
             User user,
             Car car,
             BookingStatusDictionary carBookingStatus,
+            BookingStatusDictionary flatBookingStatus,
+            Location pickupLocation,
+            Location returnLocation,
             java.time.LocalDateTime from,
             java.time.LocalDateTime to
     ) {
@@ -291,6 +299,9 @@ public class DataSeeder implements ApplicationRunner {
         b.setUser(user);
         b.setCar(car);
         // allowed optional
+        b.setFlatBookingStatus(flatBookingStatus);
+        b.setPickupLocation(pickupLocation);
+        b.setReturnLocation(returnLocation);
         b.setCarBookingStatus(carBookingStatus);
         b.setCarBookingDateFrom(from);
         b.setCarBookingDateTo(to);
@@ -298,12 +309,11 @@ public class DataSeeder implements ApplicationRunner {
         return b;
     }
 
-    private UserTypeDictionary upsertUserType(String name, String displayName, String description) {
+    private UserTypeDictionary upsertUserType(String name,String description) {
         UserTypeDictionary e = userTypeDictionaryRepository.findByName(name)
                 .orElseGet(UserTypeDictionary::new);
 
         e.setName(name);
-        e.setDisplayName(displayName);
         e.setDescription(description);
 
         // audit column
@@ -355,7 +365,6 @@ public class DataSeeder implements ApplicationRunner {
 
     private BookingStatusDictionary upsertBookingStatus(
             String name,
-            String displayName,
             String description
     ) {
         BookingStatusDictionary e =
@@ -363,7 +372,6 @@ public class DataSeeder implements ApplicationRunner {
                         .orElseGet(BookingStatusDictionary::new);
 
         e.setName(name);
-        e.setDisplayName(displayName);
         e.setDescription(description);
         e.setEnabled(true);
 

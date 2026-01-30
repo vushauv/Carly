@@ -1,4 +1,4 @@
-package pw.react.backend.dto.request.car;
+package pw.react.backend.dto.models;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;

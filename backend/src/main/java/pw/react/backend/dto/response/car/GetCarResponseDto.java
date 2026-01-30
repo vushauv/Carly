@@ -1,9 +1,8 @@
 package pw.react.backend.dto.response.car;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
-import pw.react.backend.dto.request.car.CarFeatureDto;
+import pw.react.backend.dto.models.CarFeatureDto;
 
 import java.math.BigDecimal;
 import java.util.List;

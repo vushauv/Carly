@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import pw.react.backend.domain.Location;
 import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.domain.booking.BookingStatusDictionary;
+import pw.react.backend.domain.enums.BookingStatus;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.booking.BookingRepository;
 import org.springframework.data.domain.Page;
@@ -29,7 +30,6 @@ import pw.react.backend.repositories.LocationRepository;
 @RequiredArgsConstructor
 public class BookingMainService implements BookingService {
 
-    private static final String CANCELLED_STATUS = "CANCELLED";
     private final BookingRepository repository;
     private final BookingStatusDictionaryRepository bookingStatusDictionaryRepository;
     private final LocationRepository locationRepository;
@@ -70,7 +70,7 @@ public class BookingMainService implements BookingService {
         }
 
         BookingStatusDictionary created =
-                bookingStatusDictionaryRepository.findByName("CREATED")
+                bookingStatusDictionaryRepository.findByName(BookingStatus.CREATED.name())
                         .orElseThrow(() -> new ResourceNotFoundException("CREATED status not found. Seed data missing."));
 
         var defaultPickup = locationRepository.findById(defaultPickUpLocation)
@@ -117,11 +117,12 @@ public class BookingMainService implements BookingService {
         int p = Math.max(pageNumber, 0);
         int s = (pageSize <= 0 ? defaultPageSize : pageSize);
 
+        // TODO: IntelliSense tells me where is deprecated
         //some ORM magic, but allows to filer based on the input criteria
         Specification<Booking> spec = Specification.where(BookingSpecifications.isEnabled())
                 .and(BookingSpecifications.hasBookingId(criteria.getBookingId()))
                 .and(BookingSpecifications.hasUserId(criteria.getUserId()))
-                .and(BookingSpecifications.hasStatusName(criteria.getStatus()))
+                .and(BookingSpecifications.hasStatusName(criteria.getStatus().name()))
                 .and(BookingSpecifications.dateFrom(criteria.getDateFrom()))
                 .and(BookingSpecifications.dateTo(criteria.getDateTo()));
 
@@ -131,6 +132,7 @@ public class BookingMainService implements BookingService {
     @Override
     @Transactional
     public void cancelCarBooking(Integer bookingId) {
+        var CANCELLED_STATUS = BookingStatus.CANCELLED.name();
         Booking booking = repository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
 
@@ -152,6 +154,7 @@ public class BookingMainService implements BookingService {
     @Override
     @Transactional
     public void cancelFlatBooking(Integer bookingId) {
+        var CANCELLED_STATUS = BookingStatus.CANCELLED.name();
         Booking booking = repository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
 

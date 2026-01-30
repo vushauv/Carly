@@ -8,6 +8,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import pw.react.backend.controller.path.PathResolver;
 import pw.react.backend.domain.booking.Booking;
+import pw.react.backend.domain.enums.BookingStatus;
 import pw.react.backend.dto.mapper.booking.BookingMapper;
 import pw.react.backend.dto.request.booking.BookingSearchCriteria;
 import pw.react.backend.dto.request.booking.CreateBookingRequest;
@@ -76,7 +77,7 @@ public class BookingController {
     public ResponseEntity<List<GetBookingResponse>> getAllBookings(
             @RequestHeader HttpHeaders headers,
             @RequestParam(required = false) Integer bookingId,
-            @RequestParam(required = false) String status,
+            @RequestParam(required = false) BookingStatus status,
             @RequestParam(required = false) String dateFrom,
             @RequestParam(required = false) String dateTo,
             @RequestParam(required = false) Integer userId,
@@ -88,7 +89,7 @@ public class BookingController {
         // no filters -> we get all bookings (pagination included)
         boolean noFilters =
                 bookingId == null &&
-                        (status == null || status.isBlank()) &&
+                        status == null  &&
                         dateFrom == null &&
                         dateTo == null &&
                         userId == null;

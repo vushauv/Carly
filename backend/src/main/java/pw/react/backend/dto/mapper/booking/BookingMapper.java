@@ -6,10 +6,12 @@ import pw.react.backend.domain.booking.BookingStatusDictionary;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.Location;
 import pw.react.backend.domain.user.User;
+import pw.react.backend.dto.models.LocationDto;
 import pw.react.backend.dto.request.booking.CreateBookingRequest;
 import pw.react.backend.dto.request.booking.UpdateBookingRequest;
 import pw.react.backend.dto.response.booking.BookingResponse;
 import pw.react.backend.dto.response.booking.GetBookingResponse;
+import pw.react.backend.utils.converters.out.DisplayNameConverter;
 
 import java.util.List;
 
@@ -21,7 +23,6 @@ public interface BookingMapper {
     // -------------------------
     @Mappings({
             @Mapping(target = "bookingId", ignore = true),
-
             @Mapping(target = "user", source = "userId", qualifiedByName = "userFromId"),
             @Mapping(target = "car", source = "carId", qualifiedByName = "carFromId"),
             @Mapping(target = "pickupLocation", source = "pickupLocationId", qualifiedByName = "locationFromId"),
@@ -69,14 +70,28 @@ public interface BookingMapper {
             @Mapping(target = "id", source = "bookingId"),
             @Mapping(target = "userId", source = "user.userId"),
             @Mapping(target = "carId", source = "car.carId"),
-            @Mapping(target = "pickupLocationId", source = "pickupLocation.locationId"),
-            @Mapping(target = "returnLocationId", source = "returnLocation.locationId"),
-            @Mapping(target = "carBookingStatusId", source = "carBookingStatus.bookingStatusDictionaryId"),
-            @Mapping(target = "flatBookingStatusId", source = "flatBookingStatus.bookingStatusDictionaryId")
+            @Mapping(target = "pickupLocation", source = "pickupLocation"),
+            @Mapping(target = "returnLocation", source = "returnLocation"),
+            @Mapping(target = "carStatus.name", source = "carBookingStatus.name", qualifiedByName = "toDisplayName"),
+            @Mapping(target = "flatStatus.name", source = "flatBookingStatus.name", qualifiedByName = "toDisplayName"),
+            @Mapping(target = "carStatus.id", source = "carBookingStatus.bookingStatusDictionaryId"),
+            @Mapping(target = "flatStatus.id", source = "flatBookingStatus.bookingStatusDictionaryId")
     })
     GetBookingResponse bookingToGetBookingResponse(Booking booking);
 
     List<GetBookingResponse> bookingToGetBookingResponseList(List<Booking> bookings);
+
+    // Location Mapping:
+    @Mapping(target = "id", source = "locationId")
+    @Mapping(target = "address", source = "locationName")
+    LocationDto toLocationDto(Location location);
+
+    // Helper methods:
+    @Named("toDisplayName")
+    default String toDisplayName(String name) {
+        if (name == null) return null;
+        return DisplayNameConverter.toDisplayName(name);
+    }
 
     // -------------------------
     // ID -> entity stub mappers
