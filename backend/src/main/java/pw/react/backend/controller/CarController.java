@@ -1,5 +1,6 @@
 package pw.react.backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pw.react.backend.controller.path.PathResolver;
 import pw.react.backend.domain.car.Car;
-import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.car.CarImage;
 import pw.react.backend.dto.mapper.car.CarFeatureMapper;
 import pw.react.backend.dto.mapper.car.CarImageMapper;
@@ -54,24 +54,42 @@ public class CarController {
 
     @PostMapping(path="")
     public ResponseEntity<CreateCarResponseDto> createCar(@RequestHeader HttpHeaders headers,
-                                                          @Valid @RequestBody CreateCarRequestDto  createCarDto)
+                                                          @Valid @RequestBody CreateCarRequestDto createCarDto)
             throws BadRequestException, ResourceNotFoundException
     {
         logHeaders(headers);
-        List<CarFeature> requestedFeatures = carFeatureMapper.toCarFeatureList(createCarDto.getCarFeatures());
-        CreateCarResponseDto res = carMapper.toCreateResponseDto(carService.create(requestedFeatures));
+        var requestedFeatures = carFeatureMapper.toCarFeatureList(createCarDto.getCarFeatures());
+        var car = carMapper.fromCreateCarRequestDto(createCarDto);
+        CreateCarResponseDto res = carMapper.toCreateResponseDto(carService.create(car,
+                requestedFeatures));
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
-    @PatchMapping(path="/{carId}")
+
+    @Operation(
+            summary = "Update car price and add/merge features",
+            description = """
+        Updates the car's price and merges provided features into the existing feature set.
+        - `price` is mandatory and always updated.
+        - `carFeatures` is optional. If provided, the server adds these features to the car's current features.
+        - Existing features are preserved unless the same feature already exists, then it is merged.
+        - The operation is idempotent under set semantics: sending the same request multiple times results in the same stored feature set.
+
+        **Notes**
+        - This endpoint does NOT replace the full Car resource representation.
+        """
+    )
+    @PutMapping(path="/{carId}")
     public ResponseEntity<Void> updateCar(@RequestHeader HttpHeaders headers,
                               @PathVariable Integer carId,
                               @Valid @RequestBody UpdateCarRequestDto updateCarDto)
             throws BadRequestException, ResourceNotFoundException
     {
         logHeaders(headers);
-        List<CarFeature> requestedFeatures = carFeatureMapper.toCarFeatureList(updateCarDto.getCarFeatures());
-        carService.update(carId, requestedFeatures);
+        var requestedFeatures = carFeatureMapper.toCarFeatureList(updateCarDto.getCarFeatures());
+        var car = carMapper.fromUpdateCarRequestDto(updateCarDto, carId);
+
+        carService.update(car, requestedFeatures);
         return ResponseEntity.noContent().build();
     }
 
@@ -127,7 +145,6 @@ public class CarController {
         logHeaders(headers);
         var images = carImageService.getAll(carId);
 
-        // TODO: move this logic to the mapper. Add the possibility to retrieve GetCarImagesResponseDto together with GetCarResponseDto
         GetCarImagesResponseDto res = new GetCarImagesResponseDto();
         res.setImages(new ArrayList<>());
 

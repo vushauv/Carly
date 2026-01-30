@@ -14,5 +14,7 @@ public class CarSearchParams {
     private CarAvailabilityStatus availability = CarAvailabilityStatus.AVAILABLE;
     @Valid
     private DateRange date;
+
+    // TODO: add possibility to filter by min/max price
 }
 

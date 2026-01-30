@@ -17,4 +17,5 @@ public class ParklyGetCarResponseDto
     private Integer carId;
     private List<CarFeatureDto> carFeatures;
     private List<String> urls;
+    private BigDecimal price;
 }

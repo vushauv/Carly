@@ -27,8 +27,10 @@ import pw.react.backend.repositories.user.UserTypeDictionaryRepository;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Component
@@ -173,7 +175,6 @@ public class DataSeeder implements ApplicationRunner {
         CarFeatureDictionary color = upsertCarFeatureDictionary(CarFeatureType.COLOR.name());
         CarFeatureDictionary status = upsertCarFeatureDictionary(CarFeatureType.STATUS.name());
         CarFeatureDictionary model = upsertCarFeatureDictionary(CarFeatureType.MODEL.name());
-        CarFeatureDictionary price = upsertCarFeatureDictionary(CarFeatureType.PRICE.name());
 
         // 4) Car feature values (canonical, shared)
         CarFeature fuelGas = upsertCarFeature(fuelType, CarFuelType.GAS.name());
@@ -363,6 +364,9 @@ public class DataSeeder implements ApplicationRunner {
         int toCreate = (int) (targetCount - current);
         for (int i = 0; i < toCreate; i++) {
             Car c = new Car();
+            double randomPrice = ThreadLocalRandom.current().nextDouble(100.0, 500.0);
+            BigDecimal price = BigDecimal.valueOf(randomPrice).setScale(2, RoundingMode.HALF_UP);
+            c.setPrice(price);
             c.setEnabled(true);
             carRepository.save(c);
         }

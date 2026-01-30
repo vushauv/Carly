@@ -15,4 +15,5 @@ public class GetCarResponseDto
     private Integer carId;
     private List<CarFeatureDto> carFeatures;
     private List<String> urls;
+    private BigDecimal price;
 }

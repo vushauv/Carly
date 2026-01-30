@@ -9,8 +9,7 @@ public enum CarFeatureType
     BRAND(2),
     FUEL_TYPE(3),
     MODEL(4),
-    STATUS(5),
-    PRICE(6);
+    STATUS(5);
 
     private final int Code;
     CarFeatureType(int code)

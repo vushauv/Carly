@@ -12,6 +12,9 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
+
+// Duplicated code will allow in future the possibility of flexibility.
+// The CarController contract and Parkly contract are not coupled
 public class ParklyCarMapper {
     private final CarFeatureMapper carFeatureMapper;
     private final CarImageUrlMapper carImageUrlMapper;
@@ -36,7 +39,7 @@ public class ParklyCarMapper {
     {
         var dto = new ParklyGetCarResponseDto();
         dto.setCarId(car.getCarId());
-
+        dto.setPrice(car.getPrice());
         dto.setCarFeatures(carFeatureMapper.mapFeatureLinks(car.getFeatureLinks()));
 
         if(imageIds != null)

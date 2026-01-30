@@ -55,22 +55,23 @@ public class CarService implements ICarService {
 
     @Override
     @Transactional
-    public Car update(Integer id, List<CarFeature> requestedCarFeatures) throws ResourceNotFoundException, BadRequestException
+    public Car update(Car updatedCar, List<CarFeature> requestedCarFeatures) throws ResourceNotFoundException, BadRequestException
     {
-        Car car = carRepository.findByIdWithFeatures(id).orElseThrow(() ->
-                new ResourceNotFoundException("Car with id " + id + " was not found."));
+        Car car = carRepository.findByIdWithFeatures(updatedCar.getCarId()).orElseThrow(() ->
+                new ResourceNotFoundException("Car with id " + updatedCar.getCarId() + " was not found."));
 
         checkDuplicateFeatureTypes(requestedCarFeatures);
         linkFeatures(car, requestedCarFeatures);
+        car.setPrice(updatedCar.getPrice());
         return carRepository.save(car);
     }
 
     @Override
     @Transactional
-    public Car create(List<CarFeature> requestedCarFeatures) throws ResourceNotFoundException, BadRequestException
+    public Car create(Car createdCar, List<CarFeature> requestedCarFeatures) throws ResourceNotFoundException, BadRequestException
     {
         Car car = new Car();
-
+        car.setPrice(createdCar.getPrice());
         checkDuplicateFeatureTypes(requestedCarFeatures);
         linkFeatures(car, requestedCarFeatures);
         return carRepository.save(car);
@@ -140,20 +141,12 @@ public class CarService implements ICarService {
 
     // Method to be used to calculate the total price of the car on the booking
     public BigDecimal calculateTotalPrice(Car car, DateRange dateRange)
+        throws ResourceNotFoundException
     {
-        var priceDictId = carFeatureDictionaryRepository.findById((short) CarFeatureType.PRICE.getCode())
-                .orElseThrow(() -> new IllegalStateException("Invariant violation: CarFeatureDictionary PRICE (" +
-                                CarFeatureType.PRICE.getCode() + ") not found"));
+        Car managedCar = carRepository.findById(car.getCarId())
+                .orElseThrow(() -> new ResourceNotFoundException("Car with id " + car.getCarId() + " was not found."));
 
-        var managedCar = carRepository.getReferenceById(car.getCarId());
-        var carPriceLink = carToFeatureLinkRepository.getLinkByCarAndFeatureType(priceDictId.getCarFeatureDictionaryId(),
-                managedCar.getCarId());
-
-        BigDecimal price = carPriceLink
-                .map(link -> new BigDecimal(
-                        link.getCarFeature().getValue()))
-                        .orElse(null);
-
+        var price = managedCar.getPrice();
         return price == null ? null : price.multiply(BigDecimal.valueOf(this.calculateDayDifference(dateRange)));
     }
 
