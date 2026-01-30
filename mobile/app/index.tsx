@@ -71,7 +71,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#FFFBEB",
   },
   page: {
     flex: 1,
@@ -88,6 +88,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 20,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -96,13 +98,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     marginBottom: 6,
-    color: "#374151",
+    color: "#111827",
+    fontWeight: "700",
   },
   input: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
     borderRadius: 10,
     padding: 14,
     marginBottom: 16,
+    color: "#111827",
+    fontWeight: "600",
   },
   button: {
     backgroundColor: "#FACC15",
@@ -110,20 +117,25 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
     marginTop: 8,
+    borderWidth: 1,
+    borderColor: "#F59E0B",
   },
   buttonText: {
-    fontWeight: "600",
+    fontWeight: "900",
     fontSize: 16,
+    color: "#111827",
   },
   footerText: {
     marginTop: 16,
     textAlign: "center",
     color: "#6B7280",
+    fontWeight: "700",
   },
   signUp: {
     textAlign: "center",
-    color: "#FACC15",
-    fontWeight: "600",
+    color: "#2563EB",
+    fontWeight: "900",
     marginTop: 4,
   },
 });
+

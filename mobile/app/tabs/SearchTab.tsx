@@ -3,12 +3,11 @@
 //npx expo install @react-native-async-storage/async-storage
 //npx expo install @react-navigation/native
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Animated,
   Dimensions,
-  Image,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -21,12 +20,14 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 
 import type { CarCard, CarColor, CarSearchFilters, FuelType } from "../../lib/models";
 import { dislikeCar, getSearchLookups, likeCar, searchCars } from "../../lib/carlyApi";
 import { addDislikedCarId, addLikedCar, getDislikedCarIds, getLikedCarIds } from "../../lib/storage";
+import { saveCarDetailsForId } from "../../lib/viewedCarsStorage";
 import CarCardView from "../components/CarCardView";
-
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -35,6 +36,8 @@ const DEFAULT_FILTERS: CarSearchFilters = {
 };
 
 export default function SearchTab() {
+  const router = useRouter();
+
   const [filters, setFilters] = useState<CarSearchFilters>(DEFAULT_FILTERS);
   const [cars, setCars] = useState<CarCard[]>([]);
   const [index, setIndex] = useState(0);
@@ -82,6 +85,11 @@ export default function SearchTab() {
     setLikedSet(likedIds);
     setDislikedSet(dislikedIds);
   }
+    useFocusEffect(
+      useCallback(() => {
+        hydratePrefs();
+      }, [])
+    );
 
   async function hydrateLookups() {
     const l = await getSearchLookups();
@@ -166,6 +174,12 @@ export default function SearchTab() {
     }
   }
 
+  async function onSeeMore(car: CarCard) {
+    // Save the object so the details screen can render even without backend.
+    await saveCarDetailsForId(car);
+    router.push(`/car/${car.id}`);
+  }
+
   const chips = useMemo(() => {
     const out: string[] = [];
     if (filters.fuelType) out.push(`⛽ ${filters.fuelType}`);
@@ -232,16 +246,16 @@ export default function SearchTab() {
             <View style={styles.deck}>
               {nextCar ? (
                 <View style={[styles.card, styles.cardBehind]}>
-                  <CarCardContent key={nextCar.id} car={nextCar} />
+                  <CarCardContent car={nextCar} onSeeMore={onSeeMore} />
                 </View>
               ) : null}
 
               <View style={[styles.card, styles.cardFront]}>
-                <CarCardContent key={currentCar.id} car={currentCar} />
+                <CarCardContent car={currentCar} onSeeMore={onSeeMore} />
               </View>
             </View>
 
-            {/* Toast near buttons (NOT above image) */}
+            {/* Toast near buttons */}
             <Animated.View pointerEvents="none" style={[styles.toast, { opacity: toastOpacity }]}>
               <View style={styles.toastTextWrap}>
                 <Text style={styles.toastText}>{toastTextRef.current}</Text>
@@ -284,10 +298,9 @@ function Chip({ label }: { label: string }) {
   );
 }
 
-function CarCardContent({ car }: { car: CarCard }) {
+function CarCardContent({ car, onSeeMore }: { car: CarCard; onSeeMore: (c: CarCard) => void }) {
   const images = useMemo(() => {
-    const base =
-      car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id)}/900/600`;
+    const base = car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id)}/900/600`;
     return [
       base,
       `https://picsum.photos/seed/${encodeURIComponent(car.id + "_2")}/900/600`,
@@ -303,11 +316,15 @@ function CarCardContent({ car }: { car: CarCard }) {
       metaLeft={`🎨 ${car.color}`}
       metaRight={`⭐ ${car.rating?.toFixed(1) ?? "—"}`}
       footerLeft={`${car.pricePerDay} ${car.currency} / day`}
+      footerRight={
+        <Pressable onPress={() => onSeeMore(car)} style={styles.seeMoreBtn}>
+          <Text style={styles.seeMoreText}>see more</Text>
+        </Pressable>
+      }
       imageHeight={200}
     />
   );
 }
-
 
 function ActionButton({
   variant,
@@ -353,8 +370,16 @@ function FiltersModal({
 }) {
   const [draft, setDraft] = useState<CarSearchFilters>(initial);
 
+  // IMPORTANT: string inputs for price so user can type normally
+  const [minText, setMinText] = useState<string>(String(initial.priceRange.min));
+  const [maxText, setMaxText] = useState<string>(String(initial.priceRange.max));
+
   useEffect(() => {
-    if (open) setDraft(initial);
+    if (open) {
+      setDraft(initial);
+      setMinText(String(initial.priceRange.min));
+      setMaxText(String(initial.priceRange.max));
+    }
   }, [open, initial]);
 
   function set<K extends keyof CarSearchFilters>(key: K, value: CarSearchFilters[K]) {
@@ -363,6 +388,24 @@ function FiltersModal({
 
   const modelOptions = draft.brand ? modelsByBrand[draft.brand] ?? [] : [];
   const fuelOptions: (FuelType | "")[] = ["", "gas", "diesel", "electric", "hybrid"];
+
+  function sanitizePriceText(v: string) {
+    // allow digits, comma, dot
+    return v.replace(/[^\d.,]/g, "");
+  }
+
+  function parsePrice(v: string, fallback: number) {
+    const n = Number(sanitizePriceText(v).replace(",", "."));
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  function normalizePriceTexts() {
+    const min = parsePrice(minText, draft.priceRange.min ?? 0);
+    const max = parsePrice(maxText, draft.priceRange.max ?? 500);
+    setMinText(String(min));
+    setMaxText(String(max));
+    set("priceRange", { min, max } as any);
+  }
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
@@ -476,37 +519,44 @@ function FiltersModal({
             <Text style={styles.fieldLabel}>Price per day</Text>
             <View style={styles.priceInputsRow}>
               <TextInput
-                value={draft.priceRange.min.toFixed(2)}
-                onChangeText={(v) => {
-                  const n = Number(String(v).replace(",", "."));
-                  set("priceRange", { ...draft.priceRange, min: Number.isFinite(n) ? n : 0 });
-                }}
-                placeholder="0.00"
+                value={minText}
+                onChangeText={(v) => setMinText(sanitizePriceText(v))}
+                onBlur={normalizePriceTexts}
+                placeholder="0"
                 keyboardType="decimal-pad"
                 style={[styles.input, styles.priceInput]}
               />
               <TextInput
-                value={draft.priceRange.max.toFixed(2)}
-                onChangeText={(v) => {
-                  const n = Number(String(v).replace(",", "."));
-                  set("priceRange", { ...draft.priceRange, max: Number.isFinite(n) ? n : 500 });
-                }}
-                placeholder="500.00"
+                value={maxText}
+                onChangeText={(v) => setMaxText(sanitizePriceText(v))}
+                onBlur={normalizePriceTexts}
+                placeholder="500"
                 keyboardType="decimal-pad"
                 style={[styles.input, styles.priceInput]}
               />
             </View>
 
             <View style={styles.modalActions}>
-              <Pressable style={[styles.modalBtn, styles.modalBtnGhost]} onPress={() => setDraft(DEFAULT_FILTERS)}>
+              <Pressable
+                style={[styles.modalBtn, styles.modalBtnGhost]}
+                onPress={() => {
+                  setDraft(DEFAULT_FILTERS);
+                  setMinText(String(DEFAULT_FILTERS.priceRange.min));
+                  setMaxText(String(DEFAULT_FILTERS.priceRange.max));
+                }}
+              >
                 <Text style={[styles.modalBtnText, styles.modalBtnTextGhost]}>Reset</Text>
               </Pressable>
 
               <Pressable
                 style={[styles.modalBtn, styles.modalBtnPrimary]}
                 onPress={() => {
-                  const min = Math.min(draft.priceRange.min, draft.priceRange.max);
-                  const max = Math.max(draft.priceRange.min, draft.priceRange.max);
+                  const minN = parsePrice(minText, DEFAULT_FILTERS.priceRange.min);
+                  const maxN = parsePrice(maxText, DEFAULT_FILTERS.priceRange.max);
+
+                  const min = Math.min(minN, maxN);
+                  const max = Math.max(minN, maxN);
+
                   onApply({ ...draft, priceRange: { min, max } });
                 }}
               >
@@ -523,33 +573,37 @@ function FiltersModal({
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F9FAFB" },
+  safe: { flex: 1, backgroundColor: "#FFFBEB" },
 
   header: {
     paddingHorizontal: 16,
-    paddingTop: 6,
+    paddingTop: 8,
     paddingBottom: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  headerTitle: { fontSize: 22, fontWeight: "700", color: "#111827" },
+  headerTitle: { fontSize: 22, fontWeight: "900", color: "#111827" },
 
   likedPill: {
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#FEF3C7",
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
   },
-  likedPillText: { color: "#111827", fontSize: 12, fontWeight: "800" },
+  likedPillText: { color: "#111827", fontSize: 12, fontWeight: "900" },
 
   filtersButton: {
-    backgroundColor: "#111827",
+    backgroundColor: "#FACC15",
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#F59E0B",
   },
-  filtersButtonText: { color: "#fff", fontWeight: "600" },
+  filtersButtonText: { color: "#111827", fontWeight: "900" },
 
   chipsRow: {
     paddingHorizontal: 16,
@@ -559,33 +613,32 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   chip: {
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#FEF3C7",
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
   },
-  chipText: { color: "#111827", fontSize: 12, fontWeight: "600" },
+  chipText: { color: "#111827", fontSize: 12, fontWeight: "800" },
 
   body: { flex: 1, paddingHorizontal: 16, paddingBottom: 12 },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 10 },
-  mutedText: { color: "#6B7280", fontWeight: "600" },
-  mutedTextSmall: { color: "#9CA3AF" },
-  errorText: { color: "#B91C1C", fontWeight: "700" },
+  mutedText: { color: "#6B7280", fontWeight: "700" },
+  mutedTextSmall: { color: "#9CA3AF", fontWeight: "700" },
+  errorText: { color: "#B91C1C", fontWeight: "900" },
   retryBtn: {
-    backgroundColor: "#111827",
+    backgroundColor: "#3B82F6",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 10,
   },
-  retryText: { color: "#fff", fontWeight: "700" },
+  retryText: { color: "#fff", fontWeight: "900" },
 
   deck: { flex: 1, justifyContent: "center", alignItems: "center" },
 
-  // Outer wrapper for the deck cards (CarCardView handles inner visuals)
-  card: {
-    width: "100%",
-  },
+  card: { width: "100%" },
   cardBehind: { position: "absolute", top: 12, transform: [{ scale: 0.98 }], opacity: 0.9 },
   cardFront: { position: "absolute", top: 0 },
 
@@ -593,12 +646,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 110, // above action buttons + tab bar
+    bottom: 110,
     alignItems: "center",
     zIndex: 50,
   },
   toastTextWrap: {
-    backgroundColor: "#111827",
+    backgroundColor: "#2563EB",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 999,
@@ -611,20 +664,30 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
+    borderWidth: 1,
   },
   actionBtnDisabled: { opacity: 0.5 },
   actionBtnText: { fontWeight: "900", fontSize: 16 },
-  dislikeBtn: { backgroundColor: "#FEE2E2" },
-  likeBtn: { backgroundColor: "#FEF9C3" },
+  dislikeBtn: { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" },
+  likeBtn: { backgroundColor: "#FACC15", borderColor: "#F59E0B" },
 
   prefetchText: {
     textAlign: "center",
     marginTop: 10,
     color: "#6B7280",
-    fontWeight: "700",
+    fontWeight: "800",
   },
 
-  // Modal
+  seeMoreBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "#DBEAFE",
+    borderWidth: 1,
+    borderColor: "#93C5FD",
+  },
+  seeMoreText: { fontWeight: "900", color: "#1D4ED8" },
+
   modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)" },
   modalSheet: {
     backgroundColor: "#fff",
@@ -632,43 +695,50 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     maxHeight: "82%",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
   },
   modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   modalTitle: { fontSize: 18, fontWeight: "900", color: "#111827" },
-  modalClose: { fontWeight: "800", color: "#111827" },
+  modalClose: { fontWeight: "900", color: "#2563EB" },
 
-  fieldLabel: { marginTop: 14, marginBottom: 6, color: "#374151", fontWeight: "800" },
-  helperText: { marginTop: 8, color: "#6B7280", fontWeight: "600" },
+  fieldLabel: { marginTop: 14, marginBottom: 6, color: "#111827", fontWeight: "900" },
+  helperText: { marginTop: 8, color: "#6B7280", fontWeight: "700" },
 
   input: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFBEB",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    color: "#111827",
+    fontWeight: "700",
   },
 
   optionRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
 
   option: {
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#FDE68A",
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFBEB",
   },
-  optionActive: { backgroundColor: "#111827", borderColor: "#111827" },
-  optionText: { color: "#111827", fontWeight: "800" },
-  optionTextActive: { color: "#fff" },
+  optionActive: { backgroundColor: "#FACC15", borderColor: "#F59E0B" },
+  optionText: { color: "#111827", fontWeight: "900" },
+  optionTextActive: { color: "#111827" },
 
   priceInputsRow: { flexDirection: "row", gap: 10 },
   priceInput: { flex: 1 },
 
   modalActions: { marginTop: 18, flexDirection: "row", gap: 10 },
-  modalBtn: { flex: 1, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
-  modalBtnPrimary: { backgroundColor: "#111827" },
-  modalBtnGhost: { backgroundColor: "#F3F4F6" },
-  modalBtnText: { fontWeight: "900", color: "#fff" },
+  modalBtn: { flex: 1, borderRadius: 14, paddingVertical: 14, alignItems: "center", borderWidth: 1 },
+  modalBtnPrimary: { backgroundColor: "#FACC15", borderColor: "#F59E0B" },
+  modalBtnGhost: { backgroundColor: "#FEF3C7", borderColor: "#FDE68A" },
+  modalBtnText: { fontWeight: "900", color: "#111827" },
   modalBtnTextGhost: { color: "#111827" },
 });
+
 

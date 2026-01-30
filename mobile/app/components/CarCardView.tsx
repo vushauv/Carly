@@ -130,22 +130,23 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
-    padding: 14,              // ✅ like Home card content padding
+    padding: 14,
     gap: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#FDE68A",
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 14,
     elevation: 3,
   },
 
-  // ✅ matches Home flat preview wrap
   previewWrap: {
     borderRadius: 14,
     overflow: "hidden",
     backgroundColor: "#FFFFFF",
     position: "relative",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
   },
 
   dotsRow: {
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: "#6B7280",
-    fontWeight: "700",
+    fontWeight: "800",
   },
 
   metaRow: {
@@ -187,7 +188,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     color: "#111827",
-    fontWeight: "800",
+    fontWeight: "900",
   },
 
   footerRow: {
@@ -208,4 +209,5 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 });
+
 
