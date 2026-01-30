@@ -7,7 +7,7 @@ import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.booking.Location;
 import pw.react.backend.domain.user.User;
 import pw.react.backend.dto.request.booking.CreateBookingRequest;
-import pw.react.backend.dto.request.booking.UpdateBookingRequest;
+import pw.react.backend.dto.request.booking.UpdateBookingRequestDto;
 import pw.react.backend.dto.response.booking.BookingResponse;
 import pw.react.backend.dto.response.booking.GetBookingResponse;
 import pw.react.backend.utils.converters.out.DisplayNameConverter;
@@ -18,10 +18,9 @@ import java.util.List;
         unmappedTargetPolicy = ReportingPolicy.IGNORE,
         uses = LocationMapper.class)
 public interface BookingMapper {
+    // IN mappings:
 
-    // -------------------------
     // CREATE
-    // -------------------------
     @Mappings({
             @Mapping(target = "bookingId", ignore = true),
             @Mapping(target = "user", source = "userId", qualifiedByName = "userFromId"),
@@ -30,12 +29,10 @@ public interface BookingMapper {
             @Mapping(target = "returnLocation", source = "returnLocationId", qualifiedByName = "locationFromId"),
     })
     Booking createRequestToBooking(CreateBookingRequest createBookingRequest);
-
     List<Booking> createRequestToBookingList(List<CreateBookingRequest> createBookingRequests);
 
-    // -------------------------
+
     // UPDATE
-    // -------------------------
     @Mappings({
             @Mapping(target = "bookingId", ignore = true),
             @Mapping(target = "pickupLocation", source = "pickupLocationId", qualifiedByName = "locationFromId"),
@@ -43,7 +40,7 @@ public interface BookingMapper {
             @Mapping(target = "carBookingStatus", source = "carBookingStatusId", qualifiedByName = "statusFromId"),
             @Mapping(target = "flatBookingStatus", source = "flatBookingStatusId", qualifiedByName = "statusFromId")
     })
-    Booking updateRequestToBooking(UpdateBookingRequest updateBookingRequest);
+    Booking updateRequestToBooking(UpdateBookingRequestDto updateBookingRequest);
 
 
     /**
@@ -56,7 +53,7 @@ public interface BookingMapper {
             @Mapping(target = "carBookingStatus", source = "carBookingStatusId", qualifiedByName = "statusFromId"),
             @Mapping(target = "flatBookingStatus", source = "flatBookingStatusId", qualifiedByName = "statusFromId")
     })
-    void applyUpdate(UpdateBookingRequest request, @MappingTarget Booking booking);
+    void applyUpdate(UpdateBookingRequestDto request, @MappingTarget Booking booking);
 
 
     // -------------------------

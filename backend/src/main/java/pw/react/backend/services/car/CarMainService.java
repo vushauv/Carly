@@ -168,15 +168,6 @@ public class CarMainService implements CarService {
         return DateUtils.calculateDayDifference(dateRange.getFrom(), dateRange.getTo()) + 1;
     }
 
-    // Mutates the DateRange object - ensures when price is calculated - that the same time range is considered
-    private DateRange normaliseDates(DateRange dateRange)
-        throws BadRequestException
-    {
-        if (!dateRange.getTo().isAfter(dateRange.getFrom()))
-            throw new BadRequestException("'to' must be after 'from'");
-        return dateRange;
-    }
-
     private List<Integer> searchCarsByFeatures(CarSearchCriteria searchCriteria,
                                                List<Integer> availableCarIds)
             throws BadRequestException
@@ -210,7 +201,7 @@ public class CarMainService implements CarService {
     private List<Integer> searchCarsByAvailability(CarSearchCriteria searchCriteria)
         throws BadRequestException
     {
-        var dateRange = this.normaliseDates(searchCriteria.getDateRange());
+        var dateRange = DateUtils.normaliseDates(searchCriteria.getDateRange());
         var from = dateRange.getFrom();
         var to = dateRange.getTo();
 

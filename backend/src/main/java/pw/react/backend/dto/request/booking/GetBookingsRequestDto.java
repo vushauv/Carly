@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class GetBookingsRequest {
+public class GetBookingsRequestDto {
 
     @Min(value = 0, message = "Page must be >= 0")
     private Integer page;

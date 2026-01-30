@@ -1,5 +1,6 @@
 package pw.react.backend.services.booking;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,8 @@ import pw.react.backend.exceptions.custom.CarBookingConflictException;
 import pw.react.backend.repositories.booking.BookingRepository;
 import org.springframework.data.domain.Page;
 
+import java.time.LocalTime;
+import java.time.chrono.ChronoLocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +32,7 @@ import pw.react.backend.services.car.model.CarSearchCriteria;
 import pw.react.backend.services.flatly.FlatlyService;
 import pw.react.backend.repositories.LocationRepository;
 import pw.react.backend.services.user.UserService;
+import pw.react.backend.utils.DateUtils;
 
 @Slf4j
 @Service
@@ -38,8 +42,6 @@ public class BookingMainService implements BookingService {
     private final BookingStatusDictionaryRepository bookingStatusDictionaryRepository;
     private final LocationRepository locationRepository;
     private final FlatlyService flatlyService;
-    private final UserRepository userRepository;
-    private final CarRepository carRepository;
     private final CarService carService;
     private static final Integer defaultPickUpLocation = 1; //default PickUpLocation if not provided
     private static final Integer defaultReturnLocation = 2; //default ReturnLocation if not provided
@@ -70,11 +72,7 @@ public class BookingMainService implements BookingService {
 
     @Override
     @Transactional
-    public List<Booking> batchSave(List<Booking> bookings) {
-        if (bookings == null || bookings.isEmpty()) {
-            log.warn("Bookings collection is empty or null.");
-            return Collections.emptyList();
-        }
+    public List<Booking> batchSave(List<Booking> bookings) throws BadRequestException {
         BookingStatusDictionary created =
                 bookingStatusDictionaryRepository.findByName(BookingStatus.CREATED.name())
                         .orElseThrow(() -> new ResourceNotFoundException(BookingStatus.CREATED.name() + " status not found. Seed data missing."));
@@ -83,6 +81,12 @@ public class BookingMainService implements BookingService {
             var carId = booking.getCar().getCarId();
             var userId = booking.getBookingId();
             var dateRange = new DateRange(booking.getCarBookingDateFrom(), booking.getCarBookingDateTo());
+            var now = LocalTime.now();
+
+            if(dateRange.getFrom().isBefore(ChronoLocalDateTime.from(now)))
+                throw new BadRequestException("The dateFrom cannot be before current time");
+            // Checks if a valid dateRange is provided
+            DateUtils.normaliseDates(dateRange);
 
             booking.setCarBookingStatus(created);
             if(!userService.userExistsById(userId))
@@ -121,16 +125,17 @@ public class BookingMainService implements BookingService {
     @Override
     public List<Booking> getBookingsPage(int pageNumber, int pageSize) {
         int defaultPageSize = 10;
-        return bookingRepository.findAll(PageRequest.of(pageNumber, pageSize == 0 ? defaultPageSize : pageSize)).getContent();
+        int page = Math.max(pageNumber, 0);
+        return bookingRepository.findAll(PageRequest.of(page, pageSize <= 0 ? defaultPageSize : pageSize)).getContent();
     }
 
     @Override
     public Page<Booking> search(BookingSearchCriteria criteria, int pageNumber, int pageSize) {
         int defaultPageSize = 10;
-        int p = Math.max(pageNumber, 0);
-        int s = (pageSize <= 0 ? defaultPageSize : pageSize);
+        int page = Math.max(pageNumber, 0);
+        int size = (pageSize <= 0 ? defaultPageSize : pageSize);
 
-        // TODO: IntelliSense tells me where is deprecated
+        // TODO: IntelliSense tells me 'where' is deprecated
         //some ORM magic, but allows to filer based on the input criteria
         Specification<Booking> spec = Specification.where(BookingSpecifications.isEnabled())
                 .and(BookingSpecifications.hasBookingId(criteria.getBookingId()))
@@ -139,7 +144,7 @@ public class BookingMainService implements BookingService {
                 .and(BookingSpecifications.dateFrom(criteria.getDateFrom()))
                 .and(BookingSpecifications.dateTo(criteria.getDateTo()));
 
-        return bookingRepository.findAll(spec, PageRequest.of(p, s));
+        return bookingRepository.findAll(spec, PageRequest.of(page, size));
     }
 
     @Override

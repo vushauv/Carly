@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 @Where(clause = "is_enabled = 1")
 @Table(name = "Bookings")
 public class Booking extends Auditable {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "BookingId", nullable = false)
