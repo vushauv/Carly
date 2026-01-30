@@ -1,4 +1,3 @@
-import React from "react";
 import Button from "../Button/Button.tsx";
 import styles from "./Pagination.module.css";
 
@@ -9,12 +8,8 @@ type PaginationProps = {
   onPrev: () => void;
   onNext: () => void;
 
-  // Optional extras
-  className?: string;
   disabled?: boolean;           // disable whole pagination
   showPageInfo?: boolean;       // default true
-  prevLabel?: React.ReactNode;  // default "Prev"
-  nextLabel?: React.ReactNode;  // default "Next"
 };
 
 export default function Pagination({
@@ -22,11 +17,8 @@ export default function Pagination({
   totalPages,
   onPrev,
   onNext,
-  className,
   disabled = false,
   showPageInfo = true,
-  prevLabel = "Prev",
-  nextLabel = "Next",
 }: PaginationProps) {
   const safeTotal = Math.max(1, totalPages);
   const safeCurrent = Math.min(Math.max(1, currentPage), safeTotal);
@@ -35,10 +27,9 @@ export default function Pagination({
   const nextDisabled = disabled || safeCurrent >= safeTotal;
 
   return (
-    <div className={`${styles.pagination} ${className ?? ""}`}>
-      <Button disabled={prevDisabled} onClick={onPrev} label="< prev">
-        {prevLabel}
-      </Button>
+    <div className={`${styles.pagination}`}>
+      <Button disabled={prevDisabled} onClick={onPrev} label="Prev"/>
+
 
       {showPageInfo && (
         <span className={styles.pageInfo}>
@@ -46,9 +37,7 @@ export default function Pagination({
         </span>
       )}
 
-      <Button disabled={nextDisabled} onClick={onNext} label="next >">
-        {nextLabel}
-      </Button>
+      <Button disabled={nextDisabled} onClick={onNext} label="Next"/>
     </div>
   );
 }
