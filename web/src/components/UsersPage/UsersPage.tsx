@@ -81,24 +81,6 @@ const ManageUsersPage = () => {
 
 
 
-      {/* <div className={styles.pagination}>
-        <Button
-          disabled={currentPage === 1}
-        >
-          Prev
-        </Button>
-
-        <span className={styles.pageInfo}>
-          Page {currentPage} / {totalPages}
-        </span>
-
-        <Button
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </Button>
-      </div> */}
-
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
