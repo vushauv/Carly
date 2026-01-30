@@ -17,7 +17,7 @@ import pw.react.backend.repositories.LocationRepository;
 import pw.react.backend.repositories.booking.BookingRepository;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
 import pw.react.backend.repositories.user.UserRepository;
-import pw.react.backend.services.car.CarService;
+import pw.react.backend.services.car.CarMainService;
 
 import java.util.List;
 import java.util.Map;
@@ -43,7 +43,7 @@ public class ParklyMainService implements ParklyService {
     private final ParklyCarMapper parklyCarMapper;
     private final ParklyBookingMapper parklyBookingMapper;
 
-    private final CarService carService;
+    private final CarMainService carService;
 
     @Override
     @Transactional

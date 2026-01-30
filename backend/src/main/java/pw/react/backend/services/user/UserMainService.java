@@ -7,7 +7,7 @@ import pw.react.backend.domain.enums.UserRole;
 import pw.react.backend.domain.user.User;
 import pw.react.backend.domain.user.UserTypeDictionary;
 import pw.react.backend.dto.mapper.UserMapper;
-import pw.react.backend.dto.request.UpdateUserRequest;
+import pw.react.backend.dto.request.user.UpdateUserRequest;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.repositories.user.UserTypeDictionaryRepository;

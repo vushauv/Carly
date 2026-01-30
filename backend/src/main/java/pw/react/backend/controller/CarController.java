@@ -29,8 +29,8 @@ import pw.react.backend.dto.response.car.CreateCarResponseDto;
 import pw.react.backend.dto.response.car.GetCarImagesResponseDto;
 import pw.react.backend.dto.response.car.GetCarResponseDto;
 import pw.react.backend.exceptions.ResourceNotFoundException;
-import pw.react.backend.services.car.CarImageService;
-import pw.react.backend.services.car.CarService;
+import pw.react.backend.services.car.CarImageMainService;
+import pw.react.backend.services.car.CarMainService;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,12 +43,12 @@ import static java.util.stream.Collectors.joining;
 public class CarController {
     public static final String CAR_PATH = PathResolver.Car.Base;
 
-    private final CarService carService;
+    private final CarMainService carService;
     private final CarMapper carMapper;
     private final CarFeatureMapper carFeatureMapper;
     private final CarSearchCriteriaMapper carSearchCriteriaMapper;
     private final CarImageMapper carImageMapper;
-    private final CarImageService carImageService;
+    private final CarImageMainService carImageService;
     private final CarImageUrlMapper carImageUrlMapper;
 
 

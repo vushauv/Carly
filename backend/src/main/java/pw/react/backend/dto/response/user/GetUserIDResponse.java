@@ -1,4 +1,4 @@
-package pw.react.backend.dto.response;
+package pw.react.backend.dto.response.user;
 
 
 import lombok.Getter;

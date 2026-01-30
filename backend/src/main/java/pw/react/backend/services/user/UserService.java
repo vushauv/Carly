@@ -1,7 +1,7 @@
 package pw.react.backend.services.user;
 
 import pw.react.backend.domain.user.User;
-import pw.react.backend.dto.request.UpdateUserRequest;
+import pw.react.backend.dto.request.user.UpdateUserRequest;
 
 import java.util.List;
 

@@ -12,7 +12,7 @@ import pw.react.backend.dto.mapper.car.CarSearchCriteriaMapper;
 import pw.react.backend.dto.parkly.*;
 import pw.react.backend.dto.mapper.parkly.ParklyCarMapper;
 import pw.react.backend.exceptions.ResourceNotFoundException;
-import pw.react.backend.services.car.CarService;
+import pw.react.backend.services.car.CarMainService;
 import pw.react.backend.services.parkly.ParklyService;
 
 import java.time.LocalDate;
@@ -33,7 +33,7 @@ public class ParklyController {
     public static final String PARKLY_PATH = PathResolver.Parkly.Base;
 
     private final ParklyService parklyService;
-    private final CarService carService;
+    private final CarMainService carService;
     private final ParklyCarMapper parklyCarMapper;
     private final CarSearchCriteriaMapper carSearchCriteriaMapper;
 
