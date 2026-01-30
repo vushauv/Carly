@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-//optional
-public class FlatlyCancelBookingResponse {
-    private boolean cancelled;
+public class FlatlyAmenityDto {
+    private Integer id;
+    private String name;
 }

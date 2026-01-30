@@ -5,66 +5,145 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import pw.react.backend.integrations.flatly.dto.FlatlyCancelBookingResponse;
-import pw.react.backend.integrations.flatly.dto.FlatlyCreateBookingRequest;
-import pw.react.backend.integrations.flatly.dto.FlatlyCreateBookingResponse;
+import pw.react.backend.integrations.flatly.dto.requests.FlatlyCreateBookingRequest;
+import pw.react.backend.integrations.flatly.dto.responses.FlatlyCreateBookingResponse;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
+import java.util.List;
+import pw.react.backend.integrations.flatly.dto.FlatlyFlatDto;
+import java.time.LocalDateTime;
+import java.net.URI;
+import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.http.*;
+import pw.react.backend.integrations.flatly.dto.FlatlyBookingDto;
 
 @Component
 @RequiredArgsConstructor
 public class FlatlyClient {
-
+    //TODO: adjust URLs
     private final RestTemplate restTemplate;
 
     //path to application.yml param
-    @Value("${integrations.flatly.base-url0")
+    @Value("${integrations.flatly.base-url}")
     private String baseUrl;
 
-    public FlatlyCreateBookingResponse createBooking(FlatlyCreateBookingRequest request) {
-        //tests
-        FlatlyCreateBookingResponse response = new FlatlyCreateBookingResponse();
+    // Toggle for tests
+    // In prod set to false or remove later
+    private final boolean mockMode = true;
 
-        response.setFlatBookingId(
-                request.getBookingId() != null
-                        ? request.getBookingId()
-                        : System.currentTimeMillis()
+    private int mockFlatBookingId = 100;
+
+    public  ResponseEntity<FlatlyCreateBookingResponse> createBooking(FlatlyCreateBookingRequest request) {
+        if (mockMode) {
+            FlatlyCreateBookingResponse body = new FlatlyCreateBookingResponse();
+            body.setId(mockFlatBookingId++);
+            body.setStatus("CREATED");
+            return ResponseEntity.status(HttpStatus.CREATED).body(body);
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<FlatlyCreateBookingRequest> entity = new HttpEntity<>(request, headers);
+
+        return restTemplate.exchange(
+                baseUrl + "/bookings",
+                HttpMethod.POST,
+                entity,
+                FlatlyCreateBookingResponse.class
         );
-        response.setStatus("CREATED");
-
-        return response;
-//prod:
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//
-//        HttpEntity<FlatlyCreateBookingRequest> entity = new HttpEntity<>(request, headers);
-//
-//        ResponseEntity<FlatlyCreateBookingResponse> response = restTemplate.exchange(
-//                baseUrl + "/bookings",
-//                HttpMethod.POST,
-//                entity,
-//                FlatlyCreateBookingResponse.class
-//        );
-//
-//        return response.getBody();
     }
 
-    public FlatlyCancelBookingResponse cancelBooking(Long flatBookingId) {
-        //tests
-        FlatlyCancelBookingResponse response = new FlatlyCancelBookingResponse();
-        response.setCancelled(true);
+    public ResponseEntity<Void> cancelBooking(Integer flatBookingId) {
 
-        return response;
+        if (mockMode) {
+            return ResponseEntity.ok().build();
+        }
 
-        //prod:
-//        HttpHeaders headers = new HttpHeaders();
-//        HttpEntity<Void> entity = new HttpEntity<>(headers);
-//
-//        ResponseEntity<FlatlyCancelBookingResponse> response = restTemplate.exchange(
-//                baseUrl + "/bookings/" + flatBookingId,
-//                HttpMethod.DELETE,
-//                entity,
-//                FlatlyCancelBookingResponse.class
-//        );
-//
-//        return response.getBody();
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        return restTemplate.exchange(
+                baseUrl + "/bookings/" + flatBookingId,
+                HttpMethod.DELETE,
+                entity,
+                Void.class
+        );
     }
+
+    public ResponseEntity<List<FlatlyFlatDto>> getAvailableBookings(
+            LocalDateTime dateFrom,
+            LocalDateTime dateTo
+    ) {
+
+        if (mockMode) {
+            FlatlyFlatDto flat = new FlatlyFlatDto();
+            flat.setId(69);
+            flat.setName("Flatly Downtown Studio");
+            flat.setDescription("Mock flat available in given period");
+            flat.setStatus("ACTIVE");
+
+            return ResponseEntity.ok(List.of(flat));
+        }
+
+        URI uri = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + "/flats/available")
+                .queryParam("dateFrom", dateFrom)
+                .queryParam("dateTo", dateTo)
+                .build()
+                .toUri();
+
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        return restTemplate.exchange(
+                uri,
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<List<FlatlyFlatDto>>() {}
+        );
+    }
+    public ResponseEntity<FlatlyFlatDto> getFlatById(Integer flatId) {
+
+        if (mockMode) {
+            FlatlyFlatDto flat = new FlatlyFlatDto();
+            flat.setId(flatId);
+            flat.setName("Mock Flat");
+            flat.setDescription("Mock flat details returned by FlatlyClient in mockMode");
+            flat.setStatus("ACTIVE");
+            return ResponseEntity.ok(flat);
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        return restTemplate.exchange(
+                baseUrl + "/flats/" + flatId,
+                HttpMethod.GET,
+                entity,
+                FlatlyFlatDto.class
+        );
+    }
+
+    public ResponseEntity<FlatlyBookingDto> getFlatBookingById(Integer flatBookingId) {
+
+        if (mockMode) {
+            FlatlyBookingDto b = new FlatlyBookingDto();
+            b.setId(flatBookingId);
+            b.setStatus("CONFIRMED");
+            return ResponseEntity.ok(b);
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        return restTemplate.exchange(
+                baseUrl + "/bookings/" + flatBookingId,
+                HttpMethod.GET,
+                entity,
+                FlatlyBookingDto.class
+        );
+    }
+
+
 }

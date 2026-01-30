@@ -98,7 +98,7 @@ public class ParklyMainService implements ParklyService {
                 });
     }
     @Transactional
-    public boolean cancelCarBooking(Long externalBookingId) {
+    public boolean cancelCarBooking(Integer externalBookingId) {
         User parklyUser = userRepository.findByEmail("parkly@pw.edu.pl")
                 .orElseThrow(() -> new ResourceNotFoundException("Parkly system user not found. Seed data missing."));
 
@@ -122,7 +122,7 @@ public class ParklyMainService implements ParklyService {
     }
     @Override
     @Transactional(readOnly = true)
-    public ParklyBookingDetailsResponse getCarBookingByExternalBookingId(Long externalBookingId) {
+    public ParklyBookingDetailsResponse getCarBookingByExternalBookingId(Integer externalBookingId) {
 
         User parklyUser = userRepository.findByEmail(PARKLY_SYSTEM_EMAIL)
                 .orElseThrow(() -> new ResourceNotFoundException("Parkly system user not found. Seed data missing."));

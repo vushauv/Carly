@@ -60,7 +60,7 @@ public class ParklyController {
     @DeleteMapping(PathResolver.Parkly.CarBookings + "/{externalBookingId}")
     public ResponseEntity<String> cancelCarBooking(
             @RequestHeader HttpHeaders headers,
-            @PathVariable Long externalBookingId
+            @PathVariable Integer externalBookingId
     ) {
         logHeaders(headers);
 
