@@ -68,7 +68,7 @@ export default function CarDetails() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F9FAFB" },
+  safe: { flex: 1, backgroundColor: "#FFFBEB" },
   page: { padding: 16, gap: 12 },
   backBtn: {
     alignSelf: "flex-start",
@@ -77,19 +77,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#FDE68A",
   },
-  backText: { fontWeight: "800", color: "#111827" },
+  backText: { fontWeight: "900", color: "#111827" },
   title: { fontSize: 22, fontWeight: "900", color: "#111827" },
-  muted: { color: "#6B7280", fontWeight: "700" },
+  muted: { color: "#6B7280", fontWeight: "800" },
 
   infoCard: {
     backgroundColor: "#fff",
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#FDE68A",
     gap: 6,
   },
-  line: { fontWeight: "700", color: "#111827" },
+  line: { fontWeight: "800", color: "#111827" },
 });
+

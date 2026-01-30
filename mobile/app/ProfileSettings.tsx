@@ -279,7 +279,7 @@ export default function ProfileSettings() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F9FAFB" },
+  safe: { flex: 1, backgroundColor: "#FFFBEB" },
 
   header: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 },
   backBtn: {
@@ -289,9 +289,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#FDE68A",
   },
-  backText: { fontWeight: "800", color: "#111827" },
+  backText: { fontWeight: "900", color: "#111827" },
 
   page: { paddingHorizontal: 16, paddingBottom: 16, gap: 14 },
   pageTitle: { fontSize: 22, fontWeight: "900", color: "#111827", marginTop: 4 },
@@ -301,14 +301,16 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#FDE68A",
     gap: 8,
   },
   sectionTitle: { fontSize: 16, fontWeight: "900", color: "#111827", marginBottom: 2 },
 
-  label: { color: "#374151", fontWeight: "800", marginTop: 6 },
+  label: { color: "#111827", fontWeight: "900", marginTop: 6 },
   input: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -317,7 +319,7 @@ const styles = StyleSheet.create({
   },
   inputReadOnly: { opacity: 0.85 },
 
-  helper: { marginTop: 6, color: "#6B7280", fontWeight: "600" },
+  helper: { marginTop: 6, color: "#6B7280", fontWeight: "700" },
 
   btnRow: { flexDirection: "row", gap: 10, marginTop: 10 },
   btn: {
@@ -326,10 +328,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     minWidth: 92,
+    borderWidth: 1,
   },
-  btnEdit: { backgroundColor: "#BFDBFE" },
-  btnSave: { backgroundColor: "#BBF7D0" },
-  btnDiscard: { backgroundColor: "#E5E7EB" },
+
+  // accents (blue/green/neutral)
+  btnEdit: { backgroundColor: "#DBEAFE", borderColor: "#93C5FD" },
+  btnSave: { backgroundColor: "#DCFCE7", borderColor: "#86EFAC" },
+  btnDiscard: { backgroundColor: "#FEF3C7", borderColor: "#FDE68A" },
   btnTextDark: { fontWeight: "900", color: "#111827" },
 
   bottomActions: { gap: 10, marginTop: 4, alignItems: "center" },
@@ -338,11 +343,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
+    borderWidth: 1,
   },
-  bigBtnLogout: { backgroundColor: "#BFDBFE" },
-  bigBtnDelete: { backgroundColor: "#FECACA" },
+  bigBtnLogout: { backgroundColor: "#DBEAFE", borderColor: "#93C5FD" },
+  bigBtnDelete: { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" },
   bigBtnTextDark: { fontWeight: "900", color: "#111827" },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  muted: { color: "#6B7280", fontWeight: "700" },
+  muted: { color: "#6B7280", fontWeight: "800" },
 });
+
+

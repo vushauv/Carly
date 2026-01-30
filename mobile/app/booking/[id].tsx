@@ -51,7 +51,7 @@ export default function BookingDetails() {
 const styles = StyleSheet.create({
   page: {
     padding: 16,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#FFFBEB",
     flexGrow: 1,
     gap: 12,
   },
@@ -62,15 +62,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#FDE68A",
   },
   backText: {
-    fontWeight: "700",
+    fontWeight: "900",
     color: "#111827",
   },
   title: {
     fontSize: 22,
-    fontWeight: "800",
+    fontWeight: "900",
     color: "#111827",
   },
   card: {
@@ -79,19 +79,20 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 8,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#FDE68A",
   },
   line: {
-    fontWeight: "600",
+    fontWeight: "800",
     color: "#111827",
   },
   hint: {
     color: "#6B7280",
     marginTop: 8,
-    fontWeight: "700",
+    fontWeight: "800",
   },
   notFound: {
     color: "#6B7280",
-    fontWeight: "700",
+    fontWeight: "800",
   },
 });
+

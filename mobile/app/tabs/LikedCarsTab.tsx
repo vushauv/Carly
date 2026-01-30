@@ -498,12 +498,13 @@ export default function LikedCarsTab() {
                   You have made a successful booking of flat for {dateFrom} to {dateTo}
                 </Text>
 
-                <Pressable
-                  style={[styles.actionBtn, styles.actionPrimary]}
-                  onPress={() => Alert.alert("Not implemented", "See my bookings")}
-                >
-                  <Text style={styles.actionText}>See my bookings</Text>
-                </Pressable>
+               <Pressable
+                 style={[styles.actionBtn, styles.actionPrimary]}
+                 onPress={goToCurrentBookings}
+               >
+                 <Text style={styles.actionText}>See my bookings</Text>
+               </Pressable>
+
 
                 <View style={{ height: 20 }} />
               </ScrollView>
@@ -516,7 +517,7 @@ export default function LikedCarsTab() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F9FAFB" },
+  safe: { flex: 1, backgroundColor: "#FFFBEB" },
 
   header: {
     paddingHorizontal: 16,
@@ -526,10 +527,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  title: { fontSize: 22, fontWeight: "800", color: "#111827" },
+  title: { fontSize: 22, fontWeight: "900", color: "#111827" },
 
   countPill: {
-    backgroundColor: "#111827",
+    backgroundColor: "#3B82F6",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
@@ -540,25 +541,28 @@ const styles = StyleSheet.create({
 
   empty: { marginTop: 80, alignItems: "center", gap: 8 },
   emptyTitle: { fontSize: 16, fontWeight: "900", color: "#111827" },
-  emptySub: { color: "#6B7280", fontWeight: "600", textAlign: "center" },
+  emptySub: { color: "#6B7280", fontWeight: "700", textAlign: "center" },
 
   clearBtn: {
     alignSelf: "flex-start",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FEF3C7",
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
   },
   clearBtnText: { fontWeight: "900", color: "#111827" },
 
-  // Footer actions that you pass into CarCardView
   actionsInline: { flexDirection: "row", gap: 10 },
 
   bookBtn: {
-    backgroundColor: "#FEF9C3",
+    backgroundColor: "#FACC15",
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#F59E0B",
   },
   bookBtnText: { fontWeight: "900", color: "#111827" },
 
@@ -567,11 +571,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
   },
-  removeBtnText: { fontWeight: "900", color: "#991B1B" },
+  removeBtnText: { fontWeight: "900", color: "#B91C1C" },
 
   // Flow
-  flowSafe: { flex: 1, backgroundColor: "#F9FAFB" },
+  flowSafe: { flex: 1, backgroundColor: "#FFFBEB" },
   flowHeader: {
     paddingHorizontal: 16,
     paddingTop: 6,
@@ -581,31 +587,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   flowTitle: { fontSize: 18, fontWeight: "900", color: "#111827" },
-  flowClose: { fontWeight: "900", color: "#111827" },
+  flowClose: { fontWeight: "900", color: "#2563EB" },
 
   flowContent: { paddingHorizontal: 16, paddingBottom: 16 },
 
   flowCarTitle: { marginTop: 8, fontWeight: "900", color: "#111827", fontSize: 20 },
 
-  fieldLabel: { marginTop: 14, marginBottom: 6, color: "#374151", fontWeight: "800" },
+  fieldLabel: { marginTop: 14, marginBottom: 6, color: "#111827", fontWeight: "900" },
 
-  calendarWrap: { borderRadius: 14, overflow: "hidden", backgroundColor: "#fff" },
+  calendarWrap: {
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+  },
 
   flowActions: { marginTop: 18, flexDirection: "row", gap: 10 },
 
-  actionBtn: { flex: 1, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
-  actionPrimary: { backgroundColor: "#111827" },
-  actionGhost: { backgroundColor: "#F3F4F6" },
-  actionText: { fontWeight: "900", color: "#fff" },
+  actionBtn: { flex: 1, borderRadius: 14, paddingVertical: 14, alignItems: "center", borderWidth: 1 },
+  actionPrimary: { backgroundColor: "#FACC15", borderColor: "#F59E0B" },
+  actionGhost: { backgroundColor: "#FEF3C7", borderColor: "#FDE68A" },
+  actionText: { fontWeight: "900", color: "#111827" },
   actionGhostText: { color: "#111827" },
 
-  successText: { marginTop: 12, marginBottom: 16, fontWeight: "900", color: "#065F46" },
+  successText: { marginTop: 12, marginBottom: 16, fontWeight: "900", color: "#16A34A" },
 
   partnerBox: {
     marginTop: 16,
     backgroundColor: "#fff",
     borderRadius: 18,
     padding: 14,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
     shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 10,
@@ -615,7 +629,7 @@ const styles = StyleSheet.create({
   partnerTitle: { fontWeight: "900", color: "#111827" },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 10 },
-  muted: { color: "#6B7280", fontWeight: "700" },
+  muted: { color: "#6B7280", fontWeight: "800" },
 
   // Flat cards
   flatCard: {
@@ -623,6 +637,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 18,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
     shadowColor: "#000",
     shadowOpacity: 0.06,
     shadowRadius: 18,
@@ -630,7 +646,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   flatCarouselWrap: { position: "relative" },
-  flatImage: { width: SCREEN_WIDTH - 32, height: 240, backgroundColor: "#E5E7EB" },
+  flatImage: { width: SCREEN_WIDTH - 32, height: 240, backgroundColor: "#FEF3C7" },
 
   dotsRow: {
     position: "absolute",
@@ -651,10 +667,10 @@ const styles = StyleSheet.create({
 
   flatBody: { padding: 14 },
   flatTitle: { fontSize: 18, fontWeight: "900", color: "#111827" },
-  flatSub: { marginTop: 4, color: "#6B7280", fontWeight: "700" },
+  flatSub: { marginTop: 4, color: "#6B7280", fontWeight: "800" },
   flatMetaRow: { marginTop: 10, flexDirection: "row", justifyContent: "space-between" },
   flatMeta: { fontWeight: "900", color: "#111827" },
-  flatHint: { marginTop: 10, color: "#9CA3AF", fontWeight: "700" },
+  flatHint: { marginTop: 10, color: "#9CA3AF", fontWeight: "800" },
 
   flowActionsFixed: {
     paddingHorizontal: 16,
@@ -664,4 +680,5 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 });
+
 

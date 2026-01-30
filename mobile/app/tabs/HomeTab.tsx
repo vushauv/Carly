@@ -269,7 +269,7 @@ function Stars({ value }: { value: number }) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F9FAFB" },
+  safe: { flex: 1, backgroundColor: "#FFFBEB" },
 
   header: {
     paddingHorizontal: 16,
@@ -282,25 +282,29 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 22, fontWeight: "900", color: "#111827" },
 
   profileButton: {
-    backgroundColor: "#111827",
+    backgroundColor: "#FACC15",
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#F59E0B",
   },
-  profileButtonText: { color: "#fff", fontWeight: "800" },
+  profileButtonText: { color: "#111827", fontWeight: "900" },
 
   segmentWrap: { paddingHorizontal: 16, paddingBottom: 10, gap: 8 },
-  sectionLabel: { color: "#6B7280", fontWeight: "700" },
+  sectionLabel: { color: "#6B7280", fontWeight: "800" },
   segment: {
     flexDirection: "row",
     borderRadius: 999,
     overflow: "hidden",
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#FEF3C7",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
   },
   segmentBtn: { flex: 1, paddingVertical: 10, alignItems: "center" },
-  segmentBtnActive: { backgroundColor: "#111827" },
-  segmentText: { fontWeight: "800", color: "#111827" },
-  segmentTextActive: { color: "#fff" },
+  segmentBtnActive: { backgroundColor: "#FACC15" },
+  segmentText: { fontWeight: "900", color: "#111827" },
+  segmentTextActive: { color: "#111827" },
 
   body: { flex: 1, paddingHorizontal: 16 },
   list: { paddingBottom: 16, gap: 12 },
@@ -311,7 +315,7 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#FDE68A",
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 14,
@@ -320,26 +324,29 @@ const styles = StyleSheet.create({
 
   sectionDivider: {
     height: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#FDE68A",
     marginVertical: 2,
   },
 
   bottomInfo: { gap: 10 },
   bottomRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  metaText: { color: "#6B7280", fontWeight: "700" },
+  metaText: { color: "#6B7280", fontWeight: "800" },
   stars: { fontWeight: "900", color: "#111827" },
 
   cardActions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  linkText: { fontWeight: "900", color: "#111827" },
+  linkText: { fontWeight: "900", color: "#2563EB" },
 
   cancelBtn: {
     backgroundColor: "#FEE2E2",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
   },
-  cancelBtnText: { fontWeight: "900", color: "#991B1B" },
+  cancelBtnText: { fontWeight: "900", color: "#B91C1C" },
 
   emptyWrap: { paddingVertical: 24, alignItems: "center" },
-  mutedText: { color: "#6B7280", fontWeight: "700" },
+  mutedText: { color: "#6B7280", fontWeight: "800" },
 });
+

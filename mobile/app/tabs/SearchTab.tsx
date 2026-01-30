@@ -3,7 +3,7 @@
 //npx expo install @react-native-async-storage/async-storage
 //npx expo install @react-navigation/native
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -21,6 +21,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 
 import type { CarCard, CarColor, CarSearchFilters, FuelType } from "../../lib/models";
 import { dislikeCar, getSearchLookups, likeCar, searchCars } from "../../lib/carlyApi";
@@ -84,6 +85,11 @@ export default function SearchTab() {
     setLikedSet(likedIds);
     setDislikedSet(dislikedIds);
   }
+    useFocusEffect(
+      useCallback(() => {
+        hydratePrefs();
+      }, [])
+    );
 
   async function hydrateLookups() {
     const l = await getSearchLookups();
@@ -567,33 +573,37 @@ function FiltersModal({
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F9FAFB" },
+  safe: { flex: 1, backgroundColor: "#FFFBEB" },
 
   header: {
     paddingHorizontal: 16,
-    paddingTop: 6,
+    paddingTop: 8,
     paddingBottom: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  headerTitle: { fontSize: 22, fontWeight: "700", color: "#111827" },
+  headerTitle: { fontSize: 22, fontWeight: "900", color: "#111827" },
 
   likedPill: {
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#FEF3C7",
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
   },
-  likedPillText: { color: "#111827", fontSize: 12, fontWeight: "800" },
+  likedPillText: { color: "#111827", fontSize: 12, fontWeight: "900" },
 
   filtersButton: {
-    backgroundColor: "#111827",
+    backgroundColor: "#FACC15",
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#F59E0B",
   },
-  filtersButtonText: { color: "#fff", fontWeight: "600" },
+  filtersButtonText: { color: "#111827", fontWeight: "900" },
 
   chipsRow: {
     paddingHorizontal: 16,
@@ -603,32 +613,32 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   chip: {
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#FEF3C7",
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
   },
-  chipText: { color: "#111827", fontSize: 12, fontWeight: "600" },
+  chipText: { color: "#111827", fontSize: 12, fontWeight: "800" },
 
   body: { flex: 1, paddingHorizontal: 16, paddingBottom: 12 },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 10 },
-  mutedText: { color: "#6B7280", fontWeight: "600" },
-  mutedTextSmall: { color: "#9CA3AF" },
-  errorText: { color: "#B91C1C", fontWeight: "700" },
+  mutedText: { color: "#6B7280", fontWeight: "700" },
+  mutedTextSmall: { color: "#9CA3AF", fontWeight: "700" },
+  errorText: { color: "#B91C1C", fontWeight: "900" },
   retryBtn: {
-    backgroundColor: "#111827",
+    backgroundColor: "#3B82F6",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 10,
   },
-  retryText: { color: "#fff", fontWeight: "700" },
+  retryText: { color: "#fff", fontWeight: "900" },
 
   deck: { flex: 1, justifyContent: "center", alignItems: "center" },
 
-  card: {
-    width: "100%",
-  },
+  card: { width: "100%" },
   cardBehind: { position: "absolute", top: 12, transform: [{ scale: 0.98 }], opacity: 0.9 },
   cardFront: { position: "absolute", top: 0 },
 
@@ -641,7 +651,7 @@ const styles = StyleSheet.create({
     zIndex: 50,
   },
   toastTextWrap: {
-    backgroundColor: "#111827",
+    backgroundColor: "#2563EB",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 999,
@@ -654,26 +664,29 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
+    borderWidth: 1,
   },
   actionBtnDisabled: { opacity: 0.5 },
   actionBtnText: { fontWeight: "900", fontSize: 16 },
-  dislikeBtn: { backgroundColor: "#FEE2E2" },
-  likeBtn: { backgroundColor: "#FEF9C3" },
+  dislikeBtn: { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" },
+  likeBtn: { backgroundColor: "#FACC15", borderColor: "#F59E0B" },
 
   prefetchText: {
     textAlign: "center",
     marginTop: 10,
     color: "#6B7280",
-    fontWeight: "700",
+    fontWeight: "800",
   },
 
   seeMoreBtn: {
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#DBEAFE",
+    borderWidth: 1,
+    borderColor: "#93C5FD",
   },
-  seeMoreText: { fontWeight: "900", color: "#111827" },
+  seeMoreText: { fontWeight: "900", color: "#1D4ED8" },
 
   modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)" },
   modalSheet: {
@@ -682,42 +695,50 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     maxHeight: "82%",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
   },
   modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   modalTitle: { fontSize: 18, fontWeight: "900", color: "#111827" },
-  modalClose: { fontWeight: "800", color: "#111827" },
+  modalClose: { fontWeight: "900", color: "#2563EB" },
 
-  fieldLabel: { marginTop: 14, marginBottom: 6, color: "#374151", fontWeight: "800" },
-  helperText: { marginTop: 8, color: "#6B7280", fontWeight: "600" },
+  fieldLabel: { marginTop: 14, marginBottom: 6, color: "#111827", fontWeight: "900" },
+  helperText: { marginTop: 8, color: "#6B7280", fontWeight: "700" },
 
   input: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFBEB",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    color: "#111827",
+    fontWeight: "700",
   },
 
   optionRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
 
   option: {
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#FDE68A",
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFBEB",
   },
-  optionActive: { backgroundColor: "#111827", borderColor: "#111827" },
-  optionText: { color: "#111827", fontWeight: "800" },
-  optionTextActive: { color: "#fff" },
+  optionActive: { backgroundColor: "#FACC15", borderColor: "#F59E0B" },
+  optionText: { color: "#111827", fontWeight: "900" },
+  optionTextActive: { color: "#111827" },
 
   priceInputsRow: { flexDirection: "row", gap: 10 },
   priceInput: { flex: 1 },
 
   modalActions: { marginTop: 18, flexDirection: "row", gap: 10 },
-  modalBtn: { flex: 1, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
-  modalBtnPrimary: { backgroundColor: "#111827" },
-  modalBtnGhost: { backgroundColor: "#F3F4F6" },
-  modalBtnText: { fontWeight: "900", color: "#fff" },
+  modalBtn: { flex: 1, borderRadius: 14, paddingVertical: 14, alignItems: "center", borderWidth: 1 },
+  modalBtnPrimary: { backgroundColor: "#FACC15", borderColor: "#F59E0B" },
+  modalBtnGhost: { backgroundColor: "#FEF3C7", borderColor: "#FDE68A" },
+  modalBtnText: { fontWeight: "900", color: "#111827" },
   modalBtnTextGhost: { color: "#111827" },
 });
+
+
