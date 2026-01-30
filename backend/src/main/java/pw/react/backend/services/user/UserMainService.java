@@ -3,6 +3,7 @@ package pw.react.backend.services.user;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import pw.react.backend.domain.enums.UserRole;
 import pw.react.backend.domain.user.User;
 import pw.react.backend.domain.user.UserTypeDictionary;
 import pw.react.backend.dto.mapper.UserMapper;
@@ -28,9 +29,11 @@ public class UserMainService implements UserService {
             throw new IllegalStateException("Email already in use");
         }
 
+        // Changed this line
+        // TODO: test
         UserTypeDictionary customerType =
-                userTypeDictionaryRepository.findById((short) 1)
-                        .orElseThrow(() -> new ResourceNotFoundException("UserTypeDictionary not found: 1"));
+                userTypeDictionaryRepository.findById((short)UserRole.CUSTOMER.getCode())
+                        .orElseThrow(() -> new IllegalStateException("UserTypeDictionary not found: " + UserRole.CUSTOMER.getCode()));
 
         user.setUserType(customerType);
         user.setEnabled(true);

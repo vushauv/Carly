@@ -40,7 +40,7 @@ public class FlatlyController {
         return ResponseEntity.ok("Flatly booking is already cancelled for bookingId=" + bookingId);
     }
 
-    @GetMapping("/flats/available")
+    @GetMapping(PathResolver.Flatly.Flats + "/available")
     public ResponseEntity<List<FlatlyFlatDto>> getAvailableFlats(
             @RequestParam(name = "dateFrom") LocalDateTime dateFrom,
             @RequestParam(name = "dateTo") LocalDateTime dateTo
@@ -50,12 +50,12 @@ public class FlatlyController {
         );
     }
 
-    @GetMapping("/flats/{flatId}")
+    @GetMapping(PathResolver.Flatly.Flats + "/{flatId}")
     public ResponseEntity<FlatlyFlatDto> getFlatDetails(@PathVariable Integer flatId) {
         return ResponseEntity.ok(flatlyService.getFlatDetails(flatId));
     }
 
-    @GetMapping("/flat-bookings/{flatBookingId}")
+    @GetMapping( PathResolver.Flatly.FlatBookings + "/{flatBookingId}")
     public ResponseEntity<FlatlyBookingDto> getFlatBookingDetails(@PathVariable Integer flatBookingId) {
         return ResponseEntity.ok(flatlyService.getFlatBookingDetails(flatBookingId));
     }

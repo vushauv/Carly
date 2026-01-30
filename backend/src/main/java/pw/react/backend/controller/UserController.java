@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pw.react.backend.controller.path.PathResolver;
 import pw.react.backend.domain.user.User;
 import pw.react.backend.dto.mapper.UserMapper;
 import pw.react.backend.dto.request.LoginUserRequest;
@@ -27,7 +28,7 @@ import static java.util.stream.Collectors.joining;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UserController {
 
-    public static final String USERS_PATH = "/users";
+    public static final String USERS_PATH = PathResolver.Users.Base;
 
     private final UserService userService;
     private final UserMapper userMapper;

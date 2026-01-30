@@ -41,8 +41,9 @@ public class ParklyController {
     @GetMapping(PathResolver.Parkly.CarBookings + "/{externalBookingId}")
     public ResponseEntity<ParklyBookingDetailsResponse> getCarBooking(
             @RequestHeader HttpHeaders headers,
-            @PathVariable Long externalBookingId
+            @PathVariable Integer externalBookingId
     ) {
+        // TODO: externalBookingId caused an error when running code. Had to change it to accept Integer
         logHeaders(headers);
         return ResponseEntity.ok(parklyService.getCarBookingByExternalBookingId(externalBookingId));
     }
