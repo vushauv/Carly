@@ -75,15 +75,9 @@ public class BookingMainService implements BookingService {
             log.warn("Bookings collection is empty or null.");
             return Collections.emptyList();
         }
-
         BookingStatusDictionary created =
                 bookingStatusDictionaryRepository.findByName(BookingStatus.CREATED.name())
                         .orElseThrow(() -> new ResourceNotFoundException(BookingStatus.CREATED.name() + " status not found. Seed data missing."));
-
-        var defaultPickup = locationRepository.findById(defaultPickUpLocation)
-                .orElseThrow(() -> new IllegalStateException("Default location missing"));
-        var defaultReturn = locationRepository.findById(defaultReturnLocation)
-                .orElseThrow(() -> new IllegalStateException("Default location missing"));
 
         for (Booking booking : bookings) {
             var carId = booking.getCar().getCarId();
@@ -101,9 +95,13 @@ public class BookingMainService implements BookingService {
 
             // using defaults
             if (booking.getPickupLocation() == null) {
+                var defaultPickup = locationRepository.findById(defaultPickUpLocation)
+                        .orElseThrow(() -> new IllegalStateException("Default location missing"));
                 booking.setPickupLocation(defaultPickup);
             }
             if (booking.getReturnLocation() == null) {
+                var defaultReturn = locationRepository.findById(defaultReturnLocation)
+                        .orElseThrow(() -> new IllegalStateException("Default location missing"));
                 booking.setReturnLocation(defaultReturn);
             }
         }
