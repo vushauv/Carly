@@ -28,7 +28,7 @@ type DataTableProps<T> = {
   columns: ColumnDef<T>[];
   rowKey: (row: T) => string | number;
 
-  actions?: RowAction<T>[];
+  actions: RowAction<T>[];
   emptyText?: string;
 };
 
@@ -78,10 +78,9 @@ export default function DataTable<T>({
                   key={a.id}
                   disabled={a.isDisabled?.(row)}
                   onClick={() => a.onClick(row)}
-                  label={a.id}
-                >
-                  {a.label}
-                </Button>
+                  label={a.label}
+                  color={a.color}
+                />
               )
             )}
           </div>
