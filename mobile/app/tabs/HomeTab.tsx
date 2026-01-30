@@ -1,38 +1,19 @@
 // app/tabs/HomeTab.tsx
-import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import CarCardView from "../components/CarCardView";
+import { useLocalSearchParams } from "expo-router";
 
-type BookingStatus = "current" | "history";
+import { cancelBooking, getBookings, seedBookingsIfEmpty, type Booking, type BookingStatus } from "../../lib/bookingsStorage";
 
-type Car = {
-  brand: string;
-  model: string;
-  plate: string;
-  images: string[];
-};
-
-type Flat = {
-  address: string;
-  images: string[];
-};
-
-type Booking = {
-  id: string;
-  status: BookingStatus;
-  startDate: string;
-  endDate: string;
-  car?: Car;
-  flat?: Flat;
-  rating?: number;
-};
-
-const MOCK_BOOKINGS: Booking[] = [
+const SEED_BOOKINGS: Booking[] = [
   {
     id: "b1",
     status: "current",
+    state: "Booked",
     startDate: "2026-02-01",
     endDate: "2026-02-10",
     car: {
@@ -44,10 +25,12 @@ const MOCK_BOOKINGS: Booking[] = [
         "https://picsum.photos/seed/car_b1_2/900/600",
       ],
     },
+    createdAtISO: new Date().toISOString(),
   },
   {
     id: "b2",
     status: "current",
+    state: "Booked",
     startDate: "2026-03-03",
     endDate: "2026-03-07",
     car: {
@@ -60,10 +43,12 @@ const MOCK_BOOKINGS: Booking[] = [
       address: "Sesame Street 123",
       images: ["https://picsum.photos/seed/flat_b2_1/900/600"],
     },
+    createdAtISO: new Date().toISOString(),
   },
   {
     id: "b3",
     status: "history",
+    state: "Booked",
     startDate: "2025-12-12",
     endDate: "2025-12-18",
     car: {
@@ -73,10 +58,12 @@ const MOCK_BOOKINGS: Booking[] = [
       images: ["https://picsum.photos/seed/car_b3_1/900/600"],
     },
     rating: 5,
+    createdAtISO: new Date().toISOString(),
   },
   {
     id: "b4",
     status: "history",
+    state: "Booked",
     startDate: "2025-11-01",
     endDate: "2025-11-04",
     flat: {
@@ -84,24 +71,67 @@ const MOCK_BOOKINGS: Booking[] = [
       images: [],
     },
     rating: 4,
+    createdAtISO: new Date().toISOString(),
   },
 ];
 
 export default function HomeTab() {
   const router = useRouter();
-  const [selected, setSelected] = useState<BookingStatus>("current");
+  const { section } = useLocalSearchParams<{ section?: "current" | "history" }>();
 
-  const bookings = useMemo(
-    () => MOCK_BOOKINGS.filter((b) => b.status === selected),
-    [selected]
+  const [selected, setSelected] = useState<BookingStatus>("current");
+  const [all, setAll] = useState<Booking[]>([]);
+
+  const load = useCallback(async () => {
+    await seedBookingsIfEmpty(SEED_BOOKINGS);
+    const items = await getBookings();
+    setAll(items);
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+      return () => {};
+    }, [load])
   );
+
+    useEffect(() => {
+      if (section === "current" || section === "history") {
+        setSelected(section);
+      }
+    }, [section]);
+
+
+  const bookings = useMemo(() => all.filter((b) => b.status === selected), [all, selected]);
+
+  async function onCancel(id: string) {
+    Alert.alert(
+      "Cancel booking?",
+      "Are you sure? This will move it to History as Cancelled.",
+      [
+        { text: "No", style: "cancel" },
+        {
+          text: "Yes, cancel",
+          style: "destructive",
+          onPress: async () => {
+            await cancelBooking(id);
+            await load();
+          },
+        },
+      ]
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Home</Text>
 
-        <Pressable style={styles.profileButton} onPress={() => {}}>
+        <Pressable style={styles.profileButton} onPress={() => router.push("/ProfileSettings")}>
           <Text style={styles.profileButtonText}>Profile settings</Text>
         </Pressable>
       </View>
@@ -114,32 +144,25 @@ export default function HomeTab() {
             style={[styles.segmentBtn, selected === "current" && styles.segmentBtnActive]}
             onPress={() => setSelected("current")}
           >
-            <Text style={[styles.segmentText, selected === "current" && styles.segmentTextActive]}>
-              current
-            </Text>
+            <Text style={[styles.segmentText, selected === "current" && styles.segmentTextActive]}>current</Text>
           </Pressable>
 
           <Pressable
             style={[styles.segmentBtn, selected === "history" && styles.segmentBtnActive]}
             onPress={() => setSelected("history")}
           >
-            <Text style={[styles.segmentText, selected === "history" && styles.segmentTextActive]}>
-              history
-            </Text>
+            <Text style={[styles.segmentText, selected === "history" && styles.segmentTextActive]}>history</Text>
           </Pressable>
         </View>
       </View>
 
-      <ScrollView
-        style={styles.body}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.body} contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
         {bookings.map((b) => (
           <BookingCard
             key={b.id}
             booking={b}
             onSeeMore={() => router.push(`../booking/${b.id}`)}
+            onCancel={() => void onCancel(b.id)}
           />
         ))}
 
@@ -153,7 +176,17 @@ export default function HomeTab() {
   );
 }
 
-function BookingCard({ booking, onSeeMore }: { booking: Booking; onSeeMore: () => void }) {
+function BookingCard({
+  booking,
+  onSeeMore,
+  onCancel,
+}: {
+  booking: Booking;
+  onSeeMore: () => void;
+  onCancel: () => void;
+}) {
+  const cancelled = booking.state === "Cancelled";
+
   return (
     <View style={styles.card}>
       {booking.car && booking.flat ? (
@@ -164,7 +197,7 @@ function BookingCard({ booking, onSeeMore }: { booking: Booking; onSeeMore: () =
             images={booking.car.images}
             fallbackSource={require("../../assets/images/no-images.png")}
             metaLeft={"🚗 Car"}
-            metaRight={""}
+            metaRight={cancelled ? "❌ Cancelled" : "✅ Booked"}
             imageHeight={200}
           />
 
@@ -176,7 +209,7 @@ function BookingCard({ booking, onSeeMore }: { booking: Booking; onSeeMore: () =
             images={booking.flat.images}
             fallbackSource={require("../../assets/images/no-images.png")}
             metaLeft={"🏠 Flat"}
-            metaRight={""}
+            metaRight={cancelled ? "❌ Cancelled" : "✅ Booked"}
             imageHeight={200}
           />
         </>
@@ -187,7 +220,7 @@ function BookingCard({ booking, onSeeMore }: { booking: Booking; onSeeMore: () =
           images={booking.car.images}
           fallbackSource={require("../../assets/images/no-images.png")}
           metaLeft={"🚗 Car"}
-          metaRight={""}
+          metaRight={cancelled ? "❌ Cancelled" : "✅ Booked"}
           imageHeight={200}
         />
       ) : booking.flat ? (
@@ -197,7 +230,7 @@ function BookingCard({ booking, onSeeMore }: { booking: Booking; onSeeMore: () =
           images={booking.flat.images}
           fallbackSource={require("../../assets/images/no-images.png")}
           metaLeft={"🏠 Flat"}
-          metaRight={""}
+          metaRight={cancelled ? "❌ Cancelled" : "✅ Booked"}
           imageHeight={200}
         />
       ) : null}
@@ -208,7 +241,7 @@ function BookingCard({ booking, onSeeMore }: { booking: Booking; onSeeMore: () =
             {booking.startDate} - {booking.endDate}
           </Text>
 
-          {booking.status === "history" && typeof booking.rating === "number" ? (
+          {booking.status === "history" && booking.state !== "Cancelled" && typeof booking.rating === "number" ? (
             <Stars value={booking.rating} />
           ) : null}
         </View>
@@ -219,7 +252,7 @@ function BookingCard({ booking, onSeeMore }: { booking: Booking; onSeeMore: () =
           </Pressable>
 
           {booking.status === "current" ? (
-            <Pressable style={styles.cancelBtn} onPress={() => {}}>
+            <Pressable style={styles.cancelBtn} onPress={onCancel}>
               <Text style={styles.cancelBtnText}>Cancel</Text>
             </Pressable>
           ) : null}

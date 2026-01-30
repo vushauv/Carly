@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Animated,
   Dimensions,
-  Image,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -21,12 +20,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 
 import type { CarCard, CarColor, CarSearchFilters, FuelType } from "../../lib/models";
 import { dislikeCar, getSearchLookups, likeCar, searchCars } from "../../lib/carlyApi";
 import { addDislikedCarId, addLikedCar, getDislikedCarIds, getLikedCarIds } from "../../lib/storage";
+import { saveCarDetailsForId } from "../../lib/viewedCarsStorage";
 import CarCardView from "../components/CarCardView";
-
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -35,6 +35,8 @@ const DEFAULT_FILTERS: CarSearchFilters = {
 };
 
 export default function SearchTab() {
+  const router = useRouter();
+
   const [filters, setFilters] = useState<CarSearchFilters>(DEFAULT_FILTERS);
   const [cars, setCars] = useState<CarCard[]>([]);
   const [index, setIndex] = useState(0);
@@ -166,6 +168,12 @@ export default function SearchTab() {
     }
   }
 
+  async function onSeeMore(car: CarCard) {
+    // Save the object so the details screen can render even without backend.
+    await saveCarDetailsForId(car);
+    router.push(`/car/${car.id}`);
+  }
+
   const chips = useMemo(() => {
     const out: string[] = [];
     if (filters.fuelType) out.push(`⛽ ${filters.fuelType}`);
@@ -232,16 +240,16 @@ export default function SearchTab() {
             <View style={styles.deck}>
               {nextCar ? (
                 <View style={[styles.card, styles.cardBehind]}>
-                  <CarCardContent key={nextCar.id} car={nextCar} />
+                  <CarCardContent car={nextCar} onSeeMore={onSeeMore} />
                 </View>
               ) : null}
 
               <View style={[styles.card, styles.cardFront]}>
-                <CarCardContent key={currentCar.id} car={currentCar} />
+                <CarCardContent car={currentCar} onSeeMore={onSeeMore} />
               </View>
             </View>
 
-            {/* Toast near buttons (NOT above image) */}
+            {/* Toast near buttons */}
             <Animated.View pointerEvents="none" style={[styles.toast, { opacity: toastOpacity }]}>
               <View style={styles.toastTextWrap}>
                 <Text style={styles.toastText}>{toastTextRef.current}</Text>
@@ -284,10 +292,9 @@ function Chip({ label }: { label: string }) {
   );
 }
 
-function CarCardContent({ car }: { car: CarCard }) {
+function CarCardContent({ car, onSeeMore }: { car: CarCard; onSeeMore: (c: CarCard) => void }) {
   const images = useMemo(() => {
-    const base =
-      car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id)}/900/600`;
+    const base = car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id)}/900/600`;
     return [
       base,
       `https://picsum.photos/seed/${encodeURIComponent(car.id + "_2")}/900/600`,
@@ -303,11 +310,15 @@ function CarCardContent({ car }: { car: CarCard }) {
       metaLeft={`🎨 ${car.color}`}
       metaRight={`⭐ ${car.rating?.toFixed(1) ?? "—"}`}
       footerLeft={`${car.pricePerDay} ${car.currency} / day`}
+      footerRight={
+        <Pressable onPress={() => onSeeMore(car)} style={styles.seeMoreBtn}>
+          <Text style={styles.seeMoreText}>see more</Text>
+        </Pressable>
+      }
       imageHeight={200}
     />
   );
 }
-
 
 function ActionButton({
   variant,
@@ -353,8 +364,16 @@ function FiltersModal({
 }) {
   const [draft, setDraft] = useState<CarSearchFilters>(initial);
 
+  // IMPORTANT: string inputs for price so user can type normally
+  const [minText, setMinText] = useState<string>(String(initial.priceRange.min));
+  const [maxText, setMaxText] = useState<string>(String(initial.priceRange.max));
+
   useEffect(() => {
-    if (open) setDraft(initial);
+    if (open) {
+      setDraft(initial);
+      setMinText(String(initial.priceRange.min));
+      setMaxText(String(initial.priceRange.max));
+    }
   }, [open, initial]);
 
   function set<K extends keyof CarSearchFilters>(key: K, value: CarSearchFilters[K]) {
@@ -363,6 +382,24 @@ function FiltersModal({
 
   const modelOptions = draft.brand ? modelsByBrand[draft.brand] ?? [] : [];
   const fuelOptions: (FuelType | "")[] = ["", "gas", "diesel", "electric", "hybrid"];
+
+  function sanitizePriceText(v: string) {
+    // allow digits, comma, dot
+    return v.replace(/[^\d.,]/g, "");
+  }
+
+  function parsePrice(v: string, fallback: number) {
+    const n = Number(sanitizePriceText(v).replace(",", "."));
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  function normalizePriceTexts() {
+    const min = parsePrice(minText, draft.priceRange.min ?? 0);
+    const max = parsePrice(maxText, draft.priceRange.max ?? 500);
+    setMinText(String(min));
+    setMaxText(String(max));
+    set("priceRange", { min, max } as any);
+  }
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
@@ -476,37 +513,44 @@ function FiltersModal({
             <Text style={styles.fieldLabel}>Price per day</Text>
             <View style={styles.priceInputsRow}>
               <TextInput
-                value={draft.priceRange.min.toFixed(2)}
-                onChangeText={(v) => {
-                  const n = Number(String(v).replace(",", "."));
-                  set("priceRange", { ...draft.priceRange, min: Number.isFinite(n) ? n : 0 });
-                }}
-                placeholder="0.00"
+                value={minText}
+                onChangeText={(v) => setMinText(sanitizePriceText(v))}
+                onBlur={normalizePriceTexts}
+                placeholder="0"
                 keyboardType="decimal-pad"
                 style={[styles.input, styles.priceInput]}
               />
               <TextInput
-                value={draft.priceRange.max.toFixed(2)}
-                onChangeText={(v) => {
-                  const n = Number(String(v).replace(",", "."));
-                  set("priceRange", { ...draft.priceRange, max: Number.isFinite(n) ? n : 500 });
-                }}
-                placeholder="500.00"
+                value={maxText}
+                onChangeText={(v) => setMaxText(sanitizePriceText(v))}
+                onBlur={normalizePriceTexts}
+                placeholder="500"
                 keyboardType="decimal-pad"
                 style={[styles.input, styles.priceInput]}
               />
             </View>
 
             <View style={styles.modalActions}>
-              <Pressable style={[styles.modalBtn, styles.modalBtnGhost]} onPress={() => setDraft(DEFAULT_FILTERS)}>
+              <Pressable
+                style={[styles.modalBtn, styles.modalBtnGhost]}
+                onPress={() => {
+                  setDraft(DEFAULT_FILTERS);
+                  setMinText(String(DEFAULT_FILTERS.priceRange.min));
+                  setMaxText(String(DEFAULT_FILTERS.priceRange.max));
+                }}
+              >
                 <Text style={[styles.modalBtnText, styles.modalBtnTextGhost]}>Reset</Text>
               </Pressable>
 
               <Pressable
                 style={[styles.modalBtn, styles.modalBtnPrimary]}
                 onPress={() => {
-                  const min = Math.min(draft.priceRange.min, draft.priceRange.max);
-                  const max = Math.max(draft.priceRange.min, draft.priceRange.max);
+                  const minN = parsePrice(minText, DEFAULT_FILTERS.priceRange.min);
+                  const maxN = parsePrice(maxText, DEFAULT_FILTERS.priceRange.max);
+
+                  const min = Math.min(minN, maxN);
+                  const max = Math.max(minN, maxN);
+
                   onApply({ ...draft, priceRange: { min, max } });
                 }}
               >
@@ -582,7 +626,6 @@ const styles = StyleSheet.create({
 
   deck: { flex: 1, justifyContent: "center", alignItems: "center" },
 
-  // Outer wrapper for the deck cards (CarCardView handles inner visuals)
   card: {
     width: "100%",
   },
@@ -593,7 +636,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 110, // above action buttons + tab bar
+    bottom: 110,
     alignItems: "center",
     zIndex: 50,
   },
@@ -624,7 +667,14 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  // Modal
+  seeMoreBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "#EEF2FF",
+  },
+  seeMoreText: { fontWeight: "900", color: "#111827" },
+
   modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)" },
   modalSheet: {
     backgroundColor: "#fff",
@@ -671,4 +721,3 @@ const styles = StyleSheet.create({
   modalBtnText: { fontWeight: "900", color: "#fff" },
   modalBtnTextGhost: { color: "#111827" },
 });
-
