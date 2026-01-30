@@ -4,7 +4,7 @@
 		"name": "Carly",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "49059222",
-		"_collection_link": "https://shuptik-8964816.postman.co/workspace/shuptik's-Workspace~ada6da1a-632e-4236-8c55-93c28e64359f/collection/49059222-9b80a6df-02a6-4ddb-9148-959660f3b9be?action=share&source=collection_link&creator=49059222"
+		"_collection_link": "https://shuptik-8964816.postman.co/workspace/ada6da1a-632e-4236-8c55-93c28e64359f/collection/49059222-9b80a6df-02a6-4ddb-9148-959660f3b9be?action=share&source=collection_link&creator=49059222"
 	},
 	"item": [
 		{
@@ -229,13 +229,52 @@
 				"header": []
 			},
 			"response": []
+		},
+		{
+			"name": "SearchBooking",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "GetBookings",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
 		}
 	],
 	"variable": [
 		{
 			"key": "BASE_URL",
-			"value": "",
-			"type": "default"
+			"value": "localhost:8080/api"
 		}
 	]
 }

@@ -29,7 +29,6 @@ public class ParklyController {
     //TODO: Implement searchCars so that it accepts certain parameters (optional?)
     //TODO (TBD): Decide whether Parkly has to provide our BookingId, or their BookingId!
     //TODO: Add validation for parkly by userId
-    //return car details (images!) instead of only the CarId
     public static final String PARKLY_PATH = PathResolver.Parkly.Base;
 
     private final ParklyService parklyService;
@@ -48,6 +47,7 @@ public class ParklyController {
         return ResponseEntity.ok(parklyService.getCarBookingByExternalBookingId(externalBookingId));
     }
 
+    // TODO: service should not return DTO's
     @PostMapping(PathResolver.Parkly.CarBookings)
     public ResponseEntity<ParklyBookingResponse> createCarBooking(
             @RequestHeader HttpHeaders headers,
