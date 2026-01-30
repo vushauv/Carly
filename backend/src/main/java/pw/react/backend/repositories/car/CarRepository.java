@@ -92,6 +92,23 @@ public interface CarRepository extends JpaRepository<Car, Integer> {
             @Param("cancelledStatusId") Integer cancelledStatusId
     );
 
+    @Query("""
+    select c
+    from Car c
+    where c.isEnabled = true
+    and c.carId =: carId
+      and exists (
+          select 1
+          from Booking b
+          where b.car = c
+            and (b.carBookingDateFrom < :to
+            and b.carBookingDateTo > :from)
+            and b.carBookingStatus.bookingStatusDictionaryId <> :cancelledStatusId
+            
+      )
+""")
+    Optional<Car> checkCarAvailability(@Param("carId")Integer carId);
+
     // Produces a consistent order
     List<Car> findByCarIdInOrderByCarIdAsc(List<Integer> carIds);
     Page<Car> findByCarIdInOrderByCarIdAsc(

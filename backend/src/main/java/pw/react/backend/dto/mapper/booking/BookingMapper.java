@@ -6,7 +6,6 @@ import pw.react.backend.domain.booking.BookingStatusDictionary;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.booking.Location;
 import pw.react.backend.domain.user.User;
-import pw.react.backend.dto.models.LocationDto;
 import pw.react.backend.dto.request.booking.CreateBookingRequest;
 import pw.react.backend.dto.request.booking.UpdateBookingRequest;
 import pw.react.backend.dto.response.booking.BookingResponse;

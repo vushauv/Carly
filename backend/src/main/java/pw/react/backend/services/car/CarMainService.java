@@ -130,6 +130,16 @@ public class CarMainService implements CarService {
         return carRepository.findByCarIdInOrderByCarIdAsc(filteredCarIds, PageRequest.of(page, pageSize)).getContent();
     }
 
+    public boolean checkCarAvailability(Integer carId, DateRange dateRange)
+            throws ResourceNotFoundException
+    {
+        if(!carRepository.existsById(carId))
+            throw new ResourceNotFoundException("Car with id " + carId + " was not found.");
+        var res = carRepository.checkCarAvailability(carId);
+
+        return res.isPresent();
+    }
+
     // Method to be used to calculate the total price of the car on the booking
     public BigDecimal calculateTotalPrice(Car car, DateRange dateRange)
         throws ResourceNotFoundException

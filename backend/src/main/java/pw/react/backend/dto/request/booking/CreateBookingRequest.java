@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class CreateBookingRequest {
-
     @NotNull(message = "User id is mandatory")
     private Integer userId;
 

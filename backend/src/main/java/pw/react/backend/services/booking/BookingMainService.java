@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.domain.booking.BookingStatusDictionary;
 import pw.react.backend.domain.enums.BookingStatus;
+import pw.react.backend.dto.models.DateRange;
 import pw.react.backend.exceptions.ResourceNotFoundException;
+import pw.react.backend.exceptions.custom.CarBookingConflictException;
 import pw.react.backend.repositories.booking.BookingRepository;
 import org.springframework.data.domain.Page;
 
@@ -20,26 +22,34 @@ import org.springframework.data.jpa.domain.Specification;
 import pw.react.backend.dto.request.booking.BookingSearchCriteria;
 import pw.react.backend.repositories.booking.BookingSpecifications;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
+import pw.react.backend.repositories.car.CarRepository;
+import pw.react.backend.repositories.user.UserRepository;
+import pw.react.backend.services.car.CarService;
+import pw.react.backend.services.car.model.CarSearchCriteria;
 import pw.react.backend.services.flatly.FlatlyService;
 import pw.react.backend.repositories.LocationRepository;
+import pw.react.backend.services.user.UserService;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookingMainService implements BookingService {
-
-    private final BookingRepository repository;
+    private final BookingRepository bookingRepository;
     private final BookingStatusDictionaryRepository bookingStatusDictionaryRepository;
     private final LocationRepository locationRepository;
     private final FlatlyService flatlyService;
+    private final UserRepository userRepository;
+    private final CarRepository carRepository;
+    private final CarService carService;
     private static final Integer defaultPickUpLocation = 1; //default PickUpLocation if not provided
     private static final Integer defaultReturnLocation = 2; //default ReturnLocation if not provided
+    private final UserService userService;
 
     @Override
     public void updateBooking(Integer id, Booking updatedBooking) throws ResourceNotFoundException {
-        if (repository.existsById(id)) {
+        if (bookingRepository.existsById(id)) {
             updatedBooking.setBookingId(id);
-            Booking result = repository.save(updatedBooking);
+            Booking result = bookingRepository.save(updatedBooking);
             log.info("Booking with id {} updated.", id);
             return;
         }
@@ -48,10 +58,10 @@ public class BookingMainService implements BookingService {
 
     @Override
     public boolean deleteBooking(Integer bookingId) {
-        return repository.findById(bookingId)
+        return bookingRepository.findById(bookingId)
                 .map(booking -> {
                     booking.setEnabled(false);
-                    repository.save(booking);
+                    bookingRepository.save(booking);
                     log.info("Booking with id {} soft-deleted (IsEnabled=0).", bookingId);
                     return true;
                 })
@@ -61,7 +71,6 @@ public class BookingMainService implements BookingService {
     @Override
     @Transactional
     public List<Booking> batchSave(List<Booking> bookings) {
-
         if (bookings == null || bookings.isEmpty()) {
             log.warn("Bookings collection is empty or null.");
             return Collections.emptyList();
@@ -69,7 +78,7 @@ public class BookingMainService implements BookingService {
 
         BookingStatusDictionary created =
                 bookingStatusDictionaryRepository.findByName(BookingStatus.CREATED.name())
-                        .orElseThrow(() -> new ResourceNotFoundException("CREATED status not found. Seed data missing."));
+                        .orElseThrow(() -> new ResourceNotFoundException(BookingStatus.CREATED.name() + " status not found. Seed data missing."));
 
         var defaultPickup = locationRepository.findById(defaultPickUpLocation)
                 .orElseThrow(() -> new IllegalStateException("Default location missing"));
@@ -77,9 +86,18 @@ public class BookingMainService implements BookingService {
                 .orElseThrow(() -> new IllegalStateException("Default location missing"));
 
         for (Booking booking : bookings) {
+            var carId = booking.getCar().getCarId();
+            var userId = booking.getBookingId();
+            var dateRange = new DateRange(booking.getCarBookingDateFrom(), booking.getCarBookingDateTo());
 
             booking.setCarBookingStatus(created);
-            booking.setEnabled(true);
+            if(!userService.userExistsById(userId))
+                throw new ResourceNotFoundException("User with id "
+                        + booking.getUser().getUserId() +
+                        " not found. The request is cancelled.");
+
+            if(!carService.checkCarAvailability(carId, dateRange))
+                throw new CarBookingConflictException(carId, dateRange);
 
             // using defaults
             if (booking.getPickupLocation() == null) {
@@ -89,24 +107,23 @@ public class BookingMainService implements BookingService {
                 booking.setReturnLocation(defaultReturn);
             }
         }
-
-        return repository.saveAll(bookings);
+        return bookingRepository.saveAll(bookings);
     }
 
     @Override
     public List<Booking> getAll() {
-        return repository.findAll();
+        return bookingRepository.findAll();
     }
 
     @Override
     public Optional<Booking> getById(Integer bookingId) {
-        return repository.findById(bookingId);
+        return bookingRepository.findById(bookingId);
     }
 
     @Override
     public List<Booking> getBookingsPage(int pageNumber, int pageSize) {
         int defaultPageSize = 10;
-        return repository.findAll(PageRequest.of(pageNumber, pageSize == 0 ? defaultPageSize : pageSize)).getContent();
+        return bookingRepository.findAll(PageRequest.of(pageNumber, pageSize == 0 ? defaultPageSize : pageSize)).getContent();
     }
 
     @Override
@@ -124,18 +141,18 @@ public class BookingMainService implements BookingService {
                 .and(BookingSpecifications.dateFrom(criteria.getDateFrom()))
                 .and(BookingSpecifications.dateTo(criteria.getDateTo()));
 
-        return repository.findAll(spec, PageRequest.of(p, s));
+        return bookingRepository.findAll(spec, PageRequest.of(p, s));
     }
 
     @Override
     @Transactional
     public void cancelCarBooking(Integer bookingId) {
         var CANCELLED_STATUS = BookingStatus.CANCELLED.name();
-        Booking booking = repository.findById(bookingId)
+        Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
 
         BookingStatusDictionary cancelled = bookingStatusDictionaryRepository.findByName(CANCELLED_STATUS)
-                .orElseThrow(() -> new ResourceNotFoundException("CANCELLED status missing (seed data)"));
+                .orElseThrow(() -> new ResourceNotFoundException(CANCELLED_STATUS + " status missing (seed data)"));
 
         //safeguard - if already cancelled then do nothing
         if (booking.getCarBookingStatus() != null &&
@@ -144,7 +161,7 @@ public class BookingMainService implements BookingService {
         }
 
         booking.setCarBookingStatus(cancelled);
-        repository.save(booking);
+        bookingRepository.save(booking);
 
         log.info("Car booking cancelled: bookingId={}", bookingId);
     }
@@ -153,7 +170,7 @@ public class BookingMainService implements BookingService {
     @Transactional
     public void cancelFlatBooking(Integer bookingId) {
         var CANCELLED_STATUS = BookingStatus.CANCELLED.name();
-        Booking booking = repository.findById(bookingId)
+        Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
 
         BookingStatusDictionary cancelled = bookingStatusDictionaryRepository.findByName(CANCELLED_STATUS)
@@ -172,7 +189,7 @@ public class BookingMainService implements BookingService {
 
         //on success, we change the status in our system to 'Cancelled'
         booking.setFlatBookingStatus(cancelled);
-        repository.save(booking);
+        bookingRepository.save(booking);
 
         log.info("Flat booking cancelled on Carly's side: bookingId={}", bookingId);
     }

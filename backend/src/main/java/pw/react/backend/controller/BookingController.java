@@ -49,7 +49,6 @@ public class BookingController {
             @Valid @RequestBody List<CreateBookingRequest> requests
     ) {
         logHeaders(headers);
-
         List<Booking> toCreate = bookingMapper.createRequestToBookingList(requests);
 
         List<Booking> saved = bookingService.batchSave(toCreate);

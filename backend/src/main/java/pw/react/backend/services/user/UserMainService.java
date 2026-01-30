@@ -93,8 +93,10 @@ public class UserMainService implements UserService {
         userRepository.save(user);
     }
 
-
-
+    @Override
+    public boolean userExistsById(Integer userId) {
+        return userRepository.existsById(userId);
+    }
 }
 
 

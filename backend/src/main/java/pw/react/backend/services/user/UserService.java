@@ -18,4 +18,6 @@ public interface UserService {
     void deleteUserById(Integer id);
 
     void updateUser(Integer id, UpdateUserRequest request);
+
+    boolean userExistsById(Integer userId);
 }
