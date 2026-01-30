@@ -11,9 +11,11 @@ const Button = ({
   label,
   className,
   color = "primary",
+  ...rest
 }: ButtonProps) => {
   return (
     <button
+      {...rest}
       className={cn(styles.button, className, {
         [styles.primary]: color === "primary",
         [styles.secondary]: color === "secondary",
