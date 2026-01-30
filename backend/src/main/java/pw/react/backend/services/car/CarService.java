@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 // TODO: Consider decomposing a service into multiple classes
+// TODO: Add Rating Service, which would be responsible for assigning ratings to cars
 public class CarService implements ICarService {
 
     private final CarRepository carRepository;
