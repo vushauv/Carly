@@ -1,0 +1,241 @@
+{
+	"info": {
+		"_postman_id": "9b80a6df-02a6-4ddb-9148-959660f3b9be",
+		"name": "Carly",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "49059222",
+		"_collection_link": "https://shuptik-8964816.postman.co/workspace/shuptik's-Workspace~ada6da1a-632e-4236-8c55-93c28e64359f/collection/49059222-9b80a6df-02a6-4ddb-9148-959660f3b9be?action=share&source=collection_link&creator=49059222"
+	},
+	"item": [
+		{
+			"name": "UpdateCarById",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \n    \"carFeatures\": [\n    {\n        \"dictionaryId\":1,\n        \"value\":\"RED\"\n    } \n    ],\n    \"price\": 160\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/cars/1",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"cars",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetCars",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8080/cars?page=0",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"cars"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteCarById",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "CreateCar",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \n    \"price\": 100,\n     \"carFeatures\":[\n        {\n            \"dictionaryId\":3,\n            \"value\":\"RED\"\n        }\n     ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/cars",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"cars"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetCarById",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "SearchCars",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8080/cars?availability=NOT_A_STATUS",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"cars"
+					],
+					"query": [
+						{
+							"key": "availability",
+							"value": "NOT_A_STATUS"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CarImageUpload",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "GetCarImages",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "GetCarImageById",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteCarImageById",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "GetCarsParkly",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "ParklyCars",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8080/api/parkly/cars?&date.to=2026-01-30T00:00:00&features.brand=BMW",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"parkly",
+						"cars"
+					],
+					"query": [
+						{
+							"key": null,
+							"value": null
+						},
+						{
+							"key": "date.to",
+							"value": "2026-01-30T00:00:00"
+						},
+						{
+							"key": "features.brand",
+							"value": "BMW"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetFlats",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
