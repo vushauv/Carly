@@ -13,7 +13,7 @@ const AddNewEntityComponent = ({ title, buttonText, onButtonClick }: AddNewEntit
       <h3 className={styles.subTitle}>{title}</h3>
 
       <div className={styles.topActions}>
-        <Button onClick={onButtonClick}>{buttonText}</Button>
+        <Button label={buttonText} onClick={onButtonClick}>{buttonText}</Button>
       </div>
     </div>
   );
