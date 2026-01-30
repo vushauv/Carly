@@ -4,7 +4,7 @@ import org.mapstruct.*;
 import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.domain.booking.BookingStatusDictionary;
 import pw.react.backend.domain.car.Car;
-import pw.react.backend.domain.Location;
+import pw.react.backend.domain.booking.Location;
 import pw.react.backend.domain.user.User;
 import pw.react.backend.dto.models.LocationDto;
 import pw.react.backend.dto.request.booking.CreateBookingRequest;
@@ -15,7 +15,9 @@ import pw.react.backend.utils.converters.out.DisplayNameConverter;
 
 import java.util.List;
 
-@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        uses = LocationMapper.class)
 public interface BookingMapper {
 
     // -------------------------
@@ -80,11 +82,6 @@ public interface BookingMapper {
     GetBookingResponse bookingToGetBookingResponse(Booking booking);
 
     List<GetBookingResponse> bookingToGetBookingResponseList(List<Booking> bookings);
-
-    // Location Mapping:
-    @Mapping(target = "id", source = "locationId")
-    @Mapping(target = "address", source = "locationName")
-    LocationDto toLocationDto(Location location);
 
     // Helper methods:
     @Named("toDisplayName")

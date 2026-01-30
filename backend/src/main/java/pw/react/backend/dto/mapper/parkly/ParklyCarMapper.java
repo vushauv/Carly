@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.dto.mapper.car.CarFeatureMapper;
 import pw.react.backend.dto.mapper.car.image.CarImageUrlMapper;
-import pw.react.backend.dto.parkly.ParklyGetCarResponseDto;
+import pw.react.backend.dto.response.parkly.ParklyGetCarResponseDto;
 
 import java.util.List;
 import java.util.Map;

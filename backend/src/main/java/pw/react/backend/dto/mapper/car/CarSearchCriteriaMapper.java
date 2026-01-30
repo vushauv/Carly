@@ -6,7 +6,7 @@ import org.mapstruct.ReportingPolicy;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.car.CarFeatureDictionary;
 import pw.react.backend.domain.enums.CarFeatureType;
-import pw.react.backend.dto.parkly.ParklyCarSearchParams;
+import pw.react.backend.dto.request.parkly.ParklyCarSearchParams;
 import pw.react.backend.dto.request.car.CarFeatureFilters;
 import pw.react.backend.dto.request.car.CarSearchParams;
 import pw.react.backend.services.car.model.CarSearchCriteria;

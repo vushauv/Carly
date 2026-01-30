@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.domain.booking.BookingStatusDictionary;
 import pw.react.backend.domain.user.User;
-import pw.react.backend.dto.flatly.CreateFlatlyBookingRequest;
+import pw.react.backend.dto.request.flatly.CreateFlatlyBookingRequest;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.integrations.flatly.FlatlyClient;
 import pw.react.backend.integrations.flatly.dto.FlatlyBookingDto;

@@ -6,7 +6,6 @@ import lombok.Setter;
 import org.hibernate.annotations.Where;
 import pw.react.backend.domain.Auditable;
 import pw.react.backend.domain.car.Car;
-import pw.react.backend.domain.Location;
 import pw.react.backend.domain.user.User;
 
 import java.time.LocalDateTime;
@@ -29,17 +28,17 @@ public class Booking extends Auditable {
 
     // TODO: must be non-nullable
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CarId")
+    @JoinColumn(name = "CarId", nullable = false)
     private Car car;
 
     // TODO: must be non-nullable
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PickupLocationId")
+    @JoinColumn(name = "PickupLocationId", nullable = false)
     private Location pickupLocation;
 
     // TODO: must be non-nullable
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ReturnLocationId")
+    @JoinColumn(name = "ReturnLocationId", nullable = false)
     private Location returnLocation;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -48,17 +47,17 @@ public class Booking extends Auditable {
 
     // TODO: must be non-nullable
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "CarBookingStatusId")
+    @JoinColumn(name = "CarBookingStatusId", nullable = false)
     private BookingStatusDictionary carBookingStatus;
 
     @Column(name = "ProviderExternalBookingId")
     private Integer providerExternalBookingId;
 
     // TODO: must be non-nullable
-    @Column(name = "CarBookingDateFrom")
+    @Column(name = "CarBookingDateFrom", nullable = false)
     private LocalDateTime carBookingDateFrom;
 
     // TODO: must be non-nullable
-    @Column(name = "CarBookingDateTo")
+    @Column(name = "CarBookingDateTo", nullable = false)
     private LocalDateTime carBookingDateTo;
 }

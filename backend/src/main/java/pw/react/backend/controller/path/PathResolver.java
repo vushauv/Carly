@@ -27,4 +27,8 @@ public final class PathResolver {
     public static class Users{
         public static final String Base = Root + "/users";
     }
+
+    public static class Reference{
+        public static final String Base = Root + "/reference";
+    }
 }

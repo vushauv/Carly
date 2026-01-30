@@ -1,4 +1,4 @@
-package pw.react.backend.dto.parkly;
+package pw.react.backend.dto.request.parkly;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

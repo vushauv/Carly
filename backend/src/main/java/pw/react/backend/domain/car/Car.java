@@ -16,7 +16,7 @@ import java.util.Set;
 @Entity
 @Table(name = "Cars")
 // By default, filters all queries to Cars for is_enabled == true
-@SQLRestriction("is_enabled = true")
+@Where(clause = "is_enabled = true")
 public class Car extends Auditable {
 
     @Id

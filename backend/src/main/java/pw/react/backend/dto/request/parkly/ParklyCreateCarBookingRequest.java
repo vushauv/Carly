@@ -1,4 +1,4 @@
-package pw.react.backend.dto.parkly;
+package pw.react.backend.dto.request.parkly;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;

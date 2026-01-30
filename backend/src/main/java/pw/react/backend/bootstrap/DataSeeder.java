@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.domain.booking.BookingStatusDictionary;
 import pw.react.backend.domain.car.Car;
-import pw.react.backend.domain.Location;
+import pw.react.backend.domain.booking.Location;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.car.CarFeatureDictionary;
 import pw.react.backend.domain.car.CarToFeatureLink;
@@ -25,11 +25,9 @@ import pw.react.backend.repositories.car.CarRepository;
 import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.repositories.user.UserTypeDictionaryRepository;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
-import pw.react.backend.utils.converters.out.DisplayNameConverter;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 

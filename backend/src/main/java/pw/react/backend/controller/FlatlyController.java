@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pw.react.backend.controller.path.PathResolver;
 import pw.react.backend.domain.booking.Booking;
-import pw.react.backend.dto.flatly.CreateFlatlyBookingRequest;
+import pw.react.backend.dto.request.flatly.CreateFlatlyBookingRequest;
 import pw.react.backend.dto.response.booking.BookingResponse;
 import pw.react.backend.services.flatly.FlatlyService;
 import pw.react.backend.integrations.flatly.dto.FlatlyFlatDto;

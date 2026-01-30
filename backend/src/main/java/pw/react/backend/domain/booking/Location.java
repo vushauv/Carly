@@ -1,4 +1,4 @@
-package pw.react.backend.domain;
+package pw.react.backend.domain.booking;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "Locations")
 public class Location extends Auditable {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "LocationId", nullable = false)
