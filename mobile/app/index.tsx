@@ -1,3 +1,4 @@
+// app/index.tsx
 import {
   View,
   Text,
@@ -7,22 +8,62 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+
+import { loginUser, getUserById } from "../lib/userApi";
+import { saveProfile } from "../lib/profileStorage";
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [loading, setLoading] = useState(false);
+
+  async function onLogin() {
+    const e = email.trim();
+    const p = password;
+
+    if (!e || !p) {
+      Alert.alert("Missing fields", "Email and password are required.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+        //console.log("API_BASE_URL =", require("../lib/apiClient").API_BASE_URL);
+
+      // POST /users/login -> { userId } :contentReference[oaicite:6]{index=6}
+      const { userId } = await loginUser({ email: e, password: p });
+
+      // GET /users/{id} -> user info
+      const info = await getUserById(userId);
+
+      const fullName = `${info.firstName ?? ""} ${info.lastName ?? ""}`.trim();
+
+      await saveProfile({
+        userId,
+        email: info.email ?? e,
+        phoneDigits: info.contactNumber ? String(info.contactNumber) : "",
+        fullName: fullName || "—",
+      });
+
+      router.replace("/tabs/SearchTab");
+    } catch (err: any) {
+      Alert.alert("Login failed", err?.message ?? "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={styles.page}>
           <Image
             source={require("../assets/images/carly-logo.png")}
@@ -37,6 +78,8 @@ export default function LoginScreen() {
               placeholder="Enter email"
               value={email}
               onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
             />
 
             <Text style={styles.label}>Password</Text>
@@ -48,17 +91,12 @@ export default function LoginScreen() {
               onChangeText={setPassword}
             />
 
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => {
-                router.replace("/tabs/SearchTab");
-              }}
-            >
-              <Text style={styles.buttonText}>Log in</Text>
+            <TouchableOpacity style={styles.button} onPress={onLogin} disabled={loading}>
+              {loading ? <ActivityIndicator /> : <Text style={styles.buttonText}>Log in</Text>}
             </TouchableOpacity>
 
             <Text style={styles.footerText}>Not registered yet?</Text>
-            <TouchableOpacity onPress={() => router.push("/RegisterScreen")}>
+            <TouchableOpacity onPress={() => router.push("/RegisterScreen")} disabled={loading}>
               <Text style={styles.signUp}>Sign Up</Text>
             </TouchableOpacity>
           </View>
@@ -138,4 +176,3 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 });
-

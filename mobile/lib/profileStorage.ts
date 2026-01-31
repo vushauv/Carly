@@ -1,15 +1,17 @@
+// lib/profileStorage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const KEY_PROFILE = "carly.profile.v4";
 
 export type Profile = {
-  // Personal
+  userId?: number; // <-- new
   email: string;
   phoneDigits: string; // store only digits, e.g. "123456789"
   fullName: string;
 };
 
 const DEFAULT_PROFILE: Profile = {
+  userId: undefined,
   email: "",
   phoneDigits: "",
   fullName: "",
@@ -31,7 +33,6 @@ async function writeJson<T>(key: string, value: T): Promise<void> {
 
 export async function getProfile(): Promise<Profile> {
   const p = await readJson<Partial<Profile>>(KEY_PROFILE, DEFAULT_PROFILE);
-  // Merge defaults so older stored data doesn't break
   return { ...DEFAULT_PROFILE, ...(p ?? {}) };
 }
 

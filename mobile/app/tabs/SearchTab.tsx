@@ -386,7 +386,7 @@ function FiltersModal({
     setDraft((p) => ({ ...p, [key]: value }));
   }
 
-  const modelOptions = draft.brand ? modelsByBrand[draft.brand] ?? [] : [];
+  const modelOptions = modelsByBrand["*"] ?? [];
   const fuelOptions: (FuelType | "")[] = ["", "gas", "diesel", "electric", "hybrid"];
 
   function sanitizePriceText(v: string) {
@@ -479,7 +479,7 @@ function FiltersModal({
               </Pressable>
 
               {modelOptions.length === 0 ? (
-                <Text style={styles.helperText}>Pick a brand to see models.</Text>
+                <Text style={styles.helperText}>No models available.</Text>
               ) : (
                 modelOptions.map((m) => {
                   const active = draft.model === m;

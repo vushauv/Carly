@@ -1,3 +1,4 @@
+// app/ProfileSettings.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -14,13 +15,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getProfile, saveProfile, type Profile } from "../lib/profileStorage";
+import { updateUserById, deleteUserById } from "../lib/userApi";
 
 function onlyDigits(s: string): string {
   return (s || "").replace(/\D/g, "");
 }
 
 function formatPhone(digits: string): string {
-  // Format as 123-456-789 while typing
   const d = onlyDigits(digits).slice(0, 9);
   const a = d.slice(0, 3);
   const b = d.slice(3, 6);
@@ -34,14 +35,21 @@ function formatPhone(digits: string): string {
 function isValidEmail(email: string): boolean {
   const e = email.trim();
   if (!e) return false;
-
-  // Simple, robust-enough validator for this project:
-  // - has one @
-  // - has a dot in the domain part
-  // - no spaces
-  // (not RFC-perfect, but good UX)
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return re.test(e);
+}
+
+function splitFullName(fullName: string): { firstName: string; secondName?: string; lastName: string } {
+  const parts = (fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { firstName: "", lastName: "" };
+  if (parts.length === 1) return { firstName: parts[0], lastName: "" };
+  if (parts.length === 2) return { firstName: parts[0], lastName: parts[1] };
+
+  return {
+    firstName: parts[0],
+    secondName: parts.slice(1, -1).join(" "),
+    lastName: parts[parts.length - 1],
+  };
 }
 
 export default function ProfileSettings() {
@@ -50,6 +58,7 @@ export default function ProfileSettings() {
   const [loading, setLoading] = useState(true);
 
   const [profile, setProfile] = useState<Profile>({
+    userId: undefined,
     email: "",
     phoneDigits: "",
     fullName: "",
@@ -99,13 +108,35 @@ export default function ProfileSettings() {
       return;
     }
 
-    // optional: if user started typing phone, require full 9 digits
+    if (!fullName) {
+      Alert.alert("Missing name", "Please enter your name and surname.");
+      return;
+    }
+
     if (phoneDigits.length > 0 && phoneDigits.length < 9) {
       Alert.alert("Invalid phone", "Phone number must have 9 digits.");
       return;
     }
 
-    const next: Profile = { email, phoneDigits, fullName };
+    // If we have a server userId, sync it
+    if (profile.userId) {
+      const { firstName, secondName, lastName } = splitFullName(fullName);
+
+      try {
+        await updateUserById(profile.userId, {
+          firstName,
+          secondName,
+          lastName,
+          email,
+          contactNumber: phoneDigits ? Number(phoneDigits) : undefined,
+        });
+      } catch (e: any) {
+        Alert.alert("Save failed", e?.message ?? "Server update failed");
+        return; // don't apply local changes if server rejected
+      }
+    }
+
+    const next: Profile = { ...profile, email, phoneDigits, fullName };
     await saveProfile(next);
 
     setProfile(next);
@@ -138,6 +169,15 @@ export default function ProfileSettings() {
         text: "Yes",
         style: "destructive",
         onPress: async () => {
+          // Best-effort server delete if we have a userId
+          if (profile.userId) {
+            try {
+              await deleteUserById(profile.userId);
+            } catch {
+              // don't block local delete
+            }
+          }
+
           await AsyncStorage.clear();
           router.replace("/");
         },
@@ -188,7 +228,6 @@ export default function ProfileSettings() {
         <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <Text style={styles.pageTitle}>Profile settings</Text>
 
-          {/* Personal */}
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Personal:</Text>
 
@@ -211,16 +250,11 @@ export default function ProfileSettings() {
               placeholder="123-456-789"
               keyboardType="number-pad"
               onChangeText={(typed) => {
-                // typed can include '-' because we are displaying it; strip to digits and store
                 const digits = onlyDigits(typed).slice(0, 9);
                 setPersonalDraft((p) => ({ ...p, phoneDigits: digits }));
               }}
             />
-            {editingPersonal ? (
-              <Text style={styles.helper}>
-                XXX-XXX-XXX
-              </Text>
-            ) : null}
+            {editingPersonal ? <Text style={styles.helper}>XXX-XXX-XXX</Text> : null}
 
             <Text style={styles.label}>name and surname:</Text>
             <TextInput
@@ -237,7 +271,6 @@ export default function ProfileSettings() {
                   style={[styles.btn, styles.btnEdit]}
                   onPress={() => {
                     setEditingPersonal(true);
-                    // reset draft from persisted profile when entering edit
                     setPersonalDraft({
                       email: profile.email,
                       phoneDigits: profile.phoneDigits,
@@ -260,7 +293,6 @@ export default function ProfileSettings() {
             </View>
           </View>
 
-          {/* bottom actions */}
           <View style={styles.bottomActions}>
             <Pressable style={[styles.bigBtn, styles.bigBtnLogout]} onPress={confirmLogout}>
               <Text style={styles.bigBtnTextDark}>Log out</Text>
@@ -331,7 +363,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
 
-  // accents (blue/green/neutral)
   btnEdit: { backgroundColor: "#DBEAFE", borderColor: "#93C5FD" },
   btnSave: { backgroundColor: "#DCFCE7", borderColor: "#86EFAC" },
   btnDiscard: { backgroundColor: "#FEF3C7", borderColor: "#FDE68A" },
@@ -352,5 +383,3 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   muted: { color: "#6B7280", fontWeight: "800" },
 });
-
-
