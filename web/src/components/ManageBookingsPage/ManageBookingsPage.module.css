@@ -60,25 +60,23 @@
   border: 1px solid var(--white-100);
 }
 
-.tableHeader,
+.tableHeader {
+  display: grid;
+  grid-template-columns: 60px 200px 180px 160px 120px 120px 150px;
+  gap: 16px;
+  padding: 12px 16px;
+  font-weight: bold;
+  background: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
 .tableRow {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr 2fr;
-  padding: 0.75rem 1rem;
+  grid-template-columns: 60px 200px 180px 160px 120px 120px 150px;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #dee2e6;
   align-items: center;
-  gap: 0.75rem;
-}
-
-.tableHeader {
-  background: var(--white-50);
-  font-weight: 600;
-  color: var(--gray-200);
-  border-bottom: 1px solid var(--white-100);
-}
-
-.tableRow {
-  background: var(--white);
-  border-bottom: 1px solid var(--white-100);
 }
 
 .tableRow:last-child {
@@ -86,13 +84,22 @@
 }
 
 .car {
-  font-weight: 600;
-  color: var(--gray-200);
+  font-size: 0.9rem;
+}
+
+.car small {
+  color: #6c757d;
+  font-size: 0.8rem;
 }
 
 .status {
-  font-size: 0.85rem;
-  color: var(--gray-200);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-align: center;
+  min-width: 80px;
 }
 
 .actionsHeader {
@@ -122,4 +129,61 @@
 
 .pageInfo {
   color: var(--gray-200);
+}
+
+.select {
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: white;
+  color: #495057;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.select:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.customer {
+  font-size: 0.9rem;
+}
+
+.customer small {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.dates {
+  font-size: 0.85rem;
+}
+
+.dates small {
+  color: #6c757d;
+  font-size: 0.75rem;
+}
+
+.price {
+  font-weight: 600;
+  color: #28a745;
+  text-align: right;
+}
+
+.loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.error {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #f5c6cb;
+  margin-bottom: 20px;
 }

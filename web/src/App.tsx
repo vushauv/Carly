@@ -16,6 +16,9 @@ import CarViewPage from "./components/CarViewPage/CarViewPage";
 import CarEditPage from "./components/CarEditPage/CarEditPage";
 import CarCreatePage from "./components/CarCreatePage/CarCreatePage";
 import CarImagesPage from "./components/CarImagesPage/CarImagesPage";
+import BookingViewPage from "./components/BookingViewPage/BookingViewPage";
+import BookingEditPage from "./components/BookingEditPage/BookingEditPage";
+import BookingCreatePage from "./components/BookingCreatePage/BookingCreatePage";
 
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -79,6 +82,20 @@ function App() {
           <Route
             path="/manage-bookings"
             element={loggedIn ? <ManageBookingsPage /> : <Navigate to="/login" />}
+          />
+
+          {/* Booking Management Routes */}
+          <Route
+            path="/bookings/new"
+            element={loggedIn ? <BookingCreatePage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/bookings/:id"
+            element={loggedIn ? <BookingViewPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/bookings/:id/edit"
+            element={loggedIn ? <BookingEditPage /> : <Navigate to="/login" />}
           />
 
           <Route

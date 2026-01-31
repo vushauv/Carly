@@ -1,114 +1,129 @@
 import { useEffect, useState } from "react";
-import FilterBar from "../FilterBarLayout/FilterBarLayout";
+import { useNavigate } from "react-router-dom";
+import FilterBarLayout from "../FilterBarLayout/FilterBarLayout";
 import Input from "../Input/Input";
 import Button from "../Button/Button";
 import styles from "./ManageBookingsPage.module.css";
 import AddNewEntityComponent from "../AddNewEntityComponent/AddNewComponent";
+import type { BookingDetails, BookingSearchFilters } from "./types";
+import { bookingService } from "./bookingService";
 
-type Car = {
-  id: string;
-  name: string;
-  brand: string;
-  location: string;
-  status: "Active" | "Inactive";
-  availability: "Available" | "Rented" | "Maintenance";
-  pricePerDay: number;
-};
-
-// Fake "backend" data (placeholders for now)
-const fakeCars: Car[] = [
-  {
-    id: "c1",
-    name: "Toyota Yaris",
-    brand: "Toyota",
-    location: "Warsaw Center",
-    status: "Active",
-    availability: "Available",
-    pricePerDay: 35,
-  },
-  {
-    id: "c2",
-    name: "BMW 3 Series",
-    brand: "BMW",
-    location: "Warsaw Airport",
-    status: "Active",
-    availability: "Rented",
-    pricePerDay: 95,
-  },
-  {
-    id: "c3",
-    name: "Audi A4",
-    brand: "Audi",
-    location: "Krakow Main",
-    status: "Active",
-    availability: "Maintenance",
-    pricePerDay: 90,
-  },
-  {
-    id: "c4",
-    name: "Skoda Octavia",
-    brand: "Skoda",
-    location: "Gdansk Old Town",
-    status: "Inactive",
-    availability: "Available",
-    pricePerDay: 55,
-  },
-  {
-    id: "c5",
-    name: "Hyundai i20",
-    brand: "Hyundai",
-    location: "Warsaw Center",
-    status: "Active",
-    availability: "Available",
-    pricePerDay: 40,
-  },
-  {
-    id: "c6",
-    name: "Mercedes A-Class",
-    brand: "Mercedes",
-    location: "Warsaw Airport",
-    status: "Active",
-    availability: "Available",
-    pricePerDay: 110,
-  },
-  {
-    id: "c7",
-    name: "Volkswagen Golf",
-    brand: "Volkswagen",
-    location: "Krakow Main",
-    status: "Active",
-    availability: "Rented",
-    pricePerDay: 60,
-  },
-];
-
-const PAGE_SIZE = 3;
+const PAGE_SIZE = 10;
 
 const ManageBookingsPage = () => {
-  const [cars, setCars] = useState<Car[]>([]);
+  const navigate = useNavigate();
+  
+  const [bookings, setBookings] = useState<BookingDetails[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalCars, setTotalCars] = useState<number>(0);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Filter states
+  const [filters, setFilters] = useState<Partial<BookingSearchFilters>>({
+    userId: undefined,
+    carId: undefined,
+    status: undefined,
+    userEmail: "",
+    carBrand: "",
+    carModel: "",
+    pickupLocation: "",
+    dropoffLocation: "",
+    startDateFrom: "",
+    startDateTo: "",
+    endDateFrom: "",
+    endDateTo: "",
+    priceMin: undefined,
+    priceMax: undefined
+  });
 
-  const totalPages = Math.max(1, Math.ceil(totalCars / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  const loadCarsPage = (page: number) => {
-    // Future backend shape idea:
-    // GET /cars?page=X&pageSize=Y -> { items: Car[], total: number }
-    const startIndex = (page - 1) * PAGE_SIZE;
-    const endIndex = startIndex + PAGE_SIZE;
+  const loadBookingsPage = async (page: number, appliedFilters?: Partial<BookingSearchFilters>) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const filtersToUse = appliedFilters || filters;
+      const cleanFilters = Object.fromEntries(
+        Object.entries(filtersToUse).filter(([_, value]) => 
+          value !== undefined && value !== "" && value !== null
+        )
+      );
 
-    setTotalCars(fakeCars.length);
-    setCars(fakeCars.slice(startIndex, endIndex));
+      const result = await bookingService.getAllBookings(page - 1, PAGE_SIZE, cleanFilters);
+      setBookings(result.bookings);
+      setTotalCount(result.totalCount);
+    } catch (err) {
+      console.error("Failed to load bookings:", err);
+      setError(err instanceof Error ? err.message : "Failed to load bookings");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     setCurrentPage(1);
-    loadCarsPage(1);
+    loadBookingsPage(1);
   }, []);
 
-  // Blueprint only: no real filtering logic yet
-  const applyFilters = () => {};
-  const resetFilters = () => {};
+  const handleFilterChange = (field: keyof BookingSearchFilters, value: string | number | undefined) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: value === "" ? undefined : value
+    }));
+  };
+
+  const applyFilters = () => {
+    setCurrentPage(1);
+    loadBookingsPage(1, filters);
+  };
+
+  const resetFilters = () => {
+    const emptyFilters: Partial<BookingSearchFilters> = {
+      userId: undefined,
+      carId: undefined,
+      status: undefined,
+      userEmail: "",
+      carBrand: "",
+      carModel: "",
+      pickupLocation: "",
+      dropoffLocation: "",
+      startDateFrom: "",
+      startDateTo: "",
+      endDateFrom: "",
+      endDateTo: "",
+      priceMin: undefined,
+      priceMax: undefined
+    };
+    setFilters(emptyFilters);
+    setCurrentPage(1);
+    loadBookingsPage(1, emptyFilters);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    loadBookingsPage(page);
+  };
+
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case "PENDING": return "#ffc107";
+      case "CONFIRMED": return "#17a2b8";
+      case "ACTIVE": return "#28a745";
+      case "COMPLETED": return "#6c757d";
+      case "CANCELLED": return "#dc3545";
+      default: return "#6c757d";
+    }
+  };
+
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   return (
     <div className={styles.page}>
@@ -116,146 +131,221 @@ const ManageBookingsPage = () => {
 
       <h3 className={styles.subTitle}>Search criteria</h3>
 
-      <FilterBar onApply={applyFilters} onReset={resetFilters}>
+      <FilterBarLayout onApply={applyFilters} onReset={resetFilters}>
         <div className={styles.filters}>
           <div className={styles.field}>
-            <span className={styles.label}>CarId</span>
+            <span className={styles.label}>User ID</span>
             <Input
-              type="text"
-              placeholder="e.g. c1"
+              type="number"
+              value={filters.userId?.toString() || ""}
+              onChange={(value) => handleFilterChange("userId", value ? parseInt(value) : undefined)}
+              placeholder="e.g. 1"
+              hint="User internal ID"
+            />
+          </div>
+
+          <div className={styles.field}>
+            <span className={styles.label}>Car ID</span>
+            <Input
+              type="number"
+              value={filters.carId?.toString() || ""}
+              onChange={(value) => handleFilterChange("carId", value ? parseInt(value) : undefined)}
+              placeholder="e.g. 1"
               hint="Car internal ID"
-              errorMessage="Please enter a valid car id."
-              isRequired={false}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>Name</span>
-            <Input
-              type="text"
-              placeholder="e.g. Toyota Yaris"
-              hint="Car display name"
-              errorMessage="Please enter a valid name."
-              isRequired={false}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>Location</span>
-            <Input
-              type="text"
-              placeholder="e.g. Warsaw Center"
-              hint="Current service point"
-              errorMessage="Please enter a valid location."
-              isRequired={false}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>Brand</span>
-            <Input
-              type="text"
-              placeholder="e.g. BMW"
-              hint="Car brand"
-              errorMessage="Please enter a valid brand."
-              isRequired={false}
             />
           </div>
 
           <div className={styles.field}>
             <span className={styles.label}>Status</span>
+            <select
+              value={filters.status || ""}
+              onChange={(e) => handleFilterChange("status", e.target.value as any)}
+              className={styles.select}
+            >
+              <option value="">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="ACTIVE">Active</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+
+          <div className={styles.field}>
+            <span className={styles.label}>User Email</span>
             <Input
-              type="text"
-              placeholder="Active / Inactive"
-              hint="Whether the car is active in the system"
-              errorMessage="Please enter a valid status."
-              isRequired={false}
+              type="email"
+              value={filters.userEmail || ""}
+              onChange={(value) => handleFilterChange("userEmail", value)}
+              placeholder="e.g. john@example.com"
+              hint="Customer email address"
             />
           </div>
 
           <div className={styles.field}>
-            <span className={styles.label}>Price</span>
+            <span className={styles.label}>Car Brand</span>
+            <Input
+              type="text"
+              value={filters.carBrand || ""}
+              onChange={(value) => handleFilterChange("carBrand", value)}
+              placeholder="e.g. BMW"
+              hint="Car manufacturer"
+            />
+          </div>
+
+          <div className={styles.field}>
+            <span className={styles.label}>Car Model</span>
+            <Input
+              type="text"
+              value={filters.carModel || ""}
+              onChange={(value) => handleFilterChange("carModel", value)}
+              placeholder="e.g. 3 Series"
+              hint="Car model name"
+            />
+          </div>
+
+          <div className={styles.field}>
+            <span className={styles.label}>Pickup Location</span>
+            <Input
+              type="text"
+              value={filters.pickupLocation || ""}
+              onChange={(value) => handleFilterChange("pickupLocation", value)}
+              placeholder="e.g. Warsaw Center"
+              hint="Pickup service point"
+            />
+          </div>
+
+          <div className={styles.field}>
+            <span className={styles.label}>Start Date From</span>
+            <Input
+              type="date"
+              value={filters.startDateFrom || ""}
+              onChange={(value) => handleFilterChange("startDateFrom", value)}
+              hint="Earliest start date"
+            />
+          </div>
+
+          <div className={styles.field}>
+            <span className={styles.label}>Start Date To</span>
+            <Input
+              type="date"
+              value={filters.startDateTo || ""}
+              onChange={(value) => handleFilterChange("startDateTo", value)}
+              hint="Latest start date"
+            />
+          </div>
+
+          <div className={styles.field}>
+            <span className={styles.label}>Price Min ($)</span>
             <Input
               type="number"
-              placeholder="e.g. 50"
-              hint="Price per day"
-              errorMessage="Please enter a valid number."
-              isRequired={false}
+              value={filters.priceMin?.toString() || ""}
+              onChange={(value) => handleFilterChange("priceMin", value ? parseFloat(value) : undefined)}
+              placeholder="e.g. 100"
+              hint="Minimum total price"
             />
           </div>
 
           <div className={styles.field}>
-            <span className={styles.label}>Availability</span>
+            <span className={styles.label}>Price Max ($)</span>
             <Input
-              type="text"
-              placeholder="Available / Rented / Maintenance"
-              hint="Current availability state"
-              errorMessage="Please enter a valid availability."
-              isRequired={false}
+              type="number"
+              value={filters.priceMax?.toString() || ""}
+              onChange={(value) => handleFilterChange("priceMax", value ? parseFloat(value) : undefined)}
+              placeholder="e.g. 500"
+              hint="Maximum total price"
             />
           </div>
         </div>
-      </FilterBar>
+      </FilterBarLayout>
 
       <AddNewEntityComponent
-          title="Bookings"
-          buttonText="Add new booking"
-          onButtonClick={() => {
-            // later: navigate("/users/new") or open modal
-        }}
+        title="Bookings"
+        buttonText="Add new booking"
+        onButtonClick={() => navigate("/bookings/new")}
       />
+
+      {error && (
+        <div className={styles.error}>
+          {error}
+        </div>
+      )}
 
       <div className={styles.table}>
         <div className={styles.tableHeader}>
-          <span>Id</span>
-          <span>Name</span>
-          <span>Is active</span>
+          <span>ID</span>
+          <span>Customer</span>
+          <span>Car</span>
+          <span>Dates</span>
+          <span>Status</span>
+          <span>Total Price</span>
           <span className={styles.actionsHeader}>Actions</span>
         </div>
 
-        {cars.map((c) => (
-          <div key={c.id} className={styles.tableRow}>
-            <span>{c.id}</span>
-            <span className={styles.car}>{c.name}</span>
-            <span className={styles.status}>{c.status === "Active" ? "true" : "false"}</span>
-            <div className={styles.actionButtons}>
-              <Button onClick={() => {}}>Details</Button>
-              <Button onClick={() => {}} color="secondary">
-                Edit
-              </Button>
+        {loading ? (
+          <div className={styles.loading}>Loading bookings...</div>
+        ) : (
+          bookings.map((booking) => (
+            <div key={booking.bookingId} className={styles.tableRow}>
+              <span>{booking.bookingId}</span>
+              <span className={styles.customer}>
+                {booking.user.firstName} {booking.user.lastName}
+                <br />
+                <small>{booking.user.email}</small>
+              </span>
+              <span className={styles.car}>
+                {booking.car.brand} {booking.car.model}
+                <br />
+                <small>{booking.car.color} • {booking.car.licensePlate}</small>
+              </span>
+              <span className={styles.dates}>
+                {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
+                <br />
+                <small>{booking.pickupLocation}</small>
+              </span>
+              <span 
+                className={styles.status}
+                style={{ backgroundColor: getStatusColor(booking.status), color: 'white' }}
+              >
+                {booking.status}
+              </span>
+              <span className={styles.price}>${booking.totalPrice.toFixed(2)}</span>
+              <div className={styles.actionButtons}>
+                <Button 
+                  label="Details" 
+                  onClick={() => navigate(`/bookings/${booking.bookingId}`)}
+                />
+                <Button 
+                  label="Edit"
+                  color="secondary"
+                  onClick={() => navigate(`/bookings/${booking.bookingId}/edit`)}
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
-      {cars.length === 0 ? <p className={styles.empty}>No cars found.</p> : null}
+      {!loading && bookings.length === 0 ? (
+        <p className={styles.empty}>No bookings found.</p>
+      ) : null}
 
       <div className={styles.pagination}>
         <Button
-          onClick={() => {
-            const next = Math.max(1, currentPage - 1);
-            setCurrentPage(next);
-            loadCarsPage(next);
-          }}
-          disabled={currentPage === 1}
-        >
-          Prev
-        </Button>
+          label="Prev"
+          onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1 || loading}
+        />
 
         <span className={styles.pageInfo}>
-          Page {currentPage} / {totalPages}
+          Page {currentPage} / {totalPages} ({totalCount} total)
         </span>
 
         <Button
-          onClick={() => {
-            const next = Math.min(totalPages, currentPage + 1);
-            setCurrentPage(next);
-            loadCarsPage(next);
-          }}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </Button>
+          label="Next"
+          onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages || loading}
+        />
       </div>
     </div>
   );
