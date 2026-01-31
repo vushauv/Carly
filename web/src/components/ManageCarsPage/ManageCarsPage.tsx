@@ -167,27 +167,16 @@ const ManageCarsPage = () => {
       {loading ? (
         <div className={styles.loading}>Loading cars...</div>
       ) : (
-        <>
-          <DataTable<Car>
-            rows={cars}
-            rowKey={carsRowKey}
-            columns={columns}
-            actions={actionsWithHandlers}
-            emptyText={Object.keys(activeFilters).length > 0 
-              ? "No cars found matching the current filters." 
-              : "No cars found."
-            }
-          />
-          
-          {/* Show results summary */}
-          <div className={styles.resultsSummary}>
-            {Object.keys(activeFilters).length > 0 ? (
-              <p>Found {totalCars} cars matching your filters</p>
-            ) : (
-              <p>Showing {cars.length} of {totalCars} total cars</p>
-            )}
-          </div>
-        </>
+        <DataTable<Car>
+          rows={cars}
+          rowKey={carsRowKey}
+          columns={columns}
+          actions={actionsWithHandlers}
+          emptyText={Object.keys(activeFilters).length > 0 
+            ? "No cars found matching the current filters." 
+            : "No cars found."
+          }
+        />
       )}
 
       <Pagination
