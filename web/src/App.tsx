@@ -15,6 +15,7 @@ import UserRegisterPage from "./components/UserRegisterPage/UserRegisterPage";
 import CarViewPage from "./components/CarViewPage/CarViewPage";
 import CarEditPage from "./components/CarEditPage/CarEditPage";
 import CarCreatePage from "./components/CarCreatePage/CarCreatePage";
+import CarImagesPage from "./components/CarImagesPage/CarImagesPage";
 
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -43,6 +44,10 @@ function App() {
           <Route
             path="/cars/new"
             element={loggedIn ? <CarCreatePage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/cars/:id/images"
+            element={loggedIn ? <CarImagesPage /> : <Navigate to="/login" />}
           />
           <Route
             path="/cars/:id"

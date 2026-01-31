@@ -79,6 +79,7 @@ const CarViewPage = () => {
           {getFeatureValue("brand")} {getFeatureValue("model")}
         </h1>
         <div className={styles.actions}>
+          <Button label="Manage Images" onClick={() => navigate(`/cars/${car.carId}/images`)} />
           <Button label="Edit Car" onClick={() => navigate(`/cars/${car.carId}/edit`)} />
           <Button label="Back to Cars" onClick={() => navigate("/cars")} />
         </div>
