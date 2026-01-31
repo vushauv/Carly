@@ -10,7 +10,7 @@ import { carsColumns, carsRowKey, carsActions } from "./datatable.conf";
 import Pagination from "../Pagination/Pagination";
 import { carService } from "./carService";
 
-const PAGE_SIZE = 10; // Match API default
+const PAGE_SIZE = 3; // Changed from 10 to 3 to match service default
 
 const ManageCarsPage = () => {
   const navigate = useNavigate();
@@ -119,11 +119,8 @@ const ManageCarsPage = () => {
   );
 
   const columns = useMemo(
-    () => carsColumns({ 
-      primaryCell: styles.primaryCell, 
-      status: styles.status,
-    }),
-    [styles.primaryCell, styles.status]
+    () => carsColumns(),
+    []
   );
 
   return (
