@@ -128,9 +128,9 @@ public class DataSeeder implements ApplicationRunner {
         if(superAdminType.isEmpty())
             throw new IllegalStateException("Upsert User Roles first");
 
-        upsertUserByEmail("oleh.shuptar.stud@pw.edu.pl", "Oleh", "Shuptar", superAdminType.get(), null, 111111111L);
-        upsertUserByEmail("vasili.vushau.stud@pw.edu.pl", "Vasili", "Vushau", superAdminType.get(), null, 222222222L);
-        upsertUserByEmail("stanislaw.zielinski.stud@pw.edu.pl", "Stanisław", "Zieliński", superAdminType.get(), null, 333333333L);
+        upsertUserByEmail("oleh.shuptar.stud@pw.edu.pl", "Oleh", "Shuptar", superAdminType.get(), "pass", 111111111L);
+        upsertUserByEmail("vasili.vushau.stud@pw.edu.pl", "Vasili", "Vushau", superAdminType.get(), "pass", 222222222L);
+        upsertUserByEmail("stanislaw.zielinski.stud@pw.edu.pl", "Stanisław", "Zieliński", superAdminType.get(), "pass", 333333333L);
         upsertUserByEmail("wojciech.sendek.stud@pw.edu.pl", "Wojtek", "Sendek", superAdminType.get(), "ass", 444444444L);
     }
 
@@ -158,14 +158,14 @@ public class DataSeeder implements ApplicationRunner {
             throw new IllegalStateException("Upsert CarFeatures first");
 
         // 1. Customers:
-        User u1 = upsertUserByEmail("DT@family.com", "Dominic", "Toretto", customerType.get(), null, 987654321L);
-        User u2 =upsertUserByEmail( "BB@shire.gov", "Bilbo", "Baggins", customerType.get(), null, 999999999L);
-        User u3 =upsertUserByEmail( "JS@blackpearl.org", "Jack", "Sparrow", customerType.get(), null, 123456789L);
-        User u4 =upsertUserByEmail( "HP@hogwarts.edu", "Harry", "Potter", customerType.get(), null, 111222333L);
-        User u5 =upsertUserByEmail( "john.wick@continental.com", "John", "Wick", customerType.get(), null, 505050505L);
-        User u6 =upsertUserByEmail( "batman@gotham.com", "Bruce", "Wayne", customerType.get(), null, 202020202L);
-        User u7 =upsertUserByEmail( "walter.white@heisenberg.lab", "Walter", "White", customerType.get(), null, 808080808L);
-        User u8 =upsertUserByEmail( "neo@matrix.io", "Neo", "Anderson", customerType.get(), null, 909090909L);
+        User u1 = upsertUserByEmail("DT@family.com", "Dominic", "Toretto", customerType.get(), "pass", 987654321L);
+        User u2 =upsertUserByEmail( "BB@shire.gov", "Bilbo", "Baggins", customerType.get(), "pass", 999999999L);
+        User u3 =upsertUserByEmail( "JS@blackpearl.org", "Jack", "Sparrow", customerType.get(), "pass", 123456789L);
+        User u4 =upsertUserByEmail( "HP@hogwarts.edu", "Harry", "Potter", customerType.get(), "pass", 111222333L);
+        User u5 =upsertUserByEmail( "john.wick@continental.com", "John", "Wick", customerType.get(), "pass", 505050505L);
+        User u6 =upsertUserByEmail( "batman@gotham.com", "Bruce", "Wayne", customerType.get(), "pass", 202020202L);
+        User u7 =upsertUserByEmail( "walter.white@heisenberg.lab", "Walter", "White", customerType.get(), "pass", 808080808L);
+        User u8 =upsertUserByEmail( "neo@matrix.io", "Neo", "Anderson", customerType.get(), "pass", 909090909L);
 
         // 2. CarFeatures:
         CarFeature brandBmw = upsertCarFeature(brand.get(), "BMW");

@@ -48,7 +48,7 @@ public class UserMainService implements UserService {
                 .findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
-        if (!user.getPassword().equals(password)) {
+        if (user.getPassword() != null && !user.getPassword().equals(password)) {
             throw new IllegalArgumentException("Invalid credentials");
         }
 
