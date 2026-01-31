@@ -30,7 +30,7 @@ public class ControllerExceptionHandler {
                 ));
     }
 
-    @ExceptionHandler(InvalidFileException.class)
+    @ExceptionHandler(CarBookingConflictException.class)
     public ResponseEntity<ExceptionDetails> handleCarBookingConflict(CarBookingConflictException ex, ServletWebRequest request) {
         log.error("Invalid Input Exception: {}", ex.getMessage());
         return ResponseEntity

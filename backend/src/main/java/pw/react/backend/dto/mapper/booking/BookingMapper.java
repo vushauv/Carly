@@ -5,6 +5,7 @@ import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.domain.booking.BookingStatusDictionary;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.booking.Location;
+import pw.react.backend.domain.enums.BookingStatus;
 import pw.react.backend.domain.user.User;
 import pw.react.backend.dto.request.booking.CreateBookingRequest;
 import pw.react.backend.dto.request.booking.UpdateBookingRequestDto;
@@ -37,8 +38,8 @@ public interface BookingMapper {
             @Mapping(target = "bookingId", ignore = true),
             @Mapping(target = "pickupLocation", source = "pickupLocationId", qualifiedByName = "locationFromId"),
             @Mapping(target = "returnLocation", source = "returnLocationId", qualifiedByName = "locationFromId"),
-            @Mapping(target = "carBookingStatus", source = "carBookingStatusId", qualifiedByName = "statusFromId"),
-            @Mapping(target = "flatBookingStatus", source = "flatBookingStatusId", qualifiedByName = "statusFromId")
+            @Mapping(target = "carBookingStatus", source = "carBookingStatus", qualifiedByName = "statusFromEnum"),
+            @Mapping(target = "flatBookingStatus", source = "flatBookingStatus", qualifiedByName = "statusFromEnum")
     })
     Booking updateRequestToBooking(UpdateBookingRequestDto updateBookingRequest);
 
@@ -50,8 +51,8 @@ public interface BookingMapper {
     @Mappings({
             @Mapping(target = "pickupLocation", source = "pickupLocationId", qualifiedByName = "locationFromId"),
             @Mapping(target = "returnLocation", source = "returnLocationId", qualifiedByName = "locationFromId"),
-            @Mapping(target = "carBookingStatus", source = "carBookingStatusId", qualifiedByName = "statusFromId"),
-            @Mapping(target = "flatBookingStatus", source = "flatBookingStatusId", qualifiedByName = "statusFromId")
+            @Mapping(target = "carBookingStatus", source = "carBookingStatus", qualifiedByName = "statusFromEnum"),
+            @Mapping(target = "flatBookingStatus", source = "flatBookingStatus", qualifiedByName = "statusFromEnum")
     })
     void applyUpdate(UpdateBookingRequestDto request, @MappingTarget Booking booking);
 
@@ -111,6 +112,14 @@ public interface BookingMapper {
         Location l = new Location();
         l.setLocationId(id);
         return l;
+    }
+
+    @Named("statusFromEnum")
+    default BookingStatusDictionary statusFromEnum(BookingStatus status) {
+        if (status == null) return null;
+        BookingStatusDictionary s = new BookingStatusDictionary();
+        s.setBookingStatusDictionaryId((short) status.getCode());
+        return s;
     }
 
     @Named("statusFromId")

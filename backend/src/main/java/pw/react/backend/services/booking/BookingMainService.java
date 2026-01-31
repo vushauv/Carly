@@ -15,6 +15,7 @@ import pw.react.backend.exceptions.custom.CarBookingConflictException;
 import pw.react.backend.repositories.booking.BookingRepository;
 import org.springframework.data.domain.Page;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.chrono.ChronoLocalDateTime;
 import java.util.Collections;
@@ -70,6 +71,7 @@ public class BookingMainService implements BookingService {
                 .orElse(false);
     }
 
+    // TODO: add possibility to make a booking for one day only
     @Override
     @Transactional
     public List<Booking> batchSave(List<Booking> bookings) throws BadRequestException {
@@ -79,11 +81,11 @@ public class BookingMainService implements BookingService {
 
         for (Booking booking : bookings) {
             var carId = booking.getCar().getCarId();
-            var userId = booking.getBookingId();
+            var userId = booking.getUser().getUserId();
             var dateRange = new DateRange(booking.getCarBookingDateFrom(), booking.getCarBookingDateTo());
-            var now = LocalTime.now();
+            var now = LocalDateTime.now();
 
-            if(dateRange.getFrom().isBefore(ChronoLocalDateTime.from(now)))
+            if(dateRange.getFrom().isBefore(now))
                 throw new BadRequestException("The dateFrom cannot be before current time");
             // Checks if a valid dateRange is provided
             DateUtils.normaliseDates(dateRange);
@@ -140,7 +142,7 @@ public class BookingMainService implements BookingService {
         Specification<Booking> spec = Specification.where(BookingSpecifications.isEnabled())
                 .and(BookingSpecifications.hasBookingId(criteria.getBookingId()))
                 .and(BookingSpecifications.hasUserId(criteria.getUserId()))
-                .and(BookingSpecifications.hasStatusName(criteria.getStatus().name()))
+                .and(BookingSpecifications.hasStatusName(criteria.getStatus() == null ? null : criteria.getStatus().name()))
                 .and(BookingSpecifications.dateFrom(criteria.getDateFrom()))
                 .and(BookingSpecifications.dateTo(criteria.getDateTo()));
 
@@ -177,7 +179,7 @@ public class BookingMainService implements BookingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
 
         BookingStatusDictionary cancelled = bookingStatusDictionaryRepository.findByName(CANCELLED_STATUS)
-                .orElseThrow(() -> new ResourceNotFoundException("CANCELLED status missing (seed data)"));
+                .orElseThrow(() -> new ResourceNotFoundException(CANCELLED_STATUS + " status missing (seed data)"));
 
         //safeguard - if already cancelled then do nothing
         if (booking.getFlatBookingStatus() != null &&
@@ -187,14 +189,15 @@ public class BookingMainService implements BookingService {
         //TODO: after deciding, make sure we pass the correct one: our BookingId vs their FlatBookingId!!!
 
         //first we cancell the FlatBooking via their API,
-        flatlyService.cancelFlatBookingInFlatly(bookingId);
+        var success = flatlyService.cancelFlatBookingInFlatly(bookingId);
         log.info("Flat booking cancelled on Flatly's side: bookingId={}", bookingId);
 
         //on success, we change the status in our system to 'Cancelled'
-        booking.setFlatBookingStatus(cancelled);
-        bookingRepository.save(booking);
-
-        log.info("Flat booking cancelled on Carly's side: bookingId={}", bookingId);
+        if(success) {
+            booking.setFlatBookingStatus(cancelled);
+            bookingRepository.save(booking);
+            log.info("Flat booking cancelled on Carly's side: bookingId={}", bookingId);
+        }
     }
 
 }

@@ -96,8 +96,8 @@ public interface CarRepository extends JpaRepository<Car, Integer> {
     select c
     from Car c
     where c.isEnabled = true
-    and c.carId =: carId
-      and exists (
+    and c.carId = :carId
+      and not exists (
           select 1
           from Booking b
           where b.car = c
@@ -107,7 +107,10 @@ public interface CarRepository extends JpaRepository<Car, Integer> {
             
       )
 """)
-    Optional<Car> checkCarAvailability(@Param("carId")Integer carId);
+    Optional<Car> checkCarAvailability(@Param("carId") Integer carId,
+                                       @Param("from") LocalDateTime from,
+                                       @Param("to") LocalDateTime to,
+                                       @Param("cancelledStatusId") Integer cancelledStatusId);
 
     // Produces a consistent order
     List<Car> findByCarIdInOrderByCarIdAsc(List<Integer> carIds);

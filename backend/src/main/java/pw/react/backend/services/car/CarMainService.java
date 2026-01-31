@@ -135,7 +135,9 @@ public class CarMainService implements CarService {
     {
         if(!carRepository.existsById(carId))
             throw new ResourceNotFoundException("Car with id " + carId + " was not found.");
-        var res = carRepository.checkCarAvailability(carId);
+        var res = carRepository.checkCarAvailability(carId,
+                dateRange.getFrom(), dateRange.getTo(),
+                BookingStatus.CANCELLED.getCode());
 
         return res.isPresent();
     }

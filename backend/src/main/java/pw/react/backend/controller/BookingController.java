@@ -25,8 +25,7 @@ import pw.react.backend.services.booking.BookingService;
 import pw.react.backend.services.car.CarService;
 import pw.react.backend.utils.DateUtils;
 
-import java.time.LocalTime;
-import java.time.chrono.ChronoLocalDateTime;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -36,7 +35,7 @@ import static java.util.stream.Collectors.joining;
 @RequestMapping(path = BookingController.BOOKINGS_PATH)
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-public class BookingController {
+public class    BookingController {
     public static final String BOOKINGS_PATH = PathResolver.Booking.Base;
     private final BookingService bookingService;
     private final BookingMapper bookingMapper;
@@ -84,6 +83,8 @@ public class BookingController {
             @RequestParam(required = false) @Min(0) Integer size
     ) {
         logHeaders(headers);
+        int resolvedPage = page != null ? page : 0;
+        int resolvedSize = size != null ? size : 10;
         // no filters -> we get all bookings (pagination included)
         boolean noFilters = bookingId == null &&
                         status == null  &&
@@ -105,7 +106,7 @@ public class BookingController {
                 to, from, userId);
 
         List<GetBookingResponse> result = bookingMapper.bookingToGetBookingResponseList(
-                bookingService.search(criteria, page, size).getContent()
+                bookingService.search(criteria, resolvedPage, resolvedSize).getContent()
         );
         return ResponseEntity.ok(result);
     }
@@ -129,7 +130,7 @@ public class BookingController {
                 || updatedBooking.getCarBookingDateTo() != null;
         var carId = existing.getCar().getCarId();
         var dateRange = new DateRange();
-        var now = LocalTime.now();
+        var now = LocalDateTime.now();
 
         // Only if
         if(dateChanged) {
@@ -139,7 +140,7 @@ public class BookingController {
             dateRange.setTo(updatedBooking.getCarBookingDateTo() == null ?
                     existing.getCarBookingDateTo() : updatedBooking.getCarBookingDateTo());
 
-            if (dateRange.getFrom().isBefore(ChronoLocalDateTime.from(now)))
+            if (dateRange.getFrom().isBefore(now))
                 throw new BadRequestException("The dateFrom cannot be before current time");
 
             DateUtils.normaliseDates(dateRange);
@@ -153,7 +154,6 @@ public class BookingController {
         bookingMapper.applyUpdate(updatedBooking, existing);
         log.info(String.format("Booking with id %s successfully modified.", existing.getBookingId()));
         bookingService.updateBooking(bookingId, existing);
-
     }
 
     @DeleteMapping(path = "/{bookingId}")
