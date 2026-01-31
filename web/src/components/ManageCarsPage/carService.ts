@@ -7,30 +7,52 @@ export const carService = {
    * Retrieves a paginated list of cars with optional filtering
    * Maps to: GET /api/cars?searchParams={filters}&page={pageNumber}&size={pageSize}
    */
-  async getAllCars(pageNumber: number = 0, pageSize: number = 10, filters?: Partial<CarSearchFilters>): Promise<{cars: Car[], totalCount: number}> {
-    console.log(`Fetching cars: page ${pageNumber}, size ${pageSize}`, filters ? `with filters: ${JSON.stringify(filters)}` : '');
+  async getAllCars(pageNumber: number = 0, pageSize: number = 3, filters?: Partial<CarSearchFilters>): Promise<{cars: Car[], totalCount: number}> {
+    console.log(`[CarService] Fetching cars: page ${pageNumber}, size ${pageSize}`, filters ? `with filters: ${JSON.stringify(filters)}` : '');
     
     const params = new URLSearchParams({
       page: pageNumber.toString(),
       size: pageSize.toString(),
     });
 
-    // Add filters as query parameters
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, value.toString());
-        }
-      });
+    // Add filters as searchParams object if provided
+    if (filters && Object.keys(filters).length > 0) {
+      // Create searchParams object for the API
+      const searchParams = {
+        features: {
+          brand: filters.brand,
+          model: filters.model, 
+          color: filters.color,
+          fuelType: filters.fuelType,
+          status: filters.status
+        },
+        availability: filters.availability
+      };
+      
+      // Remove undefined values
+      const cleanSearchParams = JSON.parse(JSON.stringify(searchParams));
+      params.append('searchParams', JSON.stringify(cleanSearchParams));
     }
 
     const url = buildApiUrl(API_CONFIG.ENDPOINTS.CARS) + `?${params}`;
-    const response = await apiRequest<{content: Car[], totalElements: number}>(url);
+    console.log(`[CarService] Request URL: ${url}`);
     
-    return {
-      cars: response.content || [],
-      totalCount: response.totalElements || 0
-    };
+    try {
+      const response = await apiRequest<Car[]>(url);
+      console.log(`[CarService] Raw response:`, response);
+      
+      // API returns array directly, not paginated response object
+      const cars = Array.isArray(response) ? response : [];
+      console.log(`[CarService] Extracted cars:`, cars);
+      
+      return {
+        cars: cars,
+        totalCount: cars.length // For now, using array length
+      };
+    } catch (error) {
+      console.error(`[CarService] Error in getAllCars:`, error);
+      throw error;
+    }
   },
 
   /**

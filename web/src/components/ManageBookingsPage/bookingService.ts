@@ -5,31 +5,43 @@ import { API_CONFIG, buildApiUrl, apiRequest } from "../../shared/api.config";
 export const bookingService = {
   /**
    * Retrieves a paginated list of bookings with optional filtering
+   * Maps to: GET /api/bookings with query parameters
    */
-  async getAllBookings(pageNumber: number = 0, pageSize: number = 10, filters?: Partial<BookingSearchFilters>): Promise<{bookings: BookingDetails[], totalCount: number}> {
-    console.log(`Fetching bookings: page ${pageNumber}, size ${pageSize}`, filters ? `with filters: ${JSON.stringify(filters)}` : '');
+  async getAllBookings(pageNumber: number = 0, pageSize: number = 3, filters?: Partial<BookingSearchFilters>): Promise<{bookings: BookingDetails[], totalCount: number}> {
+    console.log(`[BookingService] Fetching bookings: page ${pageNumber}, size ${pageSize}`, filters ? `with filters: ${JSON.stringify(filters)}` : '');
     
     const params = new URLSearchParams({
       page: pageNumber.toString(),
       size: pageSize.toString(),
     });
 
-    // Add filters as query parameters
+    // Add filters as individual query parameters based on API docs
     if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, value.toString());
-        }
-      });
+      if (filters.userId) params.append('userId', filters.userId.toString());
+      if (filters.status) params.append('status', filters.status);
+      if (filters.startDateFrom) params.append('dateFrom', filters.startDateFrom);
+      if (filters.startDateTo) params.append('dateTo', filters.startDateTo);
     }
 
     const url = buildApiUrl(API_CONFIG.ENDPOINTS.BOOKINGS) + `?${params}`;
-    const response = await apiRequest<{content: BookingDetails[], totalElements: number}>(url);
+    console.log(`[BookingService] Request URL: ${url}`);
     
-    return {
-      bookings: response.content || [],
-      totalCount: response.totalElements || 0
-    };
+    try {
+      const response = await apiRequest<BookingDetails[]>(url);
+      console.log(`[BookingService] Raw response:`, response);
+      
+      // API returns array directly, not paginated response object
+      const bookings = Array.isArray(response) ? response : [];
+      console.log(`[BookingService] Extracted bookings:`, bookings);
+      
+      return {
+        bookings: bookings,
+        totalCount: bookings.length // For now, using array length
+      };
+    } catch (error) {
+      console.error(`[BookingService] Error in getAllBookings:`, error);
+      throw error;
+    }
   },
 
   /**

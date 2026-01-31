@@ -4,14 +4,30 @@ import { API_CONFIG, buildApiUrl, apiRequest } from "../../shared/api.config";
 
 export const userService = {
   // GET /api/users - Get all users with pagination
-  async getAllUsers(pageNumber: number = 0, pageSize: number = 10): Promise<User[]> {
-    console.log(`Fetching users: page ${pageNumber}, size ${pageSize}`);
+  async getAllUsers(pageNumber: number = 0, pageSize: number = 3): Promise<User[]> {
+    console.log(`[UserService] Fetching users: pageNumber ${pageNumber}, pageSize ${pageSize}`);
     
-    const url = buildApiUrl(API_CONFIG.ENDPOINTS.USERS) + `?page=${pageNumber}&size=${pageSize}`;
-    const response = await apiRequest<{content: User[]}>(url);
+    const url = buildApiUrl(API_CONFIG.ENDPOINTS.USERS) + `?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+    console.log(`[UserService] Request URL: ${url}`);
     
-    return response.content || [];
+    try {
+      const response = await apiRequest<User[]>(url);
+      console.log(`[UserService] Raw response:`, response);
+      
+      // According to API docs, the response should be directly an array of users
+      const users = Array.isArray(response) ? response : [];
+      console.log(`[UserService] Extracted users:`, users);
+      console.log(`[UserService] Users count:`, users.length);
+      
+      return users;
+    } catch (error) {
+      console.error(`[UserService] Error in getAllUsers:`, error);
+      throw error;
+    }
   },
+
+  // http://localhost:8080/api/users?pageNumber=0&pageSize=3
+  
 
   // GET /api/users/{id} - Get user by ID
   async getUserById(id: number): Promise<User> {
