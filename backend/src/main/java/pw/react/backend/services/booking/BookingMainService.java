@@ -74,7 +74,9 @@ public class BookingMainService implements BookingService {
     // TODO: add possibility to make a booking for one day only
     @Override
     @Transactional
-    public List<Booking> batchSave(List<Booking> bookings) throws BadRequestException {
+    public List<Booking> batchSave(List<Booking> bookings)
+            throws BadRequestException, ResourceNotFoundException
+    {
         BookingStatusDictionary created =
                 bookingStatusDictionaryRepository.findByName(BookingStatus.CREATED.name())
                         .orElseThrow(() -> new ResourceNotFoundException(BookingStatus.CREATED.name() + " status not found. Seed data missing."));

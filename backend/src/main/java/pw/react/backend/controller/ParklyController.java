@@ -12,9 +12,9 @@ import pw.react.backend.dto.mapper.car.CarSearchCriteriaMapper;
 import pw.react.backend.dto.mapper.parkly.ParklyBookingMapper;
 import pw.react.backend.dto.mapper.parkly.ParklyCarMapper;
 import pw.react.backend.dto.request.parkly.ParklyCarSearchParams;
-import pw.react.backend.dto.request.parkly.ParklyCreateCarBookingRequest;
+import pw.react.backend.dto.request.parkly.ParklyCreateBookingRequestDto;
 import pw.react.backend.dto.response.parkly.ParklyGetBookingResponseDto;
-import pw.react.backend.dto.response.parkly.ParklyBookingResponse;
+import pw.react.backend.dto.response.parkly.ParklyCreateBookingResponseDto;
 import pw.react.backend.dto.response.parkly.ParklyGetCarResponseDto;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.services.car.CarMainService;
@@ -46,42 +46,35 @@ public class ParklyController {
     // TODO: fix parkly controller
     // Parkly integration for interacting with bookings
     @GetMapping(PathResolver.Parkly.CarBookings + "/{bookingId}")
-    public ResponseEntity<ParklyGetBookingResponseDto> getCarBooking(
-            @RequestHeader HttpHeaders headers,
-            @PathVariable Integer bookingId
-    ) throws AccessDeniedException, ResourceNotFoundException {
-        // TODO: externalBookingId caused an error when running code. Had to change it to accept Integer
+    public ResponseEntity<ParklyGetBookingResponseDto> getCarBooking(@RequestHeader HttpHeaders headers,
+                                                                     @PathVariable Integer bookingId)
+            throws AccessDeniedException, ResourceNotFoundException
+    {
         logHeaders(headers);
         var booking = parklyService.getBookingById(bookingId);
         var dto = parklyBookingMapper.toGetCarResponseDto(booking);
         return ResponseEntity.ok(dto);
     }
 
-    // TODO: service should not return DTO's
     @PostMapping(PathResolver.Parkly.CarBookings)
-    public ResponseEntity<ParklyBookingResponse> createCarBooking(
-            @RequestHeader HttpHeaders headers,
-            @Valid @RequestBody ParklyCreateCarBookingRequest request
-    ) {
+    public ResponseEntity<ParklyCreateBookingResponseDto> createCarBooking(@RequestHeader HttpHeaders headers,
+                                                                           @Valid @RequestBody ParklyCreateBookingRequestDto request)
+            throws BadRequestException
+    {
         logHeaders(headers);
-        ParklyBookingResponse response = parklyService.createCarBooking(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        var booking = parklyBookingMapper.fromCreateBookingRequestDto(request);
+        var res = parklyService.createCarBooking(booking);
+        var dto = parklyBookingMapper.toCreateBookingResponseDto(res);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-    @DeleteMapping(PathResolver.Parkly.CarBookings + "/{externalBookingId}")
-    public ResponseEntity<String> cancelCarBooking(
-            @RequestHeader HttpHeaders headers,
-            @PathVariable Integer externalBookingId
-    ) {
+    @PostMapping(PathResolver.Parkly.CarBookings + "/{bookingId}/cancel")
+    public void cancelCarBooking(@RequestHeader HttpHeaders headers,
+                                @PathVariable Integer bookingId)
+            throws AccessDeniedException
+    {
         logHeaders(headers);
-
-        boolean cancelled = parklyService.cancelCarBooking(externalBookingId);
-        if (!cancelled) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(String.format("Booking with externalBookingId=%d not found for Parkly.", externalBookingId));
-        }
-
-        return ResponseEntity.ok(String.format("Booking with externalBookingId=%d cancelled.", externalBookingId));
+        parklyService.cancelCarBooking(bookingId);
     }
 
     // Parkly integration for retrieving cars

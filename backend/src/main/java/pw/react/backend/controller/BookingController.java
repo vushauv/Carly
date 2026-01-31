@@ -15,7 +15,7 @@ import pw.react.backend.domain.enums.BookingStatus;
 import pw.react.backend.dto.mapper.booking.BookingCriteriaMapper;
 import pw.react.backend.dto.mapper.booking.BookingMapper;
 import pw.react.backend.dto.models.DateRange;
-import pw.react.backend.dto.request.booking.CreateBookingRequest;
+import pw.react.backend.dto.request.booking.CreateBookingRequestDto;
 import pw.react.backend.dto.request.booking.UpdateBookingRequestDto;
 import pw.react.backend.dto.response.booking.BookingResponse;
 import pw.react.backend.dto.response.booking.GetBookingResponseDto;
@@ -45,7 +45,7 @@ public class    BookingController {
     @PostMapping
     public ResponseEntity<Collection<BookingResponse>> createBookings(
             @RequestHeader HttpHeaders headers,
-            @Valid @RequestBody @NotEmpty List<CreateBookingRequest> requests
+            @Valid @RequestBody @NotEmpty List<CreateBookingRequestDto> requests
     ) throws BadRequestException {
         logHeaders(headers);
         List<Booking> toCreate = bookingMapper.createRequestToBookingList(requests);
