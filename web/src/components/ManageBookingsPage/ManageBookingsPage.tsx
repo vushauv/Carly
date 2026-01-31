@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import FilterBarLayout from "../FilterBarLayout/FilterBarLayout";
 import Input from "../Input/Input";
@@ -7,6 +7,8 @@ import styles from "./ManageBookingsPage.module.css";
 import AddNewEntityComponent from "../AddNewEntityComponent/AddNewComponent";
 import type { BookingDetails, BookingSearchFilters } from "./types";
 import { bookingService } from "./bookingService";
+import DataTable from "../DataTable/DataTable";
+import { bookingsColumns, bookingsRowKey, bookingsActions } from "./datatable.conf";
 
 const PAGE_SIZE = 10;
 
@@ -124,6 +126,53 @@ const ManageBookingsPage = () => {
       day: 'numeric'
     });
   };
+
+  const handleBookingAction = (actionId: string, booking: BookingDetails) => {
+    switch (actionId) {
+      case "view":
+        navigate(`/bookings/${booking.bookingId}`);
+        break;
+      case "edit":
+        navigate(`/bookings/${booking.bookingId}/edit`);
+        break;
+      case "delete":
+        handleDeleteBooking(booking.bookingId);
+        break;
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId: number) => {
+    if (!window.confirm("Are you sure you want to delete this booking? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      await bookingService.deleteBooking(bookingId);
+      // Refresh the current page after deletion
+      loadBookingsPage(currentPage);
+    } catch (err) {
+      console.error("Failed to delete booking:", err);
+      setError(err instanceof Error ? err.message : "Failed to delete booking");
+    }
+  };
+
+  const actionsWithHandlers = useMemo(() => 
+    bookingsActions.map(action => ({
+      ...action,
+      onClick: (booking: BookingDetails) => handleBookingAction(action.id, booking)
+    })), [navigate]
+  );
+
+  const columns = useMemo(
+    () => bookingsColumns({ 
+      customer: styles.customer,
+      car: styles.car,
+      dates: styles.dates,
+      status: styles.status,
+      price: styles.price,
+    }),
+    []
+  );
 
   return (
     <div className={styles.page}>
@@ -271,64 +320,17 @@ const ManageBookingsPage = () => {
         </div>
       )}
 
-      <div className={styles.table}>
-        <div className={styles.tableHeader}>
-          <span>ID</span>
-          <span>Customer</span>
-          <span>Car</span>
-          <span>Dates</span>
-          <span>Status</span>
-          <span>Total Price</span>
-          <span className={styles.actionsHeader}>Actions</span>
-        </div>
-
-        {loading ? (
-          <div className={styles.loading}>Loading bookings...</div>
-        ) : (
-          bookings.map((booking) => (
-            <div key={booking.bookingId} className={styles.tableRow}>
-              <span>{booking.bookingId}</span>
-              <span className={styles.customer}>
-                {booking.user.firstName} {booking.user.lastName}
-                <br />
-                <small>{booking.user.email}</small>
-              </span>
-              <span className={styles.car}>
-                {booking.car.brand} {booking.car.model}
-                <br />
-                <small>{booking.car.color} • {booking.car.licensePlate}</small>
-              </span>
-              <span className={styles.dates}>
-                {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
-                <br />
-                <small>{booking.pickupLocation}</small>
-              </span>
-              <span 
-                className={styles.status}
-                style={{ backgroundColor: getStatusColor(booking.status), color: 'white' }}
-              >
-                {booking.status}
-              </span>
-              <span className={styles.price}>${booking.totalPrice.toFixed(2)}</span>
-              <div className={styles.actionButtons}>
-                <Button 
-                  label="Details" 
-                  onClick={() => navigate(`/bookings/${booking.bookingId}`)}
-                />
-                <Button 
-                  label="Edit"
-                  color="secondary"
-                  onClick={() => navigate(`/bookings/${booking.bookingId}/edit`)}
-                />
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {!loading && bookings.length === 0 ? (
-        <p className={styles.empty}>No bookings found.</p>
-      ) : null}
+      {loading ? (
+        <div className={styles.loading}>Loading bookings...</div>
+      ) : (
+        <DataTable<BookingDetails>
+          rows={bookings}
+          rowKey={bookingsRowKey}
+          columns={columns}
+          actions={actionsWithHandlers}
+          emptyText="No bookings found."
+        />
+      )}
 
       <div className={styles.pagination}>
         <Button

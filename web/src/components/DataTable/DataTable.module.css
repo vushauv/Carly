@@ -45,8 +45,8 @@
     width: 300px;
     margin-left: auto;     /* pushes actions to the far right */
     display: flex;
-    justify-content: space-between;
-    gap: 0.75rem;          /* increased gap between buttons from 0.5rem to 0.75rem */
+    justify-content: flex-start;  /* changed from space-between to flex-start */
+    gap: 0.5rem;          /* reduced gap between buttons from 0.75rem to 0.5rem */
   }
   .actionsHeader{
     justify-content: flex-start;

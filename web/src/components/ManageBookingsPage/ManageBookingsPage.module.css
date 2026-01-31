@@ -51,86 +51,6 @@
   color: var(--gray-200);
 }
 
-.table {
-  display: flex;
-  flex-direction: column;
-  margin-top: 1rem;
-  border-radius: 0.75rem;
-  overflow: hidden;
-  border: 1px solid var(--white-100);
-}
-
-.tableHeader {
-  display: grid;
-  grid-template-columns: 60px 200px 180px 160px 120px 120px 150px;
-  gap: 16px;
-  padding: 12px 16px;
-  font-weight: bold;
-  background: #f8f9fa;
-  border-bottom: 2px solid #dee2e6;
-}
-
-.tableRow {
-  display: grid;
-  grid-template-columns: 60px 200px 180px 160px 120px 120px 150px;
-  gap: 16px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #dee2e6;
-  align-items: center;
-}
-
-.tableRow:last-child {
-  border-bottom: none;
-}
-
-.car {
-  font-size: 0.9rem;
-}
-
-.car small {
-  color: #6c757d;
-  font-size: 0.8rem;
-}
-
-.status {
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  text-align: center;
-  min-width: 80px;
-}
-
-.actionsHeader {
-  text-align: right;
-}
-
-.actionButtons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.empty {
-  margin-top: 0.75rem;
-  color: var(--gray-200);
-  text-align: center;
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin: 1.25rem 0 0.25rem;
-}
-
-.pageInfo {
-  color: var(--gray-200);
-}
-
 .select {
   padding: 12px;
   border: 1px solid #ced4da;
@@ -147,11 +67,21 @@
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
+/* Styles for DataTable cells */
 .customer {
   font-size: 0.9rem;
 }
 
 .customer small {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.car {
+  font-size: 0.9rem;
+}
+
+.car small {
   color: #6c757d;
   font-size: 0.8rem;
 }
@@ -165,6 +95,16 @@
   font-size: 0.75rem;
 }
 
+.status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-align: center;
+  min-width: 80px;
+}
+
 .price {
   font-weight: 600;
   color: #28a745;
@@ -172,7 +112,6 @@
 }
 
 .loading {
-  grid-column: 1 / -1;
   text-align: center;
   padding: 40px;
   color: #6c757d;
@@ -186,4 +125,16 @@
   border-radius: 6px;
   border: 1px solid #f5c6cb;
   margin-bottom: 20px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.25rem 0 0.25rem;
+}
+
+.pageInfo {
+  color: var(--gray-200);
 }
