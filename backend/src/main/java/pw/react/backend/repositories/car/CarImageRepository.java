@@ -1,6 +1,33 @@
 package pw.react.backend.repositories.car;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import pw.react.backend.domain.car.CarImage;
+import pw.react.backend.repositories.car.models.CarImageUrlRow;
 
-public interface CarImageRepository extends JpaRepository<CarImage, Integer> { }
+import java.util.List;
+import java.util.Optional;
+
+public interface CarImageRepository extends JpaRepository<CarImage, Integer> {
+    List<CarImage> findByCar_CarId(Integer carId);
+    Optional<CarImage> findByCar_CarIdAndImageId(Integer carId, Integer imageId);
+    void deleteByCar_CarIdAndImageId(Integer carId, Integer imageId);
+
+    @Query("""
+        SELECT COALESCE(MAX(ci.imageId), 0)
+        FROM CarImage ci
+        WHERE ci.car.carId = :carId
+    """)
+    int findMaxIdByCarId(@Param("carId") Integer carId);
+
+    @Query("""
+        select ci.imageId as imageId,
+         ci.car.carId as carId
+        from CarImage ci
+        where ci.car.carId in :carIds
+        order by ci.car.carId asc, ci.carImageId asc
+""")
+    List<CarImageUrlRow> findImageByCarIds(@Param("carIds") List<Integer> carIds);
+}
+

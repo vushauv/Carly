@@ -42,4 +42,4 @@ spring:
     generate-ddl: true
 # Hibernate ddl auto (create, create-drop, validate, update)
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop

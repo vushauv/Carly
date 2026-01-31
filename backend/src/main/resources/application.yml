@@ -2,6 +2,10 @@ azure:
   backend:
     url: https://pw2024.azurewebsites.net
 
+##section for Flatly integration
+integrations:
+  flatly:
+    base-url: http://localhost:8080 #TODO: add environment variable!
 
 spring:
   profiles:
@@ -17,7 +21,6 @@ spring:
       max-file-size: 200MB
       # Max Request Size
       max-request-size: 215MB
-
 # Actuator
 management:
   endpoints:
