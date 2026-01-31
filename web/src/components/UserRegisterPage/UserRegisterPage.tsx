@@ -8,23 +8,23 @@ import type { RegisterUserRequest } from "../UsersPage/types";
 
 const UserRegisterPage = () => {
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState<RegisterUserRequest>({
     firstName: "",
     secondName: "",
     lastName: "",
     email: "",
     password: "",
-    contactNumber: undefined,
+    contactNumber: "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
-    if (!formData.firstName || !formData.secondName || !formData.lastName || !formData.email || !formData.password) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError("Please fill in all required fields");
       return;
     }
@@ -37,8 +37,13 @@ const UserRegisterPage = () => {
     try {
       setSaving(true);
       setError(null);
-      
-      const result = await userService.registerUser(formData);
+
+      const payload: RegisterUserRequest = {
+        ...formData,
+        secondName: formData.secondName?.trim() ? formData.secondName.trim() : null,
+      };
+
+      const result = await userService.registerUser(payload);
       // Navigate to the newly created user's detail page
       navigate(`/users/${result.userId}`);
     } catch (err) {
@@ -52,7 +57,7 @@ const UserRegisterPage = () => {
     navigate("/users");
   };
 
-  const handleChange = (field: keyof RegisterUserRequest, value: string | number) => {
+  const handleChange = (field: keyof RegisterUserRequest, value: string | number | undefined) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -86,15 +91,15 @@ const UserRegisterPage = () => {
         </div>
 
         <div className={styles.formField}>
-          <label>Second Name <span className={styles.required}>*</span> (max 64 characters)</label>
+          <label>Second Name (max 64 characters)</label>
           <Input
             type="text"
-            value={formData.secondName}
+            value={formData.secondName ?? ""}
             onChange={(value) => handleChange("secondName", value)}
             placeholder="Enter second name"
             maxLength={64}
-            required
           />
+
         </div>
 
         <div className={styles.formField}>
@@ -146,15 +151,15 @@ const UserRegisterPage = () => {
         </div>
 
         <div className={styles.formActions}>
-          <Button 
-            type="submit" 
-            label={saving ? "Registering..." : "Register User"} 
-            color="primary" 
+          <Button
+            type="submit"
+            label={saving ? "Registering..." : "Register User"}
+            color="primary"
             disabled={saving}
           />
-          <Button 
-            type="button" 
-            label="Cancel" 
+          <Button
+            type="button"
+            label="Cancel"
             onClick={handleCancel}
             disabled={saving}
           />

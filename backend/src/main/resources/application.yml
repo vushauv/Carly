@@ -9,7 +9,7 @@ integrations:
 
 spring:
   profiles:
-    active: local
+    active: local,cors
     ##local or dev, if dev then the data seeder runs
   servlet:
     multipart:

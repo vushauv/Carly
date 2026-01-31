@@ -8,7 +8,7 @@ import type { User } from "..//UsersPage/types";
 const UserViewPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -118,7 +118,12 @@ const UserViewPage = () => {
 
         <div className={styles.userField}>
           <span className={styles.fieldLabel}>Full Name:</span>
-          <span className={styles.fieldValue}>{`${user.firstName} ${user.secondName} ${user.lastName}`}</span>
+          <span className={styles.fieldValue}>
+            {[user.firstName, user.secondName, user.lastName]
+              .filter(Boolean)
+              .join(" ")}
+          </span>
+
         </div>
 
         <div className={styles.userField}>
