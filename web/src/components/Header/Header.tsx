@@ -1,5 +1,7 @@
 import Navbar from "../Navbar/Navbar";
 import styles from "./Header.module.css";
+import { Link } from "react-router-dom";
+
 
 export interface HeaderProps {
   loggedIn: boolean;
@@ -9,13 +11,15 @@ const Header = ({ loggedIn }: HeaderProps) => {
   return (
     <header className={styles.header}>
       <div className={styles.headerContent}>
-        <a href="/" className={styles.homeLink}>
+
+        <Link to="/kpi" className={styles.homeLink}>
           <img
             src="/src/assets/icons/carly-logo.png"
             alt="Carly Logo"
             className={styles.logo}
-          ></img>
-        </a>
+          />
+        </Link>
+
         {loggedIn ? (
           <Navbar>
             {/* NavBar of the app as a component - visible only when the user is logged in*/}

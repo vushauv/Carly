@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Button from "../Button/Button";
-import styles from "./FilterBar.module.css";
+import styles from "./FilterBarLayout.module.css";
 
 export interface FilterBarProps {
   children: ReactNode;
@@ -8,20 +8,18 @@ export interface FilterBarProps {
   onReset: () => void;
 }
 
-const FilterBar = ({ children, onApply, onReset }: FilterBarProps) => {
+const FilterBarLayout = ({ children, onApply, onReset }: FilterBarProps) => {
   return (
     <div className={styles.searchShell}>
       <div className={styles.searchCriteria}>{children}</div>
       <div className={styles.searchActions}>
         <div className={styles.buttons}>
-          <Button onClick={() => onApply()}>Apply</Button>
-          <Button onClick={() => onReset()} color="secondary">
-            Reset
-          </Button>
+          <Button onClick={() => onApply()} label="Apply"/>
+          <Button onClick={() => onReset()} label="Reset" color="secondary"/>
         </div>
       </div>
     </div>
   );
 };
 
-export default FilterBar;
+export default FilterBarLayout;
