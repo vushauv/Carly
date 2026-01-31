@@ -32,10 +32,9 @@
 }
 
 .filters {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
-  flex-wrap: wrap;
-  justify-content: center;
   width: 100%;
 }
 

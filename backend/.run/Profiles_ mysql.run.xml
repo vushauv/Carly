@@ -1,6 +1,10 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Profiles: mysql" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
     <option name="ACTIVE_PROFILES" value="mysql" />
+    <envs>
+      <env name="CARLY_DB_USER" value="react" />
+      <env name="CARLY_DB_PASSWORD" value="react-db-user-pass" />
+    </envs>
     <module name="pw-backend-starter" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="pw.react.backend.BackendApplication" />
     <method v="2">

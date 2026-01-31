@@ -10,7 +10,7 @@ import { usersColumns, usersRowKey, usersActions } from "./datatable.conf.ts";
 import Pagination from "../Pagination/Pagination.tsx";
 import { userService } from "./userService.ts";
 
-const PAGE_SIZE = 10; // Match API default
+const PAGE_SIZE = 3; // Reduced for testing
 
 const ManageUsersPage = () => {
   const navigate = useNavigate();
@@ -21,21 +21,33 @@ const ManageUsersPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  console.log(`[UsersPage] Component state - users:`, users, `loading:`, loading, `currentPage:`, currentPage);
+
   const totalPages = Math.max(1, Math.ceil(totalUsers / PAGE_SIZE));
 
   const loadUsersPage = async (page: number) => {
+    console.log(`[UsersPage] loadUsersPage called with page:`, page);
     try {
+      console.log(`[UsersPage] Setting loading to true`);
       setLoading(true);
-      setError(null);
       
+      console.log(`[UsersPage] Calling userService.getAllUsers(${page}, ${PAGE_SIZE})`);
       // Call real API endpoint
       const usersData = await userService.getAllUsers(page, PAGE_SIZE);
+      console.log(`[UsersPage] Received usersData:`, usersData);
+      console.log(`[UsersPage] usersData type:`, typeof usersData, `is array:`, Array.isArray(usersData));
+      
+      console.log(`[UsersPage] Setting users state to:`, usersData);
       setUsers(usersData);
-      setTotalUsers(usersData.length); // API doesn't return total count, using current page count for demo
+      
+      const totalCount = usersData.length;
+      console.log(`[UsersPage] Setting totalUsers to:`, totalCount);
+      setTotalUsers(totalCount); // API doesn't return total count, using current page count for demo
     } catch (err) {
-      console.error("Failed to load users:", err);
-      setError("Failed to load users. Please try again.");
+      console.error("[UsersPage] Failed to load users:", err);
+      // Error handling removed - no user-facing error message
     } finally {
+      console.log(`[UsersPage] Setting loading to false`);
       setLoading(false);
     }
   };
@@ -51,7 +63,7 @@ const ManageUsersPage = () => {
       loadUsersPage(currentPage);
     } catch (err) {
       console.error("Failed to delete user:", err);
-      setError("Failed to delete user. Please try again.");
+      // Error handling removed - no user-facing error message
     }
   };
 
@@ -92,13 +104,6 @@ const ManageUsersPage = () => {
   return (
     <div className={styles.page}>
       <h1 className={styles.title}>Admin Dashboard – Manage Users</h1>
-
-      {error && (
-        <div className={styles.error}>
-          {error}
-          <button onClick={() => setError(null)}>×</button>
-        </div>
-      )}
 
       <FiltersForm<UserFilterKey>
         fields={userFilterFields}

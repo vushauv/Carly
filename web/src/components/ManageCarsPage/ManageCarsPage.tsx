@@ -27,7 +27,6 @@ const ManageCarsPage = () => {
   const loadCarsPage = async (page: number, filtersToApply: Partial<CarFilters> = {}) => {
     try {
       setLoading(true);
-      setError(null);
       
       // Convert string filters to appropriate types for the service
       const serviceFilters = {
@@ -57,7 +56,7 @@ const ManageCarsPage = () => {
       setTotalCars(result.totalCount);
     } catch (err) {
       console.error("Failed to load cars:", err);
-      setError("Failed to load cars. Please try again.");
+      // Error handling removed - no user-facing error message
     } finally {
       setLoading(false);
     }
@@ -89,7 +88,7 @@ const ManageCarsPage = () => {
       loadCarsPage(currentPage, activeFilters);
     } catch (err) {
       console.error("Failed to delete car:", err);
-      setError("Failed to delete car. Please try again.");
+      // Error handling removed - no user-facing error message
     }
   };
 
@@ -131,13 +130,6 @@ const ManageCarsPage = () => {
     <div className={styles.page}>
       <h1 className={styles.title}>Admin Dashboard – Manage Cars</h1>
 
-      {error && (
-        <div className={styles.error}>
-          {error}
-          <button onClick={() => setError(null)}>×</button>
-        </div>
-      )}
-
       <FiltersForm<CarFilterKey>
         fields={carFilterFields}
         onApply={handleApplyFilters}
@@ -175,27 +167,16 @@ const ManageCarsPage = () => {
       {loading ? (
         <div className={styles.loading}>Loading cars...</div>
       ) : (
-        <>
-          <DataTable<Car>
-            rows={cars}
-            rowKey={carsRowKey}
-            columns={columns}
-            actions={actionsWithHandlers}
-            emptyText={Object.keys(activeFilters).length > 0 
-              ? "No cars found matching the current filters." 
-              : "No cars found."
-            }
-          />
-          
-          {/* Show results summary */}
-          <div className={styles.resultsSummary}>
-            {Object.keys(activeFilters).length > 0 ? (
-              <p>Found {totalCars} cars matching your filters</p>
-            ) : (
-              <p>Showing {cars.length} of {totalCars} total cars</p>
-            )}
-          </div>
-        </>
+        <DataTable<Car>
+          rows={cars}
+          rowKey={carsRowKey}
+          columns={columns}
+          actions={actionsWithHandlers}
+          emptyText={Object.keys(activeFilters).length > 0 
+            ? "No cars found matching the current filters." 
+            : "No cars found."
+          }
+        />
       )}
 
       <Pagination
