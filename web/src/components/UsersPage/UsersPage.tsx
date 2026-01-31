@@ -26,7 +26,6 @@ const ManageUsersPage = () => {
   const loadUsersPage = async (page: number) => {
     try {
       setLoading(true);
-      setError(null);
       
       // Call real API endpoint
       const usersData = await userService.getAllUsers(page, PAGE_SIZE);
@@ -34,7 +33,7 @@ const ManageUsersPage = () => {
       setTotalUsers(usersData.length); // API doesn't return total count, using current page count for demo
     } catch (err) {
       console.error("Failed to load users:", err);
-      setError("Failed to load users. Please try again.");
+      // Error handling removed - no user-facing error message
     } finally {
       setLoading(false);
     }
@@ -51,7 +50,7 @@ const ManageUsersPage = () => {
       loadUsersPage(currentPage);
     } catch (err) {
       console.error("Failed to delete user:", err);
-      setError("Failed to delete user. Please try again.");
+      // Error handling removed - no user-facing error message
     }
   };
 
@@ -92,13 +91,6 @@ const ManageUsersPage = () => {
   return (
     <div className={styles.page}>
       <h1 className={styles.title}>Admin Dashboard – Manage Users</h1>
-
-      {error && (
-        <div className={styles.error}>
-          {error}
-          <button onClick={() => setError(null)}>×</button>
-        </div>
-      )}
 
       <FiltersForm<UserFilterKey>
         fields={userFilterFields}
