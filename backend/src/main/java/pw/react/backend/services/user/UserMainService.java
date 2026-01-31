@@ -61,7 +61,9 @@ public class UserMainService implements UserService {
     }
 
     @Override
-    public User getUserByID(Integer id) {
+    public User getUserByID(Integer id)
+        throws ResourceNotFoundException
+    {
         return userRepository.findByUserId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
     }

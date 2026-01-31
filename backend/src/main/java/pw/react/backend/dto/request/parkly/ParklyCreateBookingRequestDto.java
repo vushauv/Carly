@@ -12,13 +12,8 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class ParklyCreateCarBookingRequest {
-
-    // Parkly booking reference (for idempotency)
-    @NotNull(message = "External booking id is mandatory")
-    private Integer externalBookingId;
-
-    @NotNull(message = "Car id is mandatory")
+public class ParklyCreateBookingRequestDto {
+    @NotNull(message = "CarId is mandatory")
     private Integer carId;
 
     private Integer pickupLocationId;
@@ -26,12 +21,12 @@ public class ParklyCreateCarBookingRequest {
 
     @JsonDeserialize(using = JsonDateDeserializer.class)
     @JsonSerialize(using = JsonDateSerializer.class)
-    @NotNull(message = "Date from is mandatory")
-    private LocalDateTime dateFrom;
+    @NotNull(message = "CarBookingDateFrom is mandatory")
+    private LocalDateTime carBookingDateFrom;
 
     @JsonDeserialize(using = JsonDateDeserializer.class)
     @JsonSerialize(using = JsonDateSerializer.class)
-    @NotNull(message = "Date to is mandatory")
-    private LocalDateTime dateTo;
+    @NotNull(message = "CarBookingDateTo is mandatory")
+    private LocalDateTime carBookingDateTo;
 }
 

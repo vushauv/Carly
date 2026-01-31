@@ -2,6 +2,7 @@ package pw.react.backend.services.user;
 
 import pw.react.backend.domain.user.User;
 import pw.react.backend.dto.request.user.UpdateUserRequest;
+import pw.react.backend.exceptions.ResourceNotFoundException;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public interface UserService {
 
     List<User> getAllUsers(int pageNumber, int pageSize);
 
-    User getUserByID(Integer id);
+    User getUserByID(Integer id) throws ResourceNotFoundException;
 
     void deleteUserById(Integer id);
 

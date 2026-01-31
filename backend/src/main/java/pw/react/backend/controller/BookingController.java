@@ -15,10 +15,10 @@ import pw.react.backend.domain.enums.BookingStatus;
 import pw.react.backend.dto.mapper.booking.BookingCriteriaMapper;
 import pw.react.backend.dto.mapper.booking.BookingMapper;
 import pw.react.backend.dto.models.DateRange;
-import pw.react.backend.dto.request.booking.CreateBookingRequest;
+import pw.react.backend.dto.request.booking.CreateBookingRequestDto;
 import pw.react.backend.dto.request.booking.UpdateBookingRequestDto;
 import pw.react.backend.dto.response.booking.BookingResponse;
-import pw.react.backend.dto.response.booking.GetBookingResponse;
+import pw.react.backend.dto.response.booking.GetBookingResponseDto;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.exceptions.custom.CarBookingConflictException;
 import pw.react.backend.services.booking.BookingService;
@@ -45,7 +45,7 @@ public class    BookingController {
     @PostMapping
     public ResponseEntity<Collection<BookingResponse>> createBookings(
             @RequestHeader HttpHeaders headers,
-            @Valid @RequestBody @NotEmpty List<CreateBookingRequest> requests
+            @Valid @RequestBody @NotEmpty List<CreateBookingRequestDto> requests
     ) throws BadRequestException {
         logHeaders(headers);
         List<Booking> toCreate = bookingMapper.createRequestToBookingList(requests);
@@ -59,12 +59,12 @@ public class    BookingController {
     // TODO: implement booking finalisation
 
     @GetMapping(path = "/{bookingId}")
-    public ResponseEntity<GetBookingResponse> getBooking(
+    public ResponseEntity<GetBookingResponseDto> getBooking(
             @RequestHeader HttpHeaders headers,
             @PathVariable Integer bookingId
     ) {
         logHeaders(headers);
-        GetBookingResponse result = bookingService.getById(bookingId)
+        GetBookingResponseDto result = bookingService.getById(bookingId)
                 .map(bookingMapper::bookingToGetBookingResponse)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format("Booking with %d does not exist", bookingId)));
 
@@ -72,7 +72,7 @@ public class    BookingController {
     }
 
     @GetMapping
-    public ResponseEntity<List<GetBookingResponse>> getAllBookings(
+    public ResponseEntity<List<GetBookingResponseDto>> getAllBookings(
             @RequestHeader HttpHeaders headers,
             @RequestParam(required = false) Integer bookingId,
             @RequestParam(required = false) BookingStatus status,
@@ -105,7 +105,7 @@ public class    BookingController {
         var criteria = bookingCriteriaMapper.toBookingSearchCriteria(bookingId, status,
                 to, from, userId);
 
-        List<GetBookingResponse> result = bookingMapper.bookingToGetBookingResponseList(
+        List<GetBookingResponseDto> result = bookingMapper.bookingToGetBookingResponseList(
                 bookingService.search(criteria, resolvedPage, resolvedSize).getContent()
         );
         return ResponseEntity.ok(result);

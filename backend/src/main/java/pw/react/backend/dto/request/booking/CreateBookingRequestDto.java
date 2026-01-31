@@ -12,11 +12,11 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class CreateBookingRequest {
-    @NotNull(message = "User id is mandatory")
+public class CreateBookingRequestDto {
+    @NotNull(message = "UserId is mandatory")
     private Integer userId;
 
-    @NotNull(message = "Car id is mandatory")
+    @NotNull(message = "CarId is mandatory")
     private Integer carId;
 
     private Integer pickupLocationId;
@@ -24,11 +24,11 @@ public class CreateBookingRequest {
 
     @JsonDeserialize(using = JsonDateDeserializer.class)
     @JsonSerialize(using = JsonDateSerializer.class)
-    @NotNull(message = "Car booking date from is mandatory")
+    @NotNull(message = "CarBookingDateFrom is mandatory")
     private LocalDateTime carBookingDateFrom;
 
     @JsonDeserialize(using = JsonDateDeserializer.class)
     @JsonSerialize(using = JsonDateSerializer.class)
-    @NotNull(message = "Car booking date to is mandatory")
+    @NotNull(message = "CarBookingDateTo is mandatory")
     private LocalDateTime carBookingDateTo;
 }
