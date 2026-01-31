@@ -67,6 +67,49 @@
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
+/* Input component styles for consistent status select */
+.inputWrapper {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  padding: 0 0.875rem 0 0;
+  border: 1px solid var(--white-100);
+  border-radius: 0.5rem;
+  background-color: var(--white-50);
+  overflow: hidden;
+}
+
+.inputWrapper:focus-within {
+  outline: 2px solid var(--gray-200);
+}
+
+.input {
+  border: none;
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background-color: var(--white-secondary);
+  color: black;
+}
+
+.input:focus,
+.input:focus-visible {
+  border: none;
+  outline: none;
+}
+
+.formNote {
+  margin: 0px;
+  color: var(--gray-200);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  min-height: 1.25rem;
+}
+
+.hintIcon {
+  align-self: center;
+  cursor: pointer;
+}
+
 /* Styles for DataTable cells */
 .customer {
   font-size: 0.9rem;
@@ -101,14 +144,14 @@
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  text-align: center;
+  text-align: left;
   min-width: 80px;
 }
 
 .price {
   font-weight: 600;
   color: #28a745;
-  text-align: right;
+  text-align: left;
 }
 
 .loading {

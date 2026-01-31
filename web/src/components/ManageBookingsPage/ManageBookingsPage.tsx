@@ -206,18 +206,25 @@ const ManageBookingsPage = () => {
 
           <div className={styles.field}>
             <span className={styles.label}>Status</span>
-            <select
-              value={filters.status || ""}
-              onChange={(e) => handleFilterChange("status", e.target.value as any)}
-              className={styles.select}
-            >
-              <option value="">All Statuses</option>
-              <option value="PENDING">Pending</option>
-              <option value="CONFIRMED">Confirmed</option>
-              <option value="ACTIVE">Active</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
+            <div className={styles.inputWrapper}>
+              <select
+                value={filters.status || ""}
+                onChange={(e) => handleFilterChange("status", e.target.value as any)}
+                className={styles.input}
+              >
+                <option value="">All Statuses</option>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="ACTIVE">Active</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+              <img
+                src="/src/assets/icons/info-icon.svg"
+                alt="Hint"
+                className={styles.hintIcon}
+              />
+            </div>
           </div>
 
           <div className={styles.field}>
