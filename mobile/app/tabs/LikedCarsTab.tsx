@@ -18,7 +18,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { Calendar } from "react-native-calendars";
-import { addBooking, updateBooking, type Booking } from "../../lib/bookingsStorage";
+import { createCarBookingOnBackend } from "../../lib/bookingsApi";
 import { useRouter } from "expo-router";
 
 import type { FlatCard } from "../../lib/models";
@@ -156,51 +156,45 @@ export default function LikedCarsTab() {
       });
     }
 
-    function makeId(): string {
-      return `bk_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    }
 
-    function makePlate(): string {
-      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      const a = letters[Math.floor(Math.random() * letters.length)];
-      const b = letters[Math.floor(Math.random() * letters.length)];
-      const nums = String(Math.floor(10000 + Math.random() * 89999));
-      return `${a}${b} ${nums}`;
-    }
 
-  async function confirmCarBooking() {
-    if (!car) return;
+ function toLocalDateTimeString(dayISO: string, hhmmss = "12:00:00"): string {
+   // Backend expects LocalDateTime, so no timezone suffix.
+   // Example: "2026-05-01T12:00:00"
+   return `${dayISO}T${hhmmss}`;
+ }
 
-    if (!dateFrom || dateFrom < minFrom) {
-      Alert.alert("Invalid Date From", "Date From must be today or later.");
-      return;
-    }
-    if (!dateTo || dateTo < minTo) {
-      Alert.alert("Invalid Date To", "Date To must be after Date From.");
-      return;
-    }
+ async function confirmCarBooking() {
+   if (!car) return;
 
-    const id = makeId();
-    const booking: Booking = {
-      id,
-      status: "current",
-      state: "Booked",
-      startDate: dateFrom,
-      endDate: dateTo,
-      car: {
-        brand: car.brand,
-        model: car.model,
-        plate: makePlate(),
-        images: [car.imageUrl || "https://picsum.photos/seed/booked_car/900/600"],
-      },
-      createdAtISO: new Date().toISOString(),
-    };
+   if (!dateFrom || dateFrom < minFrom) {
+     Alert.alert("Invalid Date From", "Date From must be today or later.");
+     return;
+   }
+   if (!dateTo || dateTo < minTo) {
+     Alert.alert("Invalid Date To", "Date To must be after Date From.");
+     return;
+   }
 
-    await addBooking(booking);
-    setBookingId(id);
+   try {
+     const fromLocal = toLocalDateTimeString(dateFrom, "12:00:00");
+     const toLocal = toLocalDateTimeString(dateTo, "12:00:00");
 
-    setStep("carSuccess");
-  }
+     const newBookingId = await createCarBookingOnBackend({
+       carId: Number(car.id),
+       dateFromISO: fromLocal,
+       dateToISO: toLocal,
+       // pickupLocationId / returnLocationId later
+     });
+
+     setBookingId(newBookingId);
+     setStep("carSuccess");
+   } catch (e: any) {
+     Alert.alert("Booking failed", e?.message ?? "Unknown error");
+   }
+ }
+
+
 
 
   async function openBrowseFlats() {
@@ -230,20 +224,13 @@ export default function LikedCarsTab() {
     try {
       await bookFlat(f.id, dateFrom, dateTo);
 
-      if (bookingId) {
-        await updateBooking(bookingId, {
-          flat: {
-            address: `${f.addressLine}, ${f.city}`,
-            images: f.imageUrls,
-          },
-        });
-      }
-
+      // No backend endpoint to link flat <-> booking yet, so we only do partner booking.
       setStep("flatSuccess");
     } catch (e: any) {
       Alert.alert("Booking failed", e?.message ?? "Unknown error");
     }
   }
+
 
 
   const modalOpen = step !== "none";
@@ -278,7 +265,7 @@ export default function LikedCarsTab() {
                 key={c.id}
                 title={c.title}
                 subtitle={c.subtitle}
-                images={[c.imageUrl || "https://picsum.photos/900/600"]}
+                images={(c as any).imageUrls?.length ? (c as any).imageUrls : [c.imageUrl || "https://picsum.photos/900/600"]}
                 metaLeft={`⛽ ${c.fuelType}`}
                 metaRight={`🎨 ${c.color}`}
                 footerLeft={`${c.pricePerDay} ${c.currency} / day`}

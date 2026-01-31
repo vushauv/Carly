@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getBookingById, type Booking } from "../../lib/bookingsStorage";
+import { getBookingByIdFromBackend, type Booking } from "../../lib/bookingsApi";
+
 
 export default function BookingDetails() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function BookingDetails() {
   useEffect(() => {
     (async () => {
       if (!id) return;
-      const b = await getBookingById(id);
+      const b = await getBookingByIdFromBackend(id);
       setBooking(b);
     })();
   }, [id]);

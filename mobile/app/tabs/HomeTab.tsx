@@ -7,7 +7,13 @@ import { useFocusEffect } from "@react-navigation/native";
 import CarCardView from "../components/CarCardView";
 import { useLocalSearchParams } from "expo-router";
 
-import { cancelBooking, getBookings, seedBookingsIfEmpty, type Booking, type BookingStatus } from "../../lib/bookingsStorage";
+import {
+  cancelCarBookingOnBackend,
+  getBookingsFromBackend,
+  type Booking,
+  type BookingStatus,
+} from "../../lib/bookingsApi";
+
 
 const SEED_BOOKINGS: Booking[] = [
   {
@@ -83,10 +89,10 @@ export default function HomeTab() {
   const [all, setAll] = useState<Booking[]>([]);
 
   const load = useCallback(async () => {
-    await seedBookingsIfEmpty(SEED_BOOKINGS);
-    const items = await getBookings();
+    const items = await getBookingsFromBackend();
     setAll(items);
   }, []);
+
 
   useEffect(() => {
     void load();
@@ -118,7 +124,7 @@ export default function HomeTab() {
           text: "Yes, cancel",
           style: "destructive",
           onPress: async () => {
-            await cancelBooking(id);
+            await cancelCarBookingOnBackend(id);
             await load();
           },
         },

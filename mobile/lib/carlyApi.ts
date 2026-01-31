@@ -11,6 +11,10 @@ export type SearchLookups = {
   fuels: FuelType[]; // not currently used by UI (fuel UI is hardcoded), but useful later
 };
 
+export function resetSearchLookupsMemo(): void {
+  MEMO_LOOKUPS = null;
+}
+
 // ---------------------
 // Fallback (if backend down)
 // ---------------------

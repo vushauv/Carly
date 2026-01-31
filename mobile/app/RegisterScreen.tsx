@@ -13,10 +13,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-
 import { saveProfile } from "../lib/profileStorage";
 import { registerUser, getUserById } from "../lib/userApi";
 import { ApiError } from "../lib/apiClient";
+import { clearCachedReferenceData } from "../lib/referenceDataStorage";
+import { resetSearchLookupsMemo } from "../lib/carlyApi";
 
 function onlyDigits(s: string): string {
   return (s || "").replace(/\D/g, "");
@@ -119,6 +120,9 @@ export default function RegisterScreen() {
         phoneDigits: info.contactNumber ? String(info.contactNumber) : pDigits,
         fullName: fullName || "—",
       });
+
+      await clearCachedReferenceData();
+      resetSearchLookupsMemo();
 
       router.replace("/tabs/SearchTab");
     } catch (err) {

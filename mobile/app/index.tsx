@@ -14,7 +14,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-
+import { clearCachedReferenceData } from "../lib/referenceDataStorage";
+import { resetSearchLookupsMemo } from "../lib/carlyApi";
 import { loginUser, getUserById } from "../lib/userApi";
 import { saveProfile } from "../lib/profileStorage";
 
@@ -53,6 +54,8 @@ export default function LoginScreen() {
         fullName: fullName || "—",
       });
 
+      await clearCachedReferenceData();
+      resetSearchLookupsMemo();
       router.replace("/tabs/SearchTab");
     } catch (err: any) {
       Alert.alert("Login failed", err?.message ?? "Unknown error");
