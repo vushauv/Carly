@@ -6,9 +6,8 @@ import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.car.CarToFeatureLink;
-import pw.react.backend.dto.models.BookingStatusDto;
 import pw.react.backend.dto.models.CarFeatureDto;
-import pw.react.backend.utils.converters.out.DisplayNameConverter;
+import pw.react.backend.utils.converters.response.DisplayNameConverter;
 
 import java.util.List;
 import java.util.Set;

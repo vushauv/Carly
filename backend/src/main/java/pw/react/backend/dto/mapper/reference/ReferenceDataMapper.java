@@ -5,7 +5,7 @@ import pw.react.backend.dto.models.LookupDictionaryDto;
 import pw.react.backend.dto.response.reference.LookUpDictionaryKey;
 import pw.react.backend.dto.response.reference.ReferenceDataDto;
 import pw.react.backend.repositories.car.models.CarFeatureDictionaryRow;
-import pw.react.backend.utils.converters.out.DisplayNameConverter;
+import pw.react.backend.utils.converters.response.DisplayNameConverter;
 
 import java.util.List;
 import java.util.stream.Collectors;

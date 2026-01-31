@@ -1,8 +1,7 @@
-package pw.react.backend.utils.converters;
+package pw.react.backend.utils.converters.request;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import pw.react.backend.domain.enums.CarAvailabilityStatus;
 import pw.react.backend.domain.enums.ReferenceDataType;
 
 import java.util.Arrays;

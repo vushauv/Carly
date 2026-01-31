@@ -11,7 +11,7 @@ import pw.react.backend.dto.request.booking.CreateBookingRequest;
 import pw.react.backend.dto.request.booking.UpdateBookingRequestDto;
 import pw.react.backend.dto.response.booking.BookingResponse;
 import pw.react.backend.dto.response.booking.GetBookingResponse;
-import pw.react.backend.utils.converters.out.DisplayNameConverter;
+import pw.react.backend.utils.converters.response.DisplayNameConverter;
 
 import java.util.List;
 
