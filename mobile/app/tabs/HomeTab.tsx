@@ -221,6 +221,13 @@ export default function HomeTab() {
   );
 }
 
+function dateOnly(input?: string | null): string {
+  const s = String(input ?? "").trim();
+  if (!s) return "—";
+  if (s.length >= 10) return s.slice(0, 10);
+  return s;
+}
+
 function BookingCard({
   booking,
   onSeeMore,
@@ -232,17 +239,27 @@ function BookingCard({
 }) {
   const cancelled = booking.state === "Cancelled";
 
+  const carSubtitle =
+    booking.car?.fuelType || booking.car?.color
+      ? [booking.car?.fuelType, booking.car?.color].filter(Boolean).join(" • ")
+      : null;
+
   return (
     <View style={styles.card}>
       {booking.car && booking.flat ? (
         <>
           <CarCardView
             title={`${booking.car.brand} ${booking.car.model}`}
-            subtitle={`Plate: ${booking.car.plate}`}
+            subtitle={carSubtitle}
             images={booking.car.images}
             fallbackSource={require("../../assets/images/no-images.png")}
-            metaLeft={"🚗 Car"}
+            metaLeft={booking.car.fuelType ? `⛽ ${booking.car.fuelType}` : "🚗 Car"}
             metaRight={cancelled ? "❌ Cancelled" : "✅ Booked"}
+            footerLeft={
+              typeof booking.car.pricePerDay === "number" && booking.car.currency
+                ? `${booking.car.pricePerDay} ${booking.car.currency} / day`
+                : undefined
+            }
             imageHeight={200}
           />
 
@@ -261,11 +278,16 @@ function BookingCard({
       ) : booking.car ? (
         <CarCardView
           title={`${booking.car.brand} ${booking.car.model}`}
-          subtitle={`Plate: ${booking.car.plate}`}
+          subtitle={carSubtitle}
           images={booking.car.images}
           fallbackSource={require("../../assets/images/no-images.png")}
-          metaLeft={"🚗 Car"}
+          metaLeft={booking.car.fuelType ? `⛽ ${booking.car.fuelType}` : "🚗 Car"}
           metaRight={cancelled ? "❌ Cancelled" : "✅ Booked"}
+          footerLeft={
+            typeof booking.car.pricePerDay === "number" && booking.car.currency
+              ? `${booking.car.pricePerDay} ${booking.car.currency} / day`
+              : undefined
+          }
           imageHeight={200}
         />
       ) : booking.flat ? (
@@ -283,7 +305,7 @@ function BookingCard({
       <View style={styles.bottomInfo}>
         <View style={styles.bottomRow}>
           <Text style={styles.metaText}>
-            {booking.startDate} - {booking.endDate}
+            {dateOnly(booking.startDate)} - {dateOnly(booking.endDate)}
           </Text>
         </View>
 
@@ -301,12 +323,6 @@ function BookingCard({
       </View>
     </View>
   );
-}
-
-function Stars({ value }: { value: number }) {
-  const n = Math.max(0, Math.min(5, Math.floor(value)));
-  const out = "★★★★★☆☆☆☆☆".slice(5 - n, 10 - n);
-  return <Text style={styles.stars}>{out}</Text>;
 }
 
 const styles = StyleSheet.create({

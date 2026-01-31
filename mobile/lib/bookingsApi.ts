@@ -3,7 +3,7 @@ import { apiRequest } from "./apiClient";
 import { getProfile } from "./profileStorage";
 
 // -------------------------
-// App-facing types (same shape as your old bookingsStorage)
+// App-facing types
 // -------------------------
 export type BookingStatus = "current" | "history";
 export type BookingState = "Booked" | "Cancelled";
@@ -11,8 +11,17 @@ export type BookingState = "Booked" | "Cancelled";
 export type BookingCar = {
   brand: string;
   model: string;
-  plate: string; // backend doesn't have this -> we fill with "—"
+
+  // backend doesn't really store it -> keep for back-compat, but we won't show it in UI
+  plate: string;
+
   images: string[];
+
+  // ✅ extra car details (like Search)
+  fuelType?: string;
+  color?: string;
+  pricePerDay?: number;
+  currency?: string;
 };
 
 export type BookingFlat = {
@@ -21,15 +30,18 @@ export type BookingFlat = {
 };
 
 export type Booking = {
-  id: string; // we keep string for UI routing; backend is int
-  status: BookingStatus; // controls current/history list
-  state: BookingState; // label
+  id: string; // UI routes use string
+  status: BookingStatus; // current/history
+  state: BookingState; // Booked/Cancelled label
+
   startDate: string;
   endDate: string;
+
   car?: BookingCar;
-  flat?: BookingFlat; // currently we can't populate from booking response
-  createdAtISO: string; // not in backend -> set on fetch time
-  cancelledAtISO?: string; // not in backend -> best-effort if CANCELLED
+  flat?: BookingFlat;
+
+  createdAtISO: string;
+  cancelledAtISO?: string;
 };
 
 // -------------------------
@@ -44,7 +56,7 @@ type LocationDto = {
 
 type BookingStatusDto = {
   id?: number;
-  name?: string; // CREATED / COMPLETED / CANCELLED (expected)
+  name?: string; // CREATED / COMPLETED / CANCELLED
 };
 
 type GetBookingResponse = {
@@ -85,42 +97,27 @@ type GetCarResponseDto = {
 };
 
 // -------------------------
-// Helpers
+// Small utils
 // -------------------------
-function normalizeKey(name: unknown): string {
-  return String(name ?? "")
+function normalizeKey(s: any): string {
+  return String(s ?? "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
 }
 
-function toBackendLocalDateTime(input: string): string {
-  // Accept either:
-  // - "YYYY-MM-DD"  -> "YYYY-MM-DDT12:00:00"
-  // - ISO with Z    -> strip millis and Z, then keep local "YYYY-MM-DDTHH:mm:ss"
-  const s = String(input ?? "").trim();
-  if (!s) return s;
-
-  // If it's date-only
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return `${s}T12:00:00`;
-
-  // If it's ISO like 2026-05-01T12:00:00.000Z -> 2026-05-01T12:00:00
-  const m = s.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
-  if (m?.[1]) return m[1];
-
-  // Otherwise pass through
-  return s;
-}
-
 function extractFeatureValue(features: CarFeatureDto[] | undefined, wanted: string): string | undefined {
   if (!Array.isArray(features)) return undefined;
   const w = normalizeKey(wanted);
+
   for (const f of features) {
     const k = normalizeKey(f?.name);
     if (!k) continue;
+
     if (k === w) return String(f.value ?? "").trim() || undefined;
 
-    if (w === "fuel type" && (k === "fuel" || k === "fuel type")) {
+    // common variants
+    if (w === "fueltype" && (k === "fuel type" || k === "fuel" || k === "fueltype")) {
       return String(f.value ?? "").trim() || undefined;
     }
   }
@@ -128,13 +125,10 @@ function extractFeatureValue(features: CarFeatureDto[] | undefined, wanted: stri
 }
 
 function makeSinglePlaceholderUrl(seed: string): string {
-  // one random placeholder per mapping pass
   return `https://picsum.photos/seed/${encodeURIComponent(seed + "_" + Math.floor(Math.random() * 1e9))}/900/600`;
 }
 
 function toISODateOnlyOrDateTime(iso?: string): string {
-  // UI currently stores YYYY-MM-DD, but accepts ISO strings too.
-  // We keep ISO if provided; otherwise empty string.
   return iso ? String(iso) : "";
 }
 
@@ -146,7 +140,6 @@ type BackendBookingStatus = "CREATED" | "COMPLETED" | "CANCELLED" | "UNKNOWN";
 
 /**
  * Prefer carStatus if present; otherwise use flatStatus.
- * If both exist and differ, this picks carStatus first (car booking-centric UI).
  */
 function getEffectiveBackendStatus(b: GetBookingResponse): BackendBookingStatus {
   const car = upper(b.carStatus?.name);
@@ -160,11 +153,6 @@ function getEffectiveBackendStatus(b: GetBookingResponse): BackendBookingStatus 
   return "UNKNOWN";
 }
 
-/**
- * Maps backend booking status to UI sections and labels.
- * Current: CREATED
- * History: COMPLETED or CANCELLED
- */
 function mapToUiStatus(b: GetBookingResponse): { status: BookingStatus; state: BookingState } | null {
   const s = getEffectiveBackendStatus(b);
 
@@ -172,10 +160,8 @@ function mapToUiStatus(b: GetBookingResponse): { status: BookingStatus; state: B
   if (s === "COMPLETED") return { status: "history", state: "Booked" };
   if (s === "CANCELLED") return { status: "history", state: "Cancelled" };
 
-  // Ignore anything else (unknown statuses)
   return null;
 }
-
 
 async function enrichCar(carId: number): Promise<BookingCar | undefined> {
   const dto = await apiRequest<GetCarResponseDto>(`/cars/${carId}`, { method: "GET" });
@@ -183,23 +169,47 @@ async function enrichCar(carId: number): Promise<BookingCar | undefined> {
   const brand = extractFeatureValue(dto.carFeatures, "brand") ?? "—";
   const model = extractFeatureValue(dto.carFeatures, "model") ?? "—";
 
-  const urls = Array.isArray(dto.urls) ? dto.urls.filter((u): u is string => typeof u === "string" && u.trim()) : [];
+  const fuelType =
+    extractFeatureValue(dto.carFeatures, "fuelType") ??
+    extractFeatureValue(dto.carFeatures, "fuel type") ??
+    undefined;
+
+  const color = extractFeatureValue(dto.carFeatures, "color") ?? undefined;
+
+  const pricePerDay = typeof dto.price === "number" ? dto.price : undefined;
+  const currency = "PLN"; // your app assumes PLN elsewhere too
+
+  const urls = Array.isArray(dto.urls)
+    ? dto.urls.filter((u): u is string => typeof u === "string" && u.trim())
+    : [];
   const images = urls.length > 0 ? urls : [makeSinglePlaceholderUrl(`booking_car_${carId}`)];
 
   return {
     brand,
     model,
-    plate: "—", // backend doesn't store plate in car DTO
+    plate: "—", // keep but DO NOT show in UI
     images,
+    fuelType,
+    color,
+    pricePerDay,
+    currency,
   };
 }
 
 async function requireUserId(): Promise<number> {
   const p = await getProfile();
-  if (!p.userId) {
-    throw new Error("No userId in profile. Please log in again.");
-  }
+  if (!p.userId) throw new Error("No userId in profile. Please log in again.");
   return p.userId;
+}
+
+function toBackendLocalDateTime(iso: string): string {
+  // If you pass "YYYY-MM-DDTHH:mm:ss" already, keep it.
+  // If you pass with timezone, backend expects LocalDateTime (no zone).
+  // Safe quick strip: take first 19 chars "YYYY-MM-DDTHH:mm:ss"
+  const s = String(iso ?? "").trim();
+  if (!s) return s;
+  if (s.length >= 19) return s.slice(0, 19);
+  return s;
 }
 
 // -------------------------
@@ -208,7 +218,6 @@ async function requireUserId(): Promise<number> {
 
 /**
  * GET /bookings?userId=...
- * Returns bookings that actually exist in DB.
  */
 export async function getBookingsFromBackend(): Promise<Booking[]> {
   const userId = await requireUserId();
@@ -219,8 +228,6 @@ export async function getBookingsFromBackend(): Promise<Booking[]> {
   const rows = await apiRequest<GetBookingResponse[]>(`/bookings?${qs.toString()}`, { method: "GET" });
   const list = Array.isArray(rows) ? rows : [];
 
-  // Enrich car data in parallel (best effort)
-  const nowISO = new Date().toISOString();
   const enriched = await Promise.all(
     list.map(async (b) => {
       const mapped = mapToUiStatus(b);
@@ -243,20 +250,17 @@ export async function getBookingsFromBackend(): Promise<Booking[]> {
         endDate: end,
         car,
         flat: undefined,
-        rating: undefined,
         createdAtISO: nowISO,
         cancelledAtISO: state === "Cancelled" ? nowISO : undefined,
       } satisfies Booking;
     })
   );
 
-  // drop nulls
   const cleaned = enriched.filter((x): x is Booking => !!x);
 
   // Newest first
   cleaned.sort((a, b) => Number(b.id) - Number(a.id));
   return cleaned;
-
 }
 
 /**
@@ -271,6 +275,7 @@ export async function getBookingByIdFromBackend(bookingId: string): Promise<Book
 
   const mapped = mapToUiStatus(b);
   if (!mapped) return null;
+
   const { status, state } = mapped;
   const nowISO = new Date().toISOString();
 
@@ -284,7 +289,6 @@ export async function getBookingByIdFromBackend(bookingId: string): Promise<Book
     endDate: toISODateOnlyOrDateTime(b.carBookingDateTo),
     car,
     flat: undefined,
-    rating: undefined,
     createdAtISO: nowISO,
     cancelledAtISO: state === "Cancelled" ? nowISO : undefined,
   };
@@ -292,12 +296,11 @@ export async function getBookingByIdFromBackend(bookingId: string): Promise<Book
 
 /**
  * POST /bookings
- * Backend expects an ARRAY of CreateBookingRequest and returns ARRAY of BookingResponse.
  */
 export async function createCarBookingOnBackend(args: {
   carId: number;
-  dateFromISO: string; // date-time ISO
-  dateToISO: string; // date-time ISO
+  dateFromISO: string;
+  dateToISO: string;
   pickupLocationId?: number;
   returnLocationId?: number;
 }): Promise<string> {
