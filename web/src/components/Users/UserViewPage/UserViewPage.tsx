@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import styles from "./UserViewPage.module.css";
 import Button from "../../Button/Button";
-import { userService } from "../UsersPage/userService";
+import { userService } from "../../UsersPage/userService";
 import type { User } from "../../UsersPage/types";
 
 const UserViewPage = () => {

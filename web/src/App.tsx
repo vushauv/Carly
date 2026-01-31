@@ -9,7 +9,7 @@ import Footer from "./components/Footer/Footer";
 import ManageCarsPage from "./components/ManageCarsPage/ManageCarsPage";
 import ManageBookingsPage from "./components/ManageBookingsPage/ManageBookingsPage";
 import UsersPage from "./components/UsersPage/UsersPage";
-import UserViewPage from "./components/UserViewPage/UserViewPage";
+import UserViewPage from "./components/Users/UserViewPage/UserViewPage";
 import UserEditPage from "./components/UserEditPage/UserEditPage";
 import UserRegisterPage from "./components/UserRegisterPage/UserRegisterPage";
 
