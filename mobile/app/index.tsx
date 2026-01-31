@@ -18,6 +18,8 @@ import { clearCachedReferenceData } from "../lib/referenceDataStorage";
 import { resetSearchLookupsMemo } from "../lib/carlyApi";
 import { loginUser, getUserById } from "../lib/userApi";
 import { saveProfile } from "../lib/profileStorage";
+import { purgeLegacyCarPrefsGlobalKeys } from "../lib/storage";
+import { purgeLegacyFlatlyBookingsGlobalKey } from "../lib/flatlyBookingsStorage";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -53,6 +55,9 @@ export default function LoginScreen() {
         secondName: info.secondName ?? "",
         lastName: info.lastName ?? "",
       });
+
+      await purgeLegacyCarPrefsGlobalKeys();
+      await purgeLegacyFlatlyBookingsGlobalKey();
 
       await clearCachedReferenceData();
       resetSearchLookupsMemo();

@@ -13,9 +13,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-
 import { getProfile, saveProfile, clearProfile, type Profile } from "../lib/profileStorage";
 import { updateUserById, deleteUserById } from "../lib/userApi";
+import { getBookingsFromBackend } from "../lib/bookingsApi";
+import { getFlatlyBookings } from "../lib/flatlyBookingsStorage";
 
 type PersonalDraft = {
   email: string;
@@ -174,10 +175,53 @@ export default function ProfileSettings() {
       },
     ]);
   }
+    async function checkHasActiveBookings(): Promise<
+      | { ok: true; hasActive: boolean }
+      | { ok: false; message: string }
+    > {
+      // 1) Carly (car) bookings - live from backend
+      try {
+        const carBookings = await getBookingsFromBackend();
+        const hasActiveCar = carBookings.some((b) => b.status === "current" && b.state === "Booked");
+        if (hasActiveCar) return { ok: true, hasActive: true };
+      } catch {
+        return {
+          ok: false,
+          message:
+            "Can’t delete your account right now because we couldn’t verify your Carly bookings (backend might be down). Please try again later.",
+        };
+      }
 
+      // 2) Flatly bookings - local storage snapshot
+      try {
+        const flatly = await getFlatlyBookings();
+        const hasActiveFlat = flatly.some((b) => b.status === "CREATED");
+        return { ok: true, hasActive: hasActiveFlat };
+      } catch {
+        return {
+          ok: false,
+          message:
+            "Can’t delete your account right now because we couldn’t verify your Flatly bookings. Please try again later.",
+        };
+      }
+    }
   async function onDeleteAccount() {
     if (!profile.userId) {
       Alert.alert("Not available", "Please log in again.");
+      return;
+    }
+
+    // ✅ Validation: block deletion if there are active bookings
+    const check = await checkHasActiveBookings();
+    if (!check.ok) {
+      Alert.alert("Delete account blocked", check.message);
+      return;
+    }
+    if (check.hasActive) {
+      Alert.alert(
+        "Delete account blocked",
+        "You have active bookings. Cancel them first, then you can delete your account."
+      );
       return;
     }
 

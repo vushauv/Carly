@@ -17,70 +17,6 @@ import {
 } from "../../lib/bookingsApi";
 
 
-const SEED_BOOKINGS: Booking[] = [
-  {
-    id: "b1",
-    status: "current",
-    state: "Booked",
-    startDate: "2026-02-01",
-    endDate: "2026-02-10",
-    car: {
-      brand: "VW",
-      model: "Golf",
-      plate: "WZ 12345",
-      images: [
-        "https://picsum.photos/seed/car_b1_1/900/600",
-        "https://picsum.photos/seed/car_b1_2/900/600",
-      ],
-    },
-    createdAtISO: new Date().toISOString(),
-  },
-  {
-    id: "b2",
-    status: "current",
-    state: "Booked",
-    startDate: "2026-03-03",
-    endDate: "2026-03-07",
-    car: {
-      brand: "BMW",
-      model: "X1",
-      plate: "WX 99887",
-      images: [],
-    },
-    flat: {
-      address: "Sesame Street 123",
-      images: ["https://picsum.photos/seed/flat_b2_1/900/600"],
-    },
-    createdAtISO: new Date().toISOString(),
-  },
-  {
-    id: "b3",
-    status: "history",
-    state: "Booked",
-    startDate: "2025-12-12",
-    endDate: "2025-12-18",
-    car: {
-      brand: "VW",
-      model: "Polo",
-      plate: "WA 55221",
-      images: ["https://picsum.photos/seed/car_b3_1/900/600"],
-    },
-    createdAtISO: new Date().toISOString(),
-  },
-  {
-    id: "b4",
-    status: "history",
-    state: "Booked",
-    startDate: "2025-11-01",
-    endDate: "2025-11-04",
-    flat: {
-      address: "Baker Street 221B",
-      images: [],
-    },
-    createdAtISO: new Date().toISOString(),
-  },
-];
-
 export default function HomeTab() {
   const router = useRouter();
   const { section } = useLocalSearchParams<{ section?: "current" | "history" }>();
@@ -147,6 +83,7 @@ export default function HomeTab() {
 
   async function onCancel(id: string) {
     const isFlatly = id.startsWith("flatly-");
+
     Alert.alert(
       "Cancel booking?",
       "Are you sure? This will move it to History as Cancelled.",
@@ -156,19 +93,52 @@ export default function HomeTab() {
           text: "Yes, cancel",
           style: "destructive",
           onPress: async () => {
-            if (isFlatly) {
-              const flatBookingId = Number(id.replace("flatly-", ""));
-              await cancelFlatlyBooking(flatBookingId);
-              await markFlatlyCancelled(flatBookingId);
-            } else {
-              await cancelCarBookingOnBackend(id);
+            try {
+              if (isFlatly) {
+                const raw = id.replace("flatly-", "");
+                const flatBookingId = Number(raw);
+
+                if (!Number.isFinite(flatBookingId)) {
+                  Alert.alert("Cancel failed", "Invalid Flatly booking id.");
+                  return;
+                }
+
+                // Partner cancel (can fail / be down) -> catch and show friendly message
+                try {
+                  await cancelFlatlyBooking(flatBookingId);
+                } catch (e: any) {
+                  Alert.alert(
+                    "Cancel failed",
+                    "Flatly partner API seems unavailable right now (or booking was not found). Please try again later."
+                  );
+                  return; // IMPORTANT: don't mark local cancelled
+                }
+
+                // Only mark locally cancelled after partner cancel succeeds
+                await markFlatlyCancelled(flatBookingId);
+              } else {
+                // Carly car cancel
+                try {
+                  await cancelCarBookingOnBackend(id);
+                } catch (e: any) {
+                  Alert.alert("Cancel failed", e?.message ?? "Could not cancel car booking.");
+                  return;
+                }
+              }
+
+              // Refresh UI after successful cancel
+              await load();
+              Alert.alert("Cancelled", "Your booking was cancelled.");
+            } catch (e: any) {
+              // Last-resort catch so nothing becomes "Uncaught (in promise)"
+              Alert.alert("Cancel failed", e?.message ?? "Unknown error");
             }
-            await load();
           },
         },
       ]
     );
   }
+
 
 
   return (

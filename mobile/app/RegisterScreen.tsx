@@ -18,6 +18,8 @@ import { registerUser, getUserById } from "../lib/userApi";
 import { ApiError } from "../lib/apiClient";
 import { clearCachedReferenceData } from "../lib/referenceDataStorage";
 import { resetSearchLookupsMemo } from "../lib/carlyApi";
+import { purgeLegacyCarPrefsGlobalKeys } from "../lib/storage";
+import { purgeLegacyFlatlyBookingsGlobalKey } from "../lib/flatlyBookingsStorage";
 
 function onlyDigits(s: string): string {
   return (s || "").replace(/\D/g, "");
@@ -120,8 +122,9 @@ export default function RegisterScreen() {
         secondName: info.secondName ?? "",
         lastName: info.lastName ?? s,
       });
-
-
+      await purgeLegacyCarPrefsGlobalKeys();
+      await purgeLegacyFlatlyBookingsGlobalKey();
+      
       await clearCachedReferenceData();
       resetSearchLookupsMemo();
 
