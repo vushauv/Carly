@@ -313,13 +313,12 @@ function Chip({ label }: { label: string }) {
 
 function CarCardContent({ car, onSeeMore }: { car: CarCard; onSeeMore: (c: CarCard) => void }) {
   const images = useMemo(() => {
-    const base = car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id)}/900/600`;
-    return [
-      base,
-      `https://picsum.photos/seed/${encodeURIComponent(car.id + "_2")}/900/600`,
-      `https://picsum.photos/seed/${encodeURIComponent(car.id + "_3")}/900/600`,
-    ];
-  }, [car.id, car.imageUrl]);
+    // ✅ Use backend images (variable length)
+    if (Array.isArray(car.imageUrls) && car.imageUrls.length > 0) return car.imageUrls;
+
+    // ✅ Safety fallback: exactly ONE random
+    return [car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id + "_" + Date.now())}/900/600`];
+  }, [car.id, car.imageUrl, car.imageUrls]);
 
   return (
     <CarCardView
@@ -338,6 +337,7 @@ function CarCardContent({ car, onSeeMore }: { car: CarCard; onSeeMore: (c: CarCa
     />
   );
 }
+
 
 function ActionButton({
   variant,

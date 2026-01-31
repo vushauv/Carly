@@ -23,13 +23,14 @@ export default function CarDetails() {
 
   const images = useMemo(() => {
     if (!car) return [];
-    const base = car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id)}/900/600`;
-    return [
-      base,
-      `https://picsum.photos/seed/${encodeURIComponent(car.id + "_2")}/900/600`,
-      `https://picsum.photos/seed/${encodeURIComponent(car.id + "_3")}/900/600`,
-    ];
+
+    // ✅ Use backend-provided images if present
+    if (Array.isArray(car.imageUrls) && car.imageUrls.length > 0) return car.imageUrls;
+
+    // ✅ Fallback: exactly one placeholder
+    return [car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id + "_" + Date.now())}/900/600`];
   }, [car]);
+
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>

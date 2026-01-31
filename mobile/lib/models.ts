@@ -41,9 +41,16 @@ export type CarCard = {
   pricePerDay: number;
 
   rating?: number;
+
+  /** Back-compat: first image */
   imageUrl?: string;
+
+  /** ✅ 0..N images from backend. If backend returns none, we store exactly ONE placeholder. */
+  imageUrls?: string[];
+
   raw?: unknown;
 };
+
 
 // --------------------
 // Flatly partner models

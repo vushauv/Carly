@@ -315,6 +315,12 @@ function normalizeColorMaybe(v: string | undefined): CarColor | null {
   return normalizeColor(v);
 }
 
+function makeSinglePlaceholderUrl(carId: string): string {
+  // "random" but stable per car within a session (good enough)
+  const seed = `${carId}_${Math.floor(Math.random() * 1_000_000_000)}`;
+  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/900/600`;
+}
+
 function dtoToCard(dto: GetCarResponseDto): CarCard | null {
   const id = String(dto.carId);
 
@@ -323,15 +329,23 @@ function dtoToCard(dto: GetCarResponseDto): CarCard | null {
 
   const fuelRaw = extractFeatureValue(dto.carFeatures, "fuel type") ?? extractFeatureValue(dto.carFeatures, "fuel");
   const colorRaw = extractFeatureValue(dto.carFeatures, "color");
-if (__DEV__) console.log("[CARS] dto colorRaw:", colorRaw);
+
+  if (__DEV__) console.log("[CARS] dto colorRaw:", colorRaw);
 
   const fuelType = (normalizeFuelMaybe(fuelRaw) ?? "gas") as FuelType;
   const color = (normalizeColorMaybe(colorRaw) ?? "black") as CarColor;
 
   const pricePerDay = typeof dto.price === "number" ? dto.price : 0;
 
-  const imageUrl =
-    Array.isArray(dto.urls) && dto.urls.length > 0 && typeof dto.urls[0] === "string" ? dto.urls[0] : undefined;
+  const backendUrls =
+    Array.isArray(dto.urls) ? dto.urls.filter((u): u is string => typeof u === "string" && u.trim().length > 0) : [];
+
+  // ✅ If backend has images: use all of them.
+  // ✅ If backend has none: generate exactly ONE placeholder.
+  const imageUrls = backendUrls.length > 0 ? backendUrls : [makeSinglePlaceholderUrl(id)];
+
+  // back-compat: keep first imageUrl for places still using it
+  const imageUrl = imageUrls[0];
 
   const title = `${brand} ${model}`.trim();
   const subtitle = `${fuelType} • ${color}`;
@@ -349,13 +363,15 @@ if (__DEV__) console.log("[CARS] dto colorRaw:", colorRaw);
     currency: "PLN",
     pricePerDay,
 
-    // backend doesn't provide rating in GetCarResponseDto
     rating: undefined,
 
     imageUrl,
+    imageUrls, // ✅ NEW
+
     raw: dto,
   };
 }
+
 
 function applyPriceRange(cards: CarCard[], filters: CarSearchFilters): CarCard[] {
   const min = filters.priceRange?.min ?? 0;
