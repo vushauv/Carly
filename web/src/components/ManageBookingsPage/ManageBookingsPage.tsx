@@ -44,7 +44,6 @@ const ManageBookingsPage = () => {
   const loadBookingsPage = async (page: number, appliedFilters?: Partial<BookingSearchFilters>) => {
     try {
       setLoading(true);
-      setError(null);
       
       const filtersToUse = appliedFilters || filters;
       const cleanFilters = Object.fromEntries(
@@ -58,7 +57,7 @@ const ManageBookingsPage = () => {
       setTotalCount(result.totalCount);
     } catch (err) {
       console.error("Failed to load bookings:", err);
-      setError(err instanceof Error ? err.message : "Failed to load bookings");
+      // Error handling removed - no user-facing error message
     } finally {
       setLoading(false);
     }
@@ -152,7 +151,7 @@ const ManageBookingsPage = () => {
       loadBookingsPage(currentPage);
     } catch (err) {
       console.error("Failed to delete booking:", err);
-      setError(err instanceof Error ? err.message : "Failed to delete booking");
+      // Error handling removed - no user-facing error message
     }
   };
 
@@ -320,12 +319,6 @@ const ManageBookingsPage = () => {
         buttonText="Add new booking"
         onButtonClick={() => navigate("/bookings/new")}
       />
-
-      {error && (
-        <div className={styles.error}>
-          {error}
-        </div>
-      )}
 
       {loading ? (
         <div className={styles.loading}>Loading bookings...</div>
