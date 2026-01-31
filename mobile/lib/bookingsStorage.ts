@@ -1,3 +1,4 @@
+//lib/bookingsStorage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const KEY_BOOKINGS = "carly.bookings.v1";

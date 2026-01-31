@@ -1,3 +1,4 @@
+//lib/viewedCarsStorage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { CarCard } from "./models";
 

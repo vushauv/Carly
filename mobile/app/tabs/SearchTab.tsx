@@ -108,7 +108,19 @@ export default function SearchTab() {
       const res = await searchCars({ ...(nextFilters as any), __page: nextPage });
 
       setCars((prev) => {
-        const incoming = filterOutSeen(res, likedSet, dislikedSet);
+        // ✅ When user changes filters (mode === "replace"), show matches even if seen before.
+        // Otherwise you can easily end up with "No more cars" while backend returned data.
+        const incoming =
+          mode === "replace"
+            ? res
+            : filterOutSeen(res, likedSet, dislikedSet);
+
+        if (__DEV__) {
+          console.log(
+            `[CARS][UI] mode=${mode} page=${nextPage} backend=${res.length} incoming=${incoming.length} liked=${likedSet.size} disliked=${dislikedSet.size}`
+          );
+        }
+
         return mode === "replace" ? incoming : [...prev, ...incoming];
       });
 
@@ -121,6 +133,7 @@ export default function SearchTab() {
       setPrefetching(false);
     }
   }
+
 
   useEffect(() => {
     (async () => {
