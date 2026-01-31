@@ -1,12 +1,14 @@
 package pw.react.backend.bootstrap;
 
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import pw.react.backend.domain.booking.Booking;
@@ -27,7 +29,10 @@ import pw.react.backend.repositories.car.CarRepository;
 import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.repositories.user.UserTypeDictionaryRepository;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
+import pw.react.backend.services.car.CarImageService;
+import pw.react.backend.utils.files.bootstrap.MockMultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -40,8 +45,6 @@ import java.util.concurrent.ThreadLocalRandom;
 @Profile({"mysql", "batch"})
 @RequiredArgsConstructor
 public class DataSeeder implements ApplicationRunner {
-    @PersistenceContext
-    private EntityManager entityManager;
     private final UserTypeDictionaryRepository userTypeDictionaryRepository;
     private final CarRepository carRepository;
     private final LocationRepository locationRepository;
@@ -50,6 +53,7 @@ public class DataSeeder implements ApplicationRunner {
     private final BookingStatusDictionaryRepository bookingStatusDictionaryRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
+    private final CarImageService carImageService;
 
     @Override
     @Transactional
@@ -128,9 +132,9 @@ public class DataSeeder implements ApplicationRunner {
         if(superAdminType.isEmpty())
             throw new IllegalStateException("Upsert User Roles first");
 
-        upsertUserByEmail("oleh.shuptar.stud@pw.edu.pl", "Oleh", "Shuptar", superAdminType.get(), null, 111111111L);
-        upsertUserByEmail("vasili.vushau.stud@pw.edu.pl", "Vasili", "Vushau", superAdminType.get(), null, 222222222L);
-        upsertUserByEmail("stanislaw.zielinski.stud@pw.edu.pl", "Stanisław", "Zieliński", superAdminType.get(), null, 333333333L);
+        upsertUserByEmail("oleh.shuptar.stud@pw.edu.pl", "Oleh", "Shuptar", superAdminType.get(), "pass", 111111111L);
+        upsertUserByEmail("vasili.vushau.stud@pw.edu.pl", "Vasili", "Vushau", superAdminType.get(), "pass", 222222222L);
+        upsertUserByEmail("stanislaw.zielinski.stud@pw.edu.pl", "Stanisław", "Zieliński", superAdminType.get(), "pass", 333333333L);
         upsertUserByEmail("wojciech.sendek.stud@pw.edu.pl", "Wojtek", "Sendek", superAdminType.get(), "ass", 444444444L);
     }
 
@@ -158,14 +162,14 @@ public class DataSeeder implements ApplicationRunner {
             throw new IllegalStateException("Upsert CarFeatures first");
 
         // 1. Customers:
-        User u1 = upsertUserByEmail("DT@family.com", "Dominic", "Toretto", customerType.get(), null, 987654321L);
-        User u2 =upsertUserByEmail( "BB@shire.gov", "Bilbo", "Baggins", customerType.get(), null, 999999999L);
-        User u3 =upsertUserByEmail( "JS@blackpearl.org", "Jack", "Sparrow", customerType.get(), null, 123456789L);
-        User u4 =upsertUserByEmail( "HP@hogwarts.edu", "Harry", "Potter", customerType.get(), null, 111222333L);
-        User u5 =upsertUserByEmail( "john.wick@continental.com", "John", "Wick", customerType.get(), null, 505050505L);
-        User u6 =upsertUserByEmail( "batman@gotham.com", "Bruce", "Wayne", customerType.get(), null, 202020202L);
-        User u7 =upsertUserByEmail( "walter.white@heisenberg.lab", "Walter", "White", customerType.get(), null, 808080808L);
-        User u8 =upsertUserByEmail( "neo@matrix.io", "Neo", "Anderson", customerType.get(), null, 909090909L);
+        User u1 = upsertUserByEmail("DT@family.com", "Dominic", "Toretto", customerType.get(), "pass", 987654321L);
+        User u2 =upsertUserByEmail( "BB@shire.gov", "Bilbo", "Baggins", customerType.get(), "pass", 999999999L);
+        User u3 =upsertUserByEmail( "JS@blackpearl.org", "Jack", "Sparrow", customerType.get(), "pass", 123456789L);
+        User u4 =upsertUserByEmail( "HP@hogwarts.edu", "Harry", "Potter", customerType.get(), "pass", 111222333L);
+        User u5 =upsertUserByEmail( "john.wick@continental.com", "John", "Wick", customerType.get(), "pass", 505050505L);
+        User u6 =upsertUserByEmail( "batman@gotham.com", "Bruce", "Wayne", customerType.get(), "pass", 202020202L);
+        User u7 =upsertUserByEmail( "walter.white@heisenberg.lab", "Walter", "White", customerType.get(), "pass", 808080808L);
+        User u8 =upsertUserByEmail( "neo@matrix.io", "Neo", "Anderson", customerType.get(), "pass", 909090909L);
 
         // 2. CarFeatures:
         CarFeature brandBmw = upsertCarFeature(brand.get(), "BMW");
@@ -212,7 +216,7 @@ public class DataSeeder implements ApplicationRunner {
                 // Ofc, bmw is under repair
                 List.of(fuelGas.get(), brandBmw, modelSeries3, colorBlack, statusUnderRepair.get()),
                 List.of(fuelDiesel.get(), brandAudi, modelA4, colorWhite, statusInactive.get()),
-                List.of(fuelElectric.get(), brandToyota, modelCorolla, colorRed, statusActive.get()),
+                List.of(fuelElectric.get(), brandToyota, modelCorolla, colorWhite, statusActive.get()),
                 List.of(fuelDiesel.get(), brandMercedes, modelCClass, colorSilver, statusActive.get()),
                 List.of(fuelGas.get(), brandVolkswagen, modelGolf, colorBlue, statusActive.get()),
                 List.of(fuelDiesel.get(), brandSkoda, modelOctavia, colorGrey, statusInactive.get()),
@@ -238,6 +242,8 @@ public class DataSeeder implements ApplicationRunner {
         Car car6 = carRepository.findById(6).orElseThrow();
         Car car7 = carRepository.findById(7).orElseThrow();
 
+        seedCarImages();
+
         var todayStart = LocalDate.now().atStartOfDay();
         var created = bookingStatusDictionaryRepository.findById((short)BookingStatus.CREATED.getCode());
         var cancelled = bookingStatusDictionaryRepository.findById((short)BookingStatus.CANCELLED.getCode());
@@ -253,13 +259,51 @@ public class DataSeeder implements ApplicationRunner {
         bookingRepository.save(makeBooking(u7, car7, created.get(), null, loc1, loc2, todayStart.plusDays(3), todayStart.plusDays(6)));
     }
 
+    @Transactional
+    public void seedCarImages() {
+        uploadFromPath(1, "seed/car-images/car-1/1.jpg");
+        uploadFromPath(1, "seed/car-images/car-1/2.jpg");
+        uploadFromPath(1, "seed/car-images/car-1/3.jpg");
+        uploadFromPath(2, "seed/car-images/car-2/1.jpg");
+        uploadFromPath(2, "seed/car-images/car-2/2.jpg");
+        uploadFromPath(2, "seed/car-images/car-2/3.jpg");
+        uploadFromPath(2, "seed/car-images/car-2/4.jpg");
+        uploadFromPath(3, "seed/car-images/car-3/1.avif");
+        uploadFromPath(3, "seed/car-images/car-3/2.avif");
+        uploadFromPath(3, "seed/car-images/car-3/3.avif");
+    }
+
+    private void uploadFromPath(Integer carId, String path) {
+        try {
+            var res = new ClassPathResource(path);
+            byte[] bytes = res.getInputStream().readAllBytes();
+
+            String filename = res.getFilename() == null ? "image.jpg" : res.getFilename();
+            String contentType = MediaTypeFactory
+                    .getMediaType(filename)
+                    .map(MediaType::toString)
+                    .orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+
+            MockMultipartFile mf = new MockMultipartFile(
+                    "file",
+                    filename,
+                    contentType,
+                    bytes
+            );
+
+            carImageService.upload(mf, carId); // call your service method
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to seed upload: " + path, e);
+        }
+    }
+
     private Booking makeBooking(User user, Car car,
-            BookingStatusDictionary carBookingStatus,
-            BookingStatusDictionary flatBookingStatus,
-            Location pickupLocation,
-            Location returnLocation,
-            LocalDateTime from,
-            LocalDateTime to) {
+                                BookingStatusDictionary carBookingStatus,
+                                BookingStatusDictionary flatBookingStatus,
+                                Location pickupLocation,
+                                Location returnLocation,
+                                LocalDateTime from,
+                                LocalDateTime to) {
         Booking b = new Booking();
         b.setUser(user);
         b.setCar(car);
