@@ -12,6 +12,9 @@ import UsersPage from "./components/UsersPage/UsersPage";
 import UserViewPage from "./components/UserViewPage/UserViewPage";
 import UserEditPage from "./components/UserEditPage/UserEditPage";
 import UserRegisterPage from "./components/UserRegisterPage/UserRegisterPage";
+import CarViewPage from "./components/CarViewPage/CarViewPage";
+import CarEditPage from "./components/CarEditPage/CarEditPage";
+import CarCreatePage from "./components/CarCreatePage/CarCreatePage";
 
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -34,6 +37,20 @@ function App() {
           <Route
             path="/cars"
             element={loggedIn ? <ManageCarsPage /> : <Navigate to="/login" />}
+          />
+
+          {/* Car Management Routes */}
+          <Route
+            path="/cars/new"
+            element={loggedIn ? <CarCreatePage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/cars/:id"
+            element={loggedIn ? <CarViewPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/cars/:id/edit"
+            element={loggedIn ? <CarEditPage /> : <Navigate to="/login" />}
           />
 
           {/* User Management Routes */}

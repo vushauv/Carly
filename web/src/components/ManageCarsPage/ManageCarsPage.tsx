@@ -1,263 +1,217 @@
-import { useEffect, useState } from "react";
-import FilterBar from "../FilterBarLayout/FilterBarLayout";
-import Input from "../Input/Input";
-import Button from "../Button/Button";
+import { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./ManageCarsPage.module.css";
 import AddNewEntityComponent from "../AddNewEntityComponent/AddNewComponent";
+import FiltersForm from "../FiltersForm/FiltersForm";
+import type { Car } from "./types";
+import { type CarFilters, defaultCarFilters, type CarFilterKey, carFilterFields } from "./filters.conf";
+import DataTable from "../DataTable/DataTable";
+import { carsColumns, carsRowKey, carsActions } from "./datatable.conf";
+import Pagination from "../Pagination/Pagination";
+import { carService } from "./carService";
 
-type Car = {
-  id: string;
-  name: string;
-  brand: string;
-  location: string;
-  status: "Active" | "Inactive";
-  availability: "Available" | "Rented" | "Maintenance";
-  pricePerDay: number;
-};
-
-// Fake "backend" data (placeholders for now)
-const fakeCars: Car[] = [
-  {
-    id: "c1",
-    name: "Toyota Yaris",
-    brand: "Toyota",
-    location: "Warsaw Center",
-    status: "Active",
-    availability: "Available",
-    pricePerDay: 35,
-  },
-  {
-    id: "c2",
-    name: "BMW 3 Series",
-    brand: "BMW",
-    location: "Warsaw Airport",
-    status: "Active",
-    availability: "Rented",
-    pricePerDay: 95,
-  },
-  {
-    id: "c3",
-    name: "Audi A4",
-    brand: "Audi",
-    location: "Krakow Main",
-    status: "Active",
-    availability: "Maintenance",
-    pricePerDay: 90,
-  },
-  {
-    id: "c4",
-    name: "Skoda Octavia",
-    brand: "Skoda",
-    location: "Gdansk Old Town",
-    status: "Inactive",
-    availability: "Available",
-    pricePerDay: 55,
-  },
-  {
-    id: "c5",
-    name: "Hyundai i20",
-    brand: "Hyundai",
-    location: "Warsaw Center",
-    status: "Active",
-    availability: "Available",
-    pricePerDay: 40,
-  },
-  {
-    id: "c6",
-    name: "Mercedes A-Class",
-    brand: "Mercedes",
-    location: "Warsaw Airport",
-    status: "Active",
-    availability: "Available",
-    pricePerDay: 110,
-  },
-  {
-    id: "c7",
-    name: "Volkswagen Golf",
-    brand: "Volkswagen",
-    location: "Krakow Main",
-    status: "Active",
-    availability: "Rented",
-    pricePerDay: 60,
-  },
-];
-
-const PAGE_SIZE = 3;
+const PAGE_SIZE = 10; // Match API default
 
 const ManageCarsPage = () => {
+  const navigate = useNavigate();
+  const [filters, setFilters] = useState<CarFilters>(defaultCarFilters);
   const [cars, setCars] = useState<Car[]>([]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(0); // API uses 0-based pagination
   const [totalCars, setTotalCars] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [activeFilters, setActiveFilters] = useState<Partial<CarFilters>>({});
 
   const totalPages = Math.max(1, Math.ceil(totalCars / PAGE_SIZE));
 
-  const loadCarsPage = (page: number) => {
-    // Future backend shape idea:
-    // GET /cars?page=X&pageSize=Y -> { items: Car[], total: number }
-    const startIndex = (page - 1) * PAGE_SIZE;
-    const endIndex = startIndex + PAGE_SIZE;
+  const loadCarsPage = async (page: number, filtersToApply: Partial<CarFilters> = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Convert string filters to appropriate types for the service
+      const serviceFilters = {
+        brand: filtersToApply.brand,
+        model: filtersToApply.model,
+        color: filtersToApply.color,
+        fuelType: filtersToApply.fuelType,
+        status: filtersToApply.status,
+        availability: filtersToApply.availability as "AVAILABLE" | "RENTED" | undefined,
+        priceMin: filtersToApply.priceMin ? parseFloat(filtersToApply.priceMin) : undefined,
+        priceMax: filtersToApply.priceMax ? parseFloat(filtersToApply.priceMax) : undefined,
+      };
 
-    setTotalCars(fakeCars.length);
-    setCars(fakeCars.slice(startIndex, endIndex));
+      // Apply filters if any are provided
+      const hasFilters = Object.values(filtersToApply).some(value => value !== "" && value !== undefined);
+      
+      let result;
+      if (hasFilters) {
+        // Use search endpoint with filters
+        result = await carService.getAllCars(page, PAGE_SIZE, serviceFilters);
+      } else {
+        // Use regular getAllCars without filters
+        result = await carService.getAllCars(page, PAGE_SIZE);
+      }
+      
+      setCars(result.cars);
+      setTotalCars(result.totalCount);
+    } catch (err) {
+      console.error("Failed to load cars:", err);
+      setError("Failed to load cars. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApplyFilters = (filterValues: Partial<CarFilters>) => {
+    console.log("Applying filters:", filterValues);
+    setActiveFilters(filterValues);
+    setCurrentPage(0); // Reset to first page when filtering
+    loadCarsPage(0, filterValues);
+  };
+
+  const handleResetFilters = () => {
+    console.log("Resetting filters");
+    setActiveFilters({});
+    setFilters(defaultCarFilters);
+    setCurrentPage(0);
+    loadCarsPage(0, {}); // Load without filters
+  };
+
+  const handleDeleteCar = async (carId: number) => {
+    if (!window.confirm("Are you sure you want to delete this car? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      await carService.deleteCar(carId);
+      // Refresh the current page after deletion
+      loadCarsPage(currentPage, activeFilters);
+    } catch (err) {
+      console.error("Failed to delete car:", err);
+      setError("Failed to delete car. Please try again.");
+    }
+  };
+
+  const handleCarAction = (actionId: string, car: Car) => {
+    switch (actionId) {
+      case "view":
+        navigate(`/cars/${car.carId}`);
+        break;
+      case "edit":
+        navigate(`/cars/${car.carId}/edit`);
+        break;
+      case "delete":
+        handleDeleteCar(car.carId);
+        break;
+    }
   };
 
   useEffect(() => {
-    setCurrentPage(1);
-    loadCarsPage(1);
+    setCurrentPage(0);
+    loadCarsPage(0);
   }, []);
 
-  // Blueprint only: no real filtering logic yet
-  const applyFilters = () => {};
-  const resetFilters = () => {};
+  const actionsWithHandlers = useMemo(() => 
+    carsActions.map(action => ({
+      ...action,
+      onClick: (car: Car) => handleCarAction(action.id, car)
+    })), [navigate]
+  );
+
+  const columns = useMemo(
+    () => carsColumns({ 
+      primaryCell: styles.primaryCell, 
+      status: styles.status,
+    }),
+    [styles.primaryCell, styles.status]
+  );
 
   return (
     <div className={styles.page}>
       <h1 className={styles.title}>Admin Dashboard – Manage Cars</h1>
 
-
-      <h3 className={styles.subTitle}>Search criteria</h3>
-
-      <FilterBar onApply={applyFilters} onReset={resetFilters}>
-        <div className={styles.filters}>
-          <div className={styles.field}>
-            <span className={styles.label}>CarId</span>
-            <Input
-              type="text"
-              placeholder="e.g. c1"
-              hint="Car internal ID"
-              errorMessage="Please enter a valid car id."
-              isRequired={false}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>Name</span>
-            <Input
-              type="text"
-              placeholder="e.g. Toyota Yaris"
-              hint="Car display name"
-              errorMessage="Please enter a valid name."
-              isRequired={false}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>Location</span>
-            <Input
-              type="text"
-              placeholder="e.g. Warsaw Center"
-              hint="Current service point"
-              errorMessage="Please enter a valid location."
-              isRequired={false}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>Brand</span>
-            <Input
-              type="text"
-              placeholder="e.g. BMW"
-              hint="Car brand"
-              errorMessage="Please enter a valid brand."
-              isRequired={false}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>Status</span>
-            <Input
-              type="text"
-              placeholder="Active / Inactive"
-              hint="Whether the car is active in the system"
-              errorMessage="Please enter a valid status."
-              isRequired={false}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>Price</span>
-            <Input
-              type="number"
-              placeholder="e.g. 50"
-              hint="Price per day"
-              errorMessage="Please enter a valid number."
-              isRequired={false}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <span className={styles.label}>Availability</span>
-            <Input
-              type="text"
-              placeholder="Available / Rented / Maintenance"
-              hint="Current availability state"
-              errorMessage="Please enter a valid availability."
-              isRequired={false}
-            />
-          </div>
+      {error && (
+        <div className={styles.error}>
+          {error}
+          <button onClick={() => setError(null)}>×</button>
         </div>
-      </FilterBar>
+      )}
+
+      <FiltersForm<CarFilterKey>
+        fields={carFilterFields}
+        onApply={handleApplyFilters}
+        onReset={handleResetFilters}
+      />
+
+      {/* Display active filters summary */}
+      {Object.keys(activeFilters).length > 0 && (
+        <div className={styles.activeFilters}>
+          <strong>Active filters:</strong>
+          {Object.entries(activeFilters).map(([key, value]) => 
+            value ? (
+              <span key={key} className={styles.filterTag}>
+                {key}: {value}
+              </span>
+            ) : null
+          )}
+          <button 
+            onClick={handleResetFilters}
+            className={styles.clearFiltersBtn}
+          >
+            Clear all filters
+          </button>
+        </div>
+      )}
 
       <AddNewEntityComponent
-          title="Cars"
-          buttonText="Add new car"
-          onButtonClick={() => {
-            // later: navigate("/users/new") or open modal
+        title="Cars"
+        buttonText="Add new car"
+        onButtonClick={() => {
+          navigate("/cars/new");
         }}
       />
 
-      <div className={styles.table}>
-        <div className={styles.tableHeader}>
-          <span>Id</span>
-          <span>Name</span>
-          <span>Is active</span>
-          <span className={styles.actionsHeader}>Actions</span>
-        </div>
-
-        {cars.map((c) => (
-          <div key={c.id} className={styles.tableRow}>
-            <span>{c.id}</span>
-            <span className={styles.car}>{c.name}</span>
-            <span className={styles.status}>{c.status === "Active" ? "true" : "false"}</span>
-            <div className={styles.actionButtons}>
-              <Button onClick={() => {}}>Details</Button>
-              <Button onClick={() => {}} color="secondary">
-                Edit
-              </Button>
-            </div>
+      {loading ? (
+        <div className={styles.loading}>Loading cars...</div>
+      ) : (
+        <>
+          <DataTable<Car>
+            rows={cars}
+            rowKey={carsRowKey}
+            columns={columns}
+            actions={actionsWithHandlers}
+            emptyText={Object.keys(activeFilters).length > 0 
+              ? "No cars found matching the current filters." 
+              : "No cars found."
+            }
+          />
+          
+          {/* Show results summary */}
+          <div className={styles.resultsSummary}>
+            {Object.keys(activeFilters).length > 0 ? (
+              <p>Found {totalCars} cars matching your filters</p>
+            ) : (
+              <p>Showing {cars.length} of {totalCars} total cars</p>
+            )}
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
-      {cars.length === 0 ? <p className={styles.empty}>No cars found.</p> : null}
-
-      <div className={styles.pagination}>
-        <Button
-          onClick={() => {
-            const next = Math.max(1, currentPage - 1);
-            setCurrentPage(next);
-            loadCarsPage(next);
-          }}
-          disabled={currentPage === 1}
-        >
-          Prev
-        </Button>
-
-        <span className={styles.pageInfo}>
-          Page {currentPage} / {totalPages}
-        </span>
-
-        <Button
-          onClick={() => {
-            const next = Math.min(totalPages, currentPage + 1);
-            setCurrentPage(next);
-            loadCarsPage(next);
-          }}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </Button>
-      </div>
+      <Pagination
+        currentPage={currentPage + 1} // Display 1-based to user
+        totalPages={totalPages}
+        onPrev={() => {
+          const newPage = Math.max(0, currentPage - 1);
+          setCurrentPage(newPage);
+          loadCarsPage(newPage, activeFilters);
+        }}
+        onNext={() => {
+          const newPage = Math.min(totalPages - 1, currentPage + 1);
+          setCurrentPage(newPage);
+          loadCarsPage(newPage, activeFilters);
+        }}
+      />
     </div>
   );
 };
