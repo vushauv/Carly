@@ -7,6 +7,7 @@ import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Where;
 import pw.react.backend.domain.Auditable;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,7 +16,7 @@ import java.util.Set;
 @Entity
 @Table(name = "Cars")
 // By default, filters all queries to Cars for is_enabled == true
-@SQLRestriction("is_enabled = true")
+@Where(clause = "is_enabled = true")
 public class Car extends Auditable {
 
     @Id
@@ -25,4 +26,7 @@ public class Car extends Auditable {
 
     @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CarToFeatureLink> featureLinks = new HashSet<>();
+
+    @Column(name = "Price", nullable = false)
+    private BigDecimal price;
 }

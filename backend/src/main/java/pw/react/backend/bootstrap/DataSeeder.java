@@ -7,19 +7,18 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.domain.booking.BookingStatusDictionary;
 import pw.react.backend.domain.car.Car;
-import pw.react.backend.domain.Location;
+import pw.react.backend.domain.booking.Location;
 import pw.react.backend.domain.car.CarFeature;
 import pw.react.backend.domain.car.CarFeatureDictionary;
 import pw.react.backend.domain.car.CarToFeatureLink;
-import pw.react.backend.domain.enums.CarFeatureType;
-import pw.react.backend.domain.enums.CarFuelType;
-import pw.react.backend.domain.enums.CarStatus;
-import pw.react.backend.domain.enums.UserRole;
+import pw.react.backend.domain.enums.*;
 import pw.react.backend.domain.user.User;
 import pw.react.backend.domain.user.UserTypeDictionary;
 import pw.react.backend.repositories.LocationRepository;
+import pw.react.backend.repositories.booking.BookingRepository;
 import pw.react.backend.repositories.car.CarFeatureDictionaryRepository;
 import pw.react.backend.repositories.car.CarFeatureRepository;
 import pw.react.backend.repositories.car.CarRepository;
@@ -28,7 +27,9 @@ import pw.react.backend.repositories.user.UserTypeDictionaryRepository;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Component
@@ -43,6 +44,7 @@ public class DataSeeder implements ApplicationRunner {
     private final CarFeatureDictionaryRepository carFeatureDictionaryRepository;
     private final BookingStatusDictionaryRepository bookingStatusDictionaryRepository;
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
 
     @Override
     @Transactional
@@ -50,37 +52,44 @@ public class DataSeeder implements ApplicationRunner {
         log.info("DataSeeder running. Active profiles: {}", String.join(",", args.getSourceArgs()));
 
         // 1) Locations
-        upsertLocation("Warsaw Central", new BigDecimal("52.2297"), new BigDecimal("21.0122"));
-        upsertLocation("Krakow Main", new BigDecimal("50.0647"), new BigDecimal("19.9450"));
-        upsertLocation("Gdansk Old Town", new BigDecimal("54.3520"), new BigDecimal("18.6466"));
+        Location warsawCentral = upsertLocation("Warsaw Central", new BigDecimal("52.2297"), new BigDecimal("21.0122"));
+        Location krakowMain = upsertLocation("Krakow Main", new BigDecimal("50.0647"), new BigDecimal("19.9450"));
+        Location gdanskOldTown = upsertLocation("Gdansk Old Town", new BigDecimal("54.3520"), new BigDecimal("18.6466"));
 
         // ===============================================================================================
         //                                  Booking statuses
         // ===============================================================================================
         BookingStatusDictionary created =
-                upsertBookingStatus("CREATED", "Created", "Booking created");
-
-        BookingStatusDictionary cancelled =
-                upsertBookingStatus("CANCELLED", "Cancelled", "Booking cancelled");
+                upsertBookingStatus(BookingStatus.CREATED.name(),
+                        "Booking created");
 
         BookingStatusDictionary completed =
-                upsertBookingStatus("COMPLETED", "Completed", "Booking completed");
+                upsertBookingStatus(BookingStatus.COMPLETED.name(),
+                        "Booking completed");
+
+        BookingStatusDictionary cancelled =
+                upsertBookingStatus(BookingStatus.CANCELLED.name(),
+                        "Booking cancelled");
 
         // ===============================================================================================
         //                                  Users & UserTypes
         // ===============================================================================================
 
-        upsertUserType("CUSTOMER", "Customer", "Standard end user");
-        upsertUserType("SYSTEM", "System", "System / integration user");
-        upsertUserType("SUPER_ADMIN", "Super Admin", "All permissions");
-        upsertUserType("ADMIN", "Admin", "Administrative user");
+        upsertUserType(UserRole.CUSTOMER.name(),
+                "Standard end user");
+        upsertUserType(UserRole.SYSTEM.name(),
+                "System / integration user");
+        upsertUserType(UserRole.SUPER_ADMIN.name(),
+                "All permissions");
+        upsertUserType(UserRole.ADMIN.name(),
+                "Administrative user");
 
-        UserTypeDictionary superAdminType = userTypeDictionaryRepository.findByName("SUPER_ADMIN")
-                .orElseThrow(() -> new IllegalStateException("SUPER_ADMIN user type missing"));
-        UserTypeDictionary systemType = userTypeDictionaryRepository.findByName("SYSTEM")
-                .orElseThrow(() -> new IllegalStateException("SYSTEM user type missing"));
-        UserTypeDictionary customerType = userTypeDictionaryRepository.findByName("CUSTOMER")
-                .orElseThrow(() -> new IllegalStateException("CUSTOMER user type missing"));
+        UserTypeDictionary superAdminType = userTypeDictionaryRepository.findByName(UserRole.SUPER_ADMIN.name())
+                .orElseThrow(() -> new IllegalStateException(UserRole.SUPER_ADMIN.name() + " user type missing"));
+        UserTypeDictionary systemType = userTypeDictionaryRepository.findByName(UserRole.SYSTEM.name())
+                .orElseThrow(() -> new IllegalStateException(UserRole.SYSTEM.name() + " user type missing"));
+        UserTypeDictionary customerType = userTypeDictionaryRepository.findByName(UserRole.CUSTOMER.name())
+                .orElseThrow(() -> new IllegalStateException(UserRole.CUSTOMER.name() + " user type missing"));
         // 1) Systems
         upsertUserByEmail(
                 "carly@pw.edu.pl",
@@ -148,7 +157,7 @@ public class DataSeeder implements ApplicationRunner {
                 null,
                 987654321L
         );
-        upsertUserByEmail(
+        User customer = upsertUserByEmail(
                 "BB@shire.gov",
                 "Bilbo",
                 "Baggins",
@@ -165,16 +174,6 @@ public class DataSeeder implements ApplicationRunner {
                 123456789L
         );
 
-        // 1) User types
-        upsertUserType(UserRole.CUSTOMER.name(), "Customer", "Standard end user");
-        upsertUserType(UserRole.SYSTEM.name(), "System", "System / integration user");
-        upsertUserType(UserRole.SUPER_ADMIN.name(), "Super Admin", "All permissions");
-        upsertUserType(UserRole.ADMIN.name(), "Admin", "Administrative user");
-
-        // 2) Locations
-        upsertLocation("Warsaw Central", new BigDecimal("52.2297"), new BigDecimal("21.0122"));
-        upsertLocation("Krakow Main", new BigDecimal("50.0647"), new BigDecimal("19.9450"));
-        upsertLocation("Gdansk Old Town", new BigDecimal("54.3520"), new BigDecimal("18.6466"));
 
         // 3) Car Feature Dictionaries
         CarFeatureDictionary fuelType = upsertCarFeatureDictionary(CarFeatureType.FUEL_TYPE.name());
@@ -221,15 +220,98 @@ public class DataSeeder implements ApplicationRunner {
                         fuelElectric, brandToyota, modelCorolla, colorRed, statusUnderRepair
                 )
         );
+
+        // 7) Adding car bookings
+        Car car1 = carRepository.findById(1)
+                .orElseThrow(() -> new IllegalStateException("Car 1 missing"));
+        Car car2 = carRepository.findById(2)
+                .orElseThrow(() -> new IllegalStateException("Car 2 missing"));
+        Car car3 = carRepository.findById(3)
+                .orElseThrow(() -> new IllegalStateException("Car 3 missing"));
+        Car car4 = carRepository.findById(4)
+                .orElseThrow(() -> new IllegalStateException("Car 4 missing"));
+        Car car5 = carRepository.findById(5)
+                .orElseThrow(() -> new IllegalStateException("Car 5 missing"));
+        var todayStart = java.time.LocalDate.now().atStartOfDay();
+        //CREATED booking in the future
+        bookingRepository.save(makeBooking(
+                customer,
+                car2,
+                cancelled,
+                completed,
+                warsawCentral,
+                krakowMain,
+                todayStart,
+                todayStart.plusDays(1)
+        ));
+
+        // CAR 3: COMPLETED booking overlapping tomorrow -> +3 (blocks)
+        bookingRepository.save(makeBooking(
+                customer,
+                car3,
+                completed,
+                completed,
+                gdanskOldTown,
+                krakowMain,
+                todayStart.plusDays(1),
+                todayStart.plusDays(3)
+        ));
+
+        // CAR 4: CREATED booking in the future (blocks future availability)
+        bookingRepository.save(makeBooking(
+                customer,
+                car4,
+                created,
+                cancelled,
+                warsawCentral,
+                gdanskOldTown,
+                todayStart.plusDays(2),
+                todayStart.plusDays(5)
+        ));
+
+        // CAR 5: past booking only (should not affect availability)
+        bookingRepository.save(makeBooking(
+                customer,
+                car5,
+                completed,
+                created,
+                warsawCentral,
+                krakowMain,
+                todayStart.minusDays(10),
+                todayStart.minusDays(7)
+        ));
         log.info("DataSeeder finished.");
     }
 
-    private UserTypeDictionary upsertUserType(String name, String displayName, String description) {
+    private Booking makeBooking(
+            User user,
+            Car car,
+            BookingStatusDictionary carBookingStatus,
+            BookingStatusDictionary flatBookingStatus,
+            Location pickupLocation,
+            Location returnLocation,
+            java.time.LocalDateTime from,
+            java.time.LocalDateTime to
+    ) {
+        Booking b = new Booking();
+        b.setUser(user);
+        b.setCar(car);
+        // allowed optional
+        b.setFlatBookingStatus(flatBookingStatus);
+        b.setPickupLocation(pickupLocation);
+        b.setReturnLocation(returnLocation);
+        b.setCarBookingStatus(carBookingStatus);
+        b.setCarBookingDateFrom(from);
+        b.setCarBookingDateTo(to);
+        b.setEnabled(true);
+        return b;
+    }
+
+    private UserTypeDictionary upsertUserType(String name,String description) {
         UserTypeDictionary e = userTypeDictionaryRepository.findByName(name)
                 .orElseGet(UserTypeDictionary::new);
 
         e.setName(name);
-        e.setDisplayName(displayName);
         e.setDescription(description);
 
         // audit column
@@ -281,7 +363,6 @@ public class DataSeeder implements ApplicationRunner {
 
     private BookingStatusDictionary upsertBookingStatus(
             String name,
-            String displayName,
             String description
     ) {
         BookingStatusDictionary e =
@@ -289,7 +370,6 @@ public class DataSeeder implements ApplicationRunner {
                         .orElseGet(BookingStatusDictionary::new);
 
         e.setName(name);
-        e.setDisplayName(displayName);
         e.setDescription(description);
         e.setEnabled(true);
 
@@ -305,6 +385,9 @@ public class DataSeeder implements ApplicationRunner {
         int toCreate = (int) (targetCount - current);
         for (int i = 0; i < toCreate; i++) {
             Car c = new Car();
+            double randomPrice = ThreadLocalRandom.current().nextDouble(100.0, 500.0);
+            BigDecimal price = BigDecimal.valueOf(randomPrice).setScale(2, RoundingMode.HALF_UP);
+            c.setPrice(price);
             c.setEnabled(true);
             carRepository.save(c);
         }

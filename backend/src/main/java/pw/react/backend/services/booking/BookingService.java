@@ -1,5 +1,6 @@
 package pw.react.backend.services.booking;
 
+import org.apache.coyote.BadRequestException;
 import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.dto.request.booking.BookingSearchCriteria;
 import pw.react.backend.exceptions.ResourceNotFoundException;
@@ -8,13 +9,14 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 import java.util.Optional;
 
-public interface BookingService {
-
+public interface BookingService
+{
+    //void updateBooking(Integer id, Booking booking) throws ResourceNotFoundException;
     void updateBooking(Integer id, Booking updatedBooking) throws ResourceNotFoundException;
 
     boolean deleteBooking(Integer bookingId);
 
-    List<Booking> batchSave(List<Booking> bookings);
+    List<Booking> batchSave(List<Booking> bookings) throws BadRequestException;
 
     Optional<Booking> getById(Integer bookingId);
 

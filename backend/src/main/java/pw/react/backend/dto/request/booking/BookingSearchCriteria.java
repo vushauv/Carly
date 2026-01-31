@@ -2,6 +2,7 @@ package pw.react.backend.dto.request.booking;
 
 import lombok.Getter;
 import lombok.Setter;
+import pw.react.backend.domain.enums.BookingStatus;
 
 import java.time.LocalDateTime;
 
@@ -9,7 +10,7 @@ import java.time.LocalDateTime;
 @Setter
 public class BookingSearchCriteria {
     private Integer bookingId;
-    private String status; // e.g. CREATED/CANCELLED/COMPLETED
+    private BookingStatus status; // e.g. CREATED/CANCELLED/COMPLETED
     private LocalDateTime dateFrom;
     private LocalDateTime dateTo;
     private Integer userId;

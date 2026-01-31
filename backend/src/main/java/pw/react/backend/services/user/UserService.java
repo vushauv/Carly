@@ -1,7 +1,7 @@
 package pw.react.backend.services.user;
 
 import pw.react.backend.domain.user.User;
-import pw.react.backend.dto.request.UpdateUserRequest;
+import pw.react.backend.dto.request.user.UpdateUserRequest;
 
 import java.util.List;
 
@@ -18,4 +18,6 @@ public interface UserService {
     void deleteUserById(Integer id);
 
     void updateUser(Integer id, UpdateUserRequest request);
+
+    boolean userExistsById(Integer userId);
 }

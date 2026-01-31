@@ -1,13 +1,10 @@
 package pw.react.backend.services.parkly;
 
-import pw.react.backend.dto.parkly.*;
-
-import java.util.List;
+import pw.react.backend.dto.request.parkly.ParklyCreateCarBookingRequest;
+import pw.react.backend.dto.response.parkly.ParklyBookingDetailsResponse;
+import pw.react.backend.dto.response.parkly.ParklyBookingResponse;
 
 public interface ParklyService {
-
-    // CarService will be used instead
-    //List<ParklyGetCarResponseDto> searchAvailableCars(ParklySearchCarsRequest request);
     ParklyBookingResponse createCarBooking(ParklyCreateCarBookingRequest request);
     boolean cancelCarBooking(Integer externalBookingId);
     ParklyBookingDetailsResponse getCarBookingByExternalBookingId(Integer externalBookingId);

@@ -1,7 +1,7 @@
 package pw.react.backend.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import pw.react.backend.domain.Location;
+import pw.react.backend.domain.booking.Location;
 
 import java.util.Optional;
 
