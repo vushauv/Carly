@@ -97,37 +97,37 @@ const UserViewPage = () => {
 
       <div className={styles.userViewContent}>
         <div className={styles.userField}>
-          <label className={styles.fieldLabel}>User ID:</label>
+          <span className={styles.fieldLabel}>User ID:</span>
           <span className={styles.fieldValue}>{user.userId}</span>
         </div>
 
         <div className={styles.userField}>
-          <label className={styles.fieldLabel}>First Name:</label>
+          <span className={styles.fieldLabel}>First Name:</span>
           <span className={styles.fieldValue}>{user.firstName}</span>
         </div>
 
         <div className={styles.userField}>
-          <label className={styles.fieldLabel}>Second Name:</label>
+          <span className={styles.fieldLabel}>Second Name:</span>
           <span className={styles.fieldValue}>{user.secondName}</span>
         </div>
 
         <div className={styles.userField}>
-          <label className={styles.fieldLabel}>Last Name:</label>
+          <span className={styles.fieldLabel}>Last Name:</span>
           <span className={styles.fieldValue}>{user.lastName}</span>
         </div>
 
         <div className={styles.userField}>
-          <label className={styles.fieldLabel}>Full Name:</label>
+          <span className={styles.fieldLabel}>Full Name:</span>
           <span className={styles.fieldValue}>{`${user.firstName} ${user.secondName} ${user.lastName}`}</span>
         </div>
 
         <div className={styles.userField}>
-          <label className={styles.fieldLabel}>Email Address:</label>
+          <span className={styles.fieldLabel}>Email Address:</span>
           <span className={styles.fieldValue}>{user.email}</span>
         </div>
 
         <div className={styles.userField}>
-          <label className={styles.fieldLabel}>Contact Number:</label>
+          <span className={styles.fieldLabel}>Contact Number:</span>
           <span className={styles.fieldValue}>{user.contactNumber || "Not provided"}</span>
         </div>
       </div>

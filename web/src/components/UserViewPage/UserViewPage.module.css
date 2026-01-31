@@ -1,0 +1,90 @@
+.userViewPage {
+  padding: 2rem;
+  max-width: 100%;
+  margin: 0;
+  text-align: left;
+}
+
+.userViewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.userViewHeader h1 {
+  margin: 0;
+  color: #333;
+  font-size: 2rem;
+}
+
+.userViewActions {
+  display: flex;
+  gap: 1rem;
+}
+
+.userViewContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.userField {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.fieldLabel {
+  font-weight: 600;
+  color: #555;
+  font-size: 0.9rem;
+  min-width: 150px;
+  text-align: left;
+}
+
+.fieldValue {
+  font-size: 1rem;
+  color: #333;
+  flex: 1;
+}
+
+.error {
+  color: #dc3545;
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .userViewPage {
+    padding: 1rem;
+  }
+  
+  .userViewHeader {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .userViewActions {
+    justify-content: center;
+  }
+  
+  .userField {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .fieldLabel {
+    min-width: auto;
+  }
+}
