@@ -26,6 +26,8 @@ import type { LikedCar } from "../../lib/storage";
 import { clearLikedCars, getLikedCars, removeLikedCar } from "../../lib/storage";
 import { bookFlat, getPartnerFlatsForPeriod } from "../../lib/carlyApi";
 import CarCardView from "../components/CarCardView";
+import { createFlatlyBooking, getAvailableFlats } from "../../lib/flatlyApi";
+import { addFlatlyBooking } from "../../lib/flatlyBookingsStorage";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -205,7 +207,7 @@ export default function LikedCarsTab() {
     setStep("browseFlats");
     setFlatsLoading(true);
     try {
-      const res = await getPartnerFlatsForPeriod(dateFrom, dateTo);
+      const res = await getAvailableFlats(dateFrom, dateTo);
       setFlats(res);
       setFlatIndex(0);
       setFlatImgIndex({});
@@ -222,14 +224,34 @@ export default function LikedCarsTab() {
     if (!f) return;
 
     try {
-      await bookFlat(f.id, dateFrom, dateTo);
+      const flatBookingId = await createFlatlyBooking({
+        flatId: Number(f.id),
+        dateFromDayISO: dateFrom,
+        dateToDayISO: dateTo,
+        guestsCount: 1,
+      });
 
-      // No backend endpoint to link flat <-> booking yet, so we only do partner booking.
+      await addFlatlyBooking({
+        flatBookingId,
+        flatId: Number(f.id),
+        dateFromDayISO: dateFrom,
+        dateToDayISO: dateTo,
+        flatSnapshot: {
+          title: f.title,
+          addressLine: f.addressLine,
+          city: f.city,
+          imageUrls: f.imageUrls,
+          currency: f.currency,
+          pricePerNight: f.pricePerNight,
+        },
+      });
+
       setStep("flatSuccess");
     } catch (e: any) {
       Alert.alert("Booking failed", e?.message ?? "Unknown error");
     }
   }
+
 
 
 

@@ -6,6 +6,8 @@ import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import CarCardView from "../components/CarCardView";
 import { useLocalSearchParams } from "expo-router";
+import { cancelFlatlyBooking } from "../../lib/flatlyApi";
+import { getFlatlyBookings, markFlatlyCancelled } from "../../lib/flatlyBookingsStorage";
 
 import {
   cancelCarBookingOnBackend,
@@ -89,8 +91,40 @@ export default function HomeTab() {
   const [all, setAll] = useState<Booking[]>([]);
 
   const load = useCallback(async () => {
-    const items = await getBookingsFromBackend();
-    setAll(items);
+    const carBookings = await getBookingsFromBackend();
+
+    const flatly = await getFlatlyBookings();
+    const flatBookings: Booking[] = flatly.map((fb) => {
+      const cancelled = fb.status === "CANCELLED";
+      return {
+        id: `flatly-${fb.flatBookingId}`, // keep unique + routeable
+        status: cancelled ? "history" : "current",
+        state: cancelled ? "Cancelled" : "Booked",
+        startDate: fb.dateFromDayISO,
+        endDate: fb.dateToDayISO,
+        car: undefined,
+        flat: fb.flatSnapshot
+          ? {
+              address: `${fb.flatSnapshot.addressLine}, ${fb.flatSnapshot.city}`,
+              images: fb.flatSnapshot.imageUrls,
+            }
+          : {
+              address: `Flat #${fb.flatId}`,
+              images: [],
+            },
+        rating: undefined,
+        createdAtISO: fb.createdAtISO,
+        cancelledAtISO: fb.cancelledAtISO,
+      };
+    });
+
+    const merged = [...carBookings, ...flatBookings];
+
+    // optional: newest first by createdAtISO (or fallback)
+    merged.sort((a, b) => String(b.createdAtISO ?? "").localeCompare(String(a.createdAtISO ?? "")));
+
+    setAll(merged);
+
   }, []);
 
 
@@ -115,6 +149,7 @@ export default function HomeTab() {
   const bookings = useMemo(() => all.filter((b) => b.status === selected), [all, selected]);
 
   async function onCancel(id: string) {
+    const isFlatly = id.startsWith("flatly-");
     Alert.alert(
       "Cancel booking?",
       "Are you sure? This will move it to History as Cancelled.",
@@ -124,13 +159,20 @@ export default function HomeTab() {
           text: "Yes, cancel",
           style: "destructive",
           onPress: async () => {
-            await cancelCarBookingOnBackend(id);
+            if (isFlatly) {
+              const flatBookingId = Number(id.replace("flatly-", ""));
+              await cancelFlatlyBooking(flatBookingId);
+              await markFlatlyCancelled(flatBookingId);
+            } else {
+              await cancelCarBookingOnBackend(id);
+            }
             await load();
           },
         },
       ]
     );
   }
+
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
