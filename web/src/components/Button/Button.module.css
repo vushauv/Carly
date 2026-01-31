@@ -25,8 +25,18 @@
     color: var(--white);
 }
 
+.danger{
+    background-color: #dc3545;
+    color: var(--white);
+}
+
 .secondary:hover{
     background-color: var(--slate-secondary);
+    color: var(--white);
+}
+
+.danger:hover{
+    background-color: #c82333;
     color: var(--white);
 }
 

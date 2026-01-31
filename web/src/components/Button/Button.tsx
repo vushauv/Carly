@@ -4,7 +4,7 @@ import type { ButtonHTMLAttributes } from "react";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   label: string;
-  color?: "primary" | "secondary";
+  color?: "primary" | "secondary" | "danger";
 }
 
 const Button = ({
@@ -19,6 +19,7 @@ const Button = ({
       className={cn(styles.button, className, {
         [styles.primary]: color === "primary",
         [styles.secondary]: color === "secondary",
+        [styles.danger]: color === "danger",
       })}
     >
       {label}
