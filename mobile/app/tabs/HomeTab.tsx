@@ -131,7 +131,7 @@ export default function HomeTab() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Home</Text>
 
-        <Pressable style={styles.profileButton} onPress={() => router.push("/ProfileSettings")}>
+        <Pressable style={styles.profileButton} onPress={() => router.push("../ProfileSettings")}>
           <Text style={styles.profileButtonText}>Profile settings</Text>
         </Pressable>
       </View>
