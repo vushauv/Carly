@@ -40,15 +40,16 @@ public class ParklyController {
     private final ParklyCarMapper parklyCarMapper;
     private final CarSearchCriteriaMapper carSearchCriteriaMapper;
 
+    // TODO: fix parkly controller
     // Parkly integration for interacting with bookings
-    @GetMapping(PathResolver.Parkly.CarBookings + "/{externalBookingId}")
+    @GetMapping(PathResolver.Parkly.CarBookings + "/{bookingId}")
     public ResponseEntity<ParklyBookingDetailsResponse> getCarBooking(
             @RequestHeader HttpHeaders headers,
-            @PathVariable Integer externalBookingId
+            @PathVariable Integer bookingId
     ) {
         // TODO: externalBookingId caused an error when running code. Had to change it to accept Integer
         logHeaders(headers);
-        return ResponseEntity.ok(parklyService.getCarBookingByExternalBookingId(externalBookingId));
+        return ResponseEntity.ok(parklyService.getCarBookingByExternalBookingId(bookingId));
     }
 
     // TODO: service should not return DTO's

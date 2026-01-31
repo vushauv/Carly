@@ -20,16 +20,18 @@ import pw.react.backend.repositories.LocationRepository;
 import pw.react.backend.repositories.booking.BookingRepository;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
 import pw.react.backend.repositories.user.UserRepository;
+import pw.react.backend.services.booking.BookingMainService;
+import pw.react.backend.services.booking.BookingService;
 import pw.react.backend.services.car.CarMainService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ParklyMainService implements ParklyService {
-
     //TODO (WSE): We have to know the ID assigned to Parkly here, I think realistically the ids wont change so keeping the email
     // is equivalent to keeping the hard-coded ID iteself, maybe there is a better way in the future
 
@@ -41,6 +43,7 @@ public class ParklyMainService implements ParklyService {
     private static final String CREATED_STATUS = BookingStatus.CREATED.name();
     private static final String CANCELLED_STATUS = BookingStatus.CANCELLED.name();
 
+    private final BookingService bookingService;
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
     private final BookingRepository bookingRepository;
@@ -126,6 +129,18 @@ public class ParklyMainService implements ParklyService {
                 })
                 .orElse(false);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Booking> getBookingById(Integer bookingId)
+            throws ResourceNotFoundException
+    {
+        User parklyUser = userRepository.findByEmail(PARKLY_SYSTEM_EMAIL)
+                .orElseThrow(() -> new ResourceNotFoundException("Parkly system user not found"));
+
+        return bookingService.getById(bookingId);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public ParklyBookingDetailsResponse getCarBookingByExternalBookingId(Integer externalBookingId) {
