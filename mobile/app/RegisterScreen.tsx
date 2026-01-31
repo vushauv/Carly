@@ -9,17 +9,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { saveProfile, type Profile } from "../lib/profileStorage";
+
+import { saveProfile } from "../lib/profileStorage";
+import { registerUser, getUserById } from "../lib/userApi";
+import { ApiError } from "../lib/apiClient";
 
 function onlyDigits(s: string): string {
   return (s || "").replace(/\D/g, "");
 }
 
 function formatPhone(digits: string): string {
-  // Format as 123-456-789 while typing (same pattern as ProfileSettings)
   const d = onlyDigits(digits).slice(0, 9);
   const a = d.slice(0, 3);
   const b = d.slice(3, 6);
@@ -37,14 +40,32 @@ function isValidEmail(email: string): boolean {
   return re.test(e);
 }
 
+function prettyApiError(err: unknown): string {
+  if (err instanceof ApiError) {
+    const body =
+      typeof err.body === "string"
+        ? err.body
+        : err.body
+        ? JSON.stringify(err.body)
+        : "";
+    return `${err.message} (HTTP ${err.status})${body ? `\n\n${body}` : ""}`;
+  }
+  if (err && typeof err === "object" && "message" in err) {
+    return String((err as any).message);
+  }
+  return "Unknown error";
+}
+
 export default function RegisterScreen() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(""); // still present, not used elsewhere (keeping behavior)
+  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [phoneDigits, setPhoneDigits] = useState("");
+
+  const [loading, setLoading] = useState(false);
 
   const phoneDisplay = useMemo(() => formatPhone(phoneDigits), [phoneDigits]);
 
@@ -52,42 +73,72 @@ export default function RegisterScreen() {
     const e = email.trim();
     const n = name.trim();
     const s = surname.trim();
-    const p = onlyDigits(phoneDigits).slice(0, 9);
+    const pDigits = onlyDigits(phoneDigits).slice(0, 9);
 
     if (!isValidEmail(e)) {
       Alert.alert("Invalid email", "Please enter a valid email address (e.g. name@example.com).");
       return;
     }
-
     if (!n || !s) {
       Alert.alert("Missing info", "Please enter your name and surname.");
       return;
     }
 
-    // optional phone, but if provided must be 9 digits (same rule as ProfileSettings)
-    if (p.length > 0 && p.length < 9) {
+    // ✅ Password minimum 8 characters
+    if (!password || password.length < 8) {
+      Alert.alert("Invalid password", "Password must be at least 8 characters.");
+      return;
+    }
+
+    if (pDigits.length > 0 && pDigits.length < 9) {
       Alert.alert("Invalid phone", "Phone number must have 9 digits.");
       return;
     }
 
-    const profile: Profile = {
-      email: e,
-      phoneDigits: p,
-      fullName: `${n} ${s}`.trim(),
-    };
+    setLoading(true);
+    try {
+      // IMPORTANT: this must be POST /users/register
+      // If you still don't see the backend being called, you're not on this screen/route.
+      const { userId } = await registerUser({
+        firstName: n,
+        lastName: s,
+        email: e,
+        password,
+        contactNumber: pDigits ? Number(pDigits) : undefined,
+      });
 
-    await saveProfile(profile);
+      // ✅ Verify persistence like login does:
+      // If this fails, backend did NOT store/commit the user.
+      const info = await getUserById(userId);
 
-    // existing behavior: go to Search after registering
-    router.replace("/tabs/SearchTab");
+      const fullName = `${info.firstName ?? n} ${info.lastName ?? s}`.trim();
+
+      await saveProfile({
+        userId,
+        email: info.email ?? e,
+        phoneDigits: info.contactNumber ? String(info.contactNumber) : pDigits,
+        fullName: fullName || "—",
+      });
+
+      router.replace("/tabs/SearchTab");
+    } catch (err) {
+      const msg = prettyApiError(err);
+
+      // This message makes it obvious what failed.
+      Alert.alert(
+        "Register failed",
+        msg.includes("404")
+          ? `${msg}\n\nServer returned a userId but GET /users/{id} failed. That usually means the backend did NOT persist the user.`
+          : msg
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
@@ -102,14 +153,16 @@ export default function RegisterScreen() {
             onChangeText={setEmail}
             autoCapitalize="none"
             keyboardType="email-address"
+            editable={!loading}
           />
 
           <TextInput
             style={styles.input}
-            placeholder="Password"
+            placeholder="Password (min 8 chars)"
             secureTextEntry
             value={password}
             onChangeText={setPassword}
+            editable={!loading}
           />
 
           <TextInput
@@ -117,6 +170,7 @@ export default function RegisterScreen() {
             placeholder="Name"
             value={name}
             onChangeText={setName}
+            editable={!loading}
           />
 
           <TextInput
@@ -124,6 +178,7 @@ export default function RegisterScreen() {
             placeholder="Surname"
             value={surname}
             onChangeText={setSurname}
+            editable={!loading}
           />
 
           <TextInput
@@ -131,14 +186,16 @@ export default function RegisterScreen() {
             placeholder="Phone (optional) e.g. 123-456-789"
             value={phoneDisplay}
             keyboardType="number-pad"
-            onChangeText={(typed) => {
-              const digits = onlyDigits(typed).slice(0, 9);
-              setPhoneDigits(digits);
-            }}
+            editable={!loading}
+            onChangeText={(typed) => setPhoneDigits(onlyDigits(typed).slice(0, 9))}
           />
 
-          <TouchableOpacity style={styles.button} onPress={onCreateAccount}>
-            <Text style={styles.buttonText}>Create account</Text>
+          <TouchableOpacity style={styles.button} onPress={onCreateAccount} disabled={loading}>
+            {loading ? <ActivityIndicator /> : <Text style={styles.buttonText}>Create account</Text>}
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.linkBtn} onPress={() => router.replace("/") } disabled={loading}>
+            <Text style={styles.linkText}>Back to login</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -147,19 +204,9 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
-  container: {
-    padding: 20,
-    paddingTop: 40,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 24,
-  },
+  safe: { flex: 1, backgroundColor: "#F9FAFB" },
+  container: { padding: 20, paddingTop: 40 },
+  title: { fontSize: 28, fontWeight: "700", marginBottom: 24 },
   input: {
     backgroundColor: "#F3F4F6",
     borderRadius: 10,
@@ -173,8 +220,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 12,
   },
-  buttonText: {
-    fontWeight: "600",
-    fontSize: 16,
-  },
+  buttonText: { fontWeight: "600", fontSize: 16 },
+  linkBtn: { marginTop: 14, alignItems: "center" },
+  linkText: { fontWeight: "700", color: "#2563EB" },
 });

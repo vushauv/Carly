@@ -121,7 +121,7 @@ public class DataSeeder implements ApplicationRunner {
                 "Oleh",
                 "Shuptar",
                 superAdminType,
-                null,
+                "pass",
                 111111111L
         );
         upsertUserByEmail(
@@ -129,7 +129,7 @@ public class DataSeeder implements ApplicationRunner {
                 "Vasili",
                 "Vushau",
                 superAdminType,
-                null,
+                "pass",
                 222222222L
         );
         upsertUserByEmail(
@@ -137,7 +137,7 @@ public class DataSeeder implements ApplicationRunner {
                 "Stanisław",
                 "Zieliński",
                 superAdminType,
-                null,
+                "pass",
                 333333333L
         );
         upsertUserByEmail(
@@ -145,7 +145,7 @@ public class DataSeeder implements ApplicationRunner {
                 "Wojtek",
                 "Sendek",
                 superAdminType,
-                "ass",
+                "pass",
                 444444444L
         );
         // 3) Example customers (to avoid FK mistakes when creating test data)
@@ -154,7 +154,7 @@ public class DataSeeder implements ApplicationRunner {
                 "Dominic",
                 "Toretto",
                 customerType,
-                null,
+                "pass",
                 987654321L
         );
         User customer = upsertUserByEmail(
@@ -162,7 +162,7 @@ public class DataSeeder implements ApplicationRunner {
                 "Bilbo",
                 "Baggins",
                 customerType,
-                null,
+                "pass",
                 999999999L
         );
         upsertUserByEmail(
@@ -170,7 +170,7 @@ public class DataSeeder implements ApplicationRunner {
                 "Jack",
                 "Sparrow",
                 customerType,
-                null,
+                "pass",
                 123456789L
         );
 
