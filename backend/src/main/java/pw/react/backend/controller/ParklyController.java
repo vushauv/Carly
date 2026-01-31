@@ -9,16 +9,18 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import pw.react.backend.controller.path.PathResolver;
 import pw.react.backend.dto.mapper.car.CarSearchCriteriaMapper;
+import pw.react.backend.dto.mapper.parkly.ParklyBookingMapper;
 import pw.react.backend.dto.mapper.parkly.ParklyCarMapper;
 import pw.react.backend.dto.request.parkly.ParklyCarSearchParams;
 import pw.react.backend.dto.request.parkly.ParklyCreateCarBookingRequest;
-import pw.react.backend.dto.response.parkly.ParklyBookingDetailsResponse;
+import pw.react.backend.dto.response.parkly.ParklyGetBookingResponseDto;
 import pw.react.backend.dto.response.parkly.ParklyBookingResponse;
 import pw.react.backend.dto.response.parkly.ParklyGetCarResponseDto;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.services.car.CarMainService;
 import pw.react.backend.services.parkly.ParklyService;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,17 +41,20 @@ public class ParklyController {
     private final CarMainService carService;
     private final ParklyCarMapper parklyCarMapper;
     private final CarSearchCriteriaMapper carSearchCriteriaMapper;
+    private final ParklyBookingMapper parklyBookingMapper;
 
     // TODO: fix parkly controller
     // Parkly integration for interacting with bookings
     @GetMapping(PathResolver.Parkly.CarBookings + "/{bookingId}")
-    public ResponseEntity<ParklyBookingDetailsResponse> getCarBooking(
+    public ResponseEntity<ParklyGetBookingResponseDto> getCarBooking(
             @RequestHeader HttpHeaders headers,
             @PathVariable Integer bookingId
-    ) {
+    ) throws AccessDeniedException, ResourceNotFoundException {
         // TODO: externalBookingId caused an error when running code. Had to change it to accept Integer
         logHeaders(headers);
-        return ResponseEntity.ok(parklyService.getCarBookingByExternalBookingId(bookingId));
+        var booking = parklyService.getBookingById(bookingId);
+        var dto = parklyBookingMapper.toGetCarResponseDto(booking);
+        return ResponseEntity.ok(dto);
     }
 
     // TODO: service should not return DTO's

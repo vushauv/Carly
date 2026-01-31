@@ -9,24 +9,24 @@ import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.domain.booking.BookingStatusDictionary;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.enums.BookingStatus;
+import pw.react.backend.domain.enums.SystemUsers;
 import pw.react.backend.domain.user.User;
-import pw.react.backend.dto.mapper.parkly.ParklyBookingMapper;
+import pw.react.backend.dto.mapper.parkly.ParklyBookingMapper_v2;
 import pw.react.backend.dto.mapper.parkly.ParklyCarMapper;
 import pw.react.backend.dto.request.parkly.ParklyCreateCarBookingRequest;
-import pw.react.backend.dto.response.parkly.ParklyBookingDetailsResponse;
+import pw.react.backend.dto.response.parkly.ParklyGetBookingResponseDto;
 import pw.react.backend.dto.response.parkly.ParklyBookingResponse;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.repositories.LocationRepository;
 import pw.react.backend.repositories.booking.BookingRepository;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
 import pw.react.backend.repositories.user.UserRepository;
-import pw.react.backend.services.booking.BookingMainService;
 import pw.react.backend.services.booking.BookingService;
 import pw.react.backend.services.car.CarMainService;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -36,10 +36,9 @@ public class ParklyMainService implements ParklyService {
     // is equivalent to keeping the hard-coded ID iteself, maybe there is a better way in the future
 
     // TODO: CAN PARKLY SERVICE USE BookingService for all that functionality??
-    //private static final Integer PARKLY_SYSTEM_ID = 2;
 
     // TODO: better to use ID here, email could be changed by them
-    private static final String PARKLY_SYSTEM_EMAIL = "parkly@pw.edu.pl";
+    private static final Integer PARKLY_SYSTEM_ID = SystemUsers.PARKLY.getCode();
     private static final String CREATED_STATUS = BookingStatus.CREATED.name();
     private static final String CANCELLED_STATUS = BookingStatus.CANCELLED.name();
 
@@ -50,7 +49,7 @@ public class ParklyMainService implements ParklyService {
     private final BookingStatusDictionaryRepository bookingStatusDictionaryRepository;
 
     private final ParklyCarMapper parklyCarMapper;
-    private final ParklyBookingMapper parklyBookingMapper;
+    private final ParklyBookingMapper_v2 parklyBookingMapper;
 
     private final CarMainService carService;
 
@@ -58,7 +57,7 @@ public class ParklyMainService implements ParklyService {
     @Transactional
     public ParklyBookingResponse createCarBooking(ParklyCreateCarBookingRequest request) {
         //TODO: remove locations if we decide on getting rid of them
-        User parklyUser = userRepository.findByEmail(PARKLY_SYSTEM_EMAIL)
+        User parklyUser = userRepository.findByEmail("")
                 .orElseThrow(() -> new ResourceNotFoundException("Parkly system user not found. Seed data missing."));
 
         BookingStatusDictionary created = bookingStatusDictionaryRepository.findByName(CREATED_STATUS)
@@ -132,20 +131,29 @@ public class ParklyMainService implements ParklyService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Booking> getBookingById(Integer bookingId)
-            throws ResourceNotFoundException
+    public Booking getBookingById(Integer bookingId)
+            throws ResourceNotFoundException, AccessDeniedException
     {
-        User parklyUser = userRepository.findByEmail(PARKLY_SYSTEM_EMAIL)
-                .orElseThrow(() -> new ResourceNotFoundException("Parkly system user not found"));
+        // We assume that the parkly system is registered
+        var pasklySystem = userRepository.findByUserId(PARKLY_SYSTEM_ID)
+                .orElseThrow(() -> new IllegalStateException("Parkly system is not registered"));
 
-        return bookingService.getById(bookingId);
+        var booking =  bookingService.getById(bookingId);
+        if(booking.isEmpty())
+            throw new ResourceNotFoundException("Booking with id " + bookingId + " not found");
+
+        var resolvedBooking = booking.get();
+        if(resolvedBooking.getUser().getUserId() != pasklySystem.getUserId())
+            throw new AccessDeniedException("Access denied to booking with id " + bookingId);
+
+        return resolvedBooking;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ParklyBookingDetailsResponse getCarBookingByExternalBookingId(Integer externalBookingId) {
+    public ParklyGetBookingResponseDto getCarBookingByExternalBookingId(Integer externalBookingId) {
 
-        User parklyUser = userRepository.findByEmail(PARKLY_SYSTEM_EMAIL)
+        User parklyUser = userRepository.findByEmail("")
                 .orElseThrow(() -> new ResourceNotFoundException("Parkly system user not found. Seed data missing."));
 
         Booking booking = bookingRepository

@@ -10,7 +10,7 @@ import pw.react.backend.domain.user.User;
 import pw.react.backend.dto.request.booking.CreateBookingRequest;
 import pw.react.backend.dto.request.booking.UpdateBookingRequestDto;
 import pw.react.backend.dto.response.booking.BookingResponse;
-import pw.react.backend.dto.response.booking.GetBookingResponse;
+import pw.react.backend.dto.response.booking.GetBookingResponseDto;
 import pw.react.backend.utils.converters.response.DisplayNameConverter;
 
 import java.util.List;
@@ -76,9 +76,9 @@ public interface BookingMapper {
             @Mapping(target = "carStatus.id", source = "carBookingStatus.bookingStatusDictionaryId"),
             @Mapping(target = "flatStatus.id", source = "flatBookingStatus.bookingStatusDictionaryId")
     })
-    GetBookingResponse bookingToGetBookingResponse(Booking booking);
+    GetBookingResponseDto bookingToGetBookingResponse(Booking booking);
 
-    List<GetBookingResponse> bookingToGetBookingResponseList(List<Booking> bookings);
+    List<GetBookingResponseDto> bookingToGetBookingResponseList(List<Booking> bookings);
 
     // Helper methods:
     @Named("toDisplayName")
