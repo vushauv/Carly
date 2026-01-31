@@ -1,8 +1,8 @@
 .userViewPage {
-  padding: 2rem;
-  max-width: 100%;
-  margin: 0;
-  text-align: left;
+  padding: 2rem 4rem; /* Increased horizontal padding */
+  max-width: 1400px; /* Set a maximum width but allow it to be wider */
+  margin: 0 auto; /* Center the content */
+  width: 100%; /* Use full available width up to max-width */
 }
 
 .userViewHeader {
@@ -28,9 +28,10 @@
 .userViewContent {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem 2rem;
+  gap: 1.5rem 3rem; /* Increased horizontal gap between columns */
   align-items: start;
   width: 100%;
+  max-width: none; /* Remove any width restrictions */
 }
 
 .userField {
@@ -67,9 +68,24 @@
 }
 
 /* Responsive design */
+@media (max-width: 1400px) {
+  .userViewPage {
+    padding: 2rem 3rem;
+  }
+  
+  .userViewContent {
+    gap: 1.5rem 2.5rem;
+  }
+}
+
 @media (max-width: 1200px) {
+  .userViewPage {
+    padding: 2rem;
+  }
+  
   .userViewContent {
     grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem 2rem;
   }
 }
 
