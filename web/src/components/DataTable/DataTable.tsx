@@ -16,7 +16,7 @@ export type ColumnDef<T> = {
 export type RowAction<T> = {
   id: string;
   label: string;
-  color?: "primary" | "secondary";
+  color?: "primary" | "secondary" | "danger";
   onClick: (row: T) => void;
   isVisible?: (row: T) => boolean;
   isDisabled?: (row: T) => boolean;
