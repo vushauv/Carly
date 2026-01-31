@@ -8,7 +8,6 @@ import pw.react.backend.dto.mapper.booking.LocationMapper;
 import pw.react.backend.dto.request.parkly.ParklyCreateBookingRequestDto;
 import pw.react.backend.dto.response.parkly.ParklyCreateBookingResponseDto;
 import pw.react.backend.dto.response.parkly.ParklyGetBookingResponseDto;
-import pw.react.backend.dto.response.parkly.ParklyGetCarResponseDto;
 import pw.react.backend.utils.converters.response.DisplayNameConverter;
 
 @Mapper(componentModel = "spring",
@@ -16,7 +15,6 @@ import pw.react.backend.utils.converters.response.DisplayNameConverter;
         uses = LocationMapper.class)
 public interface ParklyBookingMapper {
     // OUT mapping:
-
     @Mapping(target = "bookingId", source = "bookingId")
     @Mapping(target = "carId", source = "car.carId")
     @Mapping(target = "pickupLocation", source = "pickupLocation")

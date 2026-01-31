@@ -32,18 +32,6 @@ public interface BookingMapper {
     Booking createRequestToBooking(CreateBookingRequestDto createBookingRequest);
     List<Booking> createRequestToBookingList(List<CreateBookingRequestDto> createBookingRequests);
 
-
-    // UPDATE
-    @Mappings({
-            @Mapping(target = "bookingId", ignore = true),
-            @Mapping(target = "pickupLocation", source = "pickupLocationId", qualifiedByName = "locationFromId"),
-            @Mapping(target = "returnLocation", source = "returnLocationId", qualifiedByName = "locationFromId"),
-            @Mapping(target = "carBookingStatus", source = "carBookingStatus", qualifiedByName = "statusFromEnum"),
-            @Mapping(target = "flatBookingStatus", source = "flatBookingStatus", qualifiedByName = "statusFromEnum")
-    })
-    Booking updateRequestToBooking(UpdateBookingRequestDto updateBookingRequest);
-
-
     /**
      * Apply patch-like update: only overwrite fields that are non-null in the request.
      */
@@ -56,10 +44,7 @@ public interface BookingMapper {
     })
     void applyUpdate(UpdateBookingRequestDto request, @MappingTarget Booking booking);
 
-
-    // -------------------------
-    // RESPONSES
-    // -------------------------
+    // OUT:
     @Mapping(target = "id", source = "bookingId")
     BookingResponse bookingToResponse(Booking booking);
 

@@ -1,0 +1,423 @@
+{
+	"info": {
+		"_postman_id": "9b80a6df-02a6-4ddb-9148-959660f3b9be",
+		"name": "Carly",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "49059222",
+		"_collection_link": "https://shuptik-8964816.postman.co/workspace/ada6da1a-632e-4236-8c55-93c28e64359f/collection/49059222-9b80a6df-02a6-4ddb-9148-959660f3b9be?action=share&source=collection_link&creator=49059222"
+	},
+	"item": [
+		{
+			"name": "UpdateCarById",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \n    \"carFeatures\": [\n    {\n        \"dictionaryId\":1,\n        \"value\":\"RED\"\n    } \n    ],\n    \"price\": 160\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/cars/1",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"cars",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetCars",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8080/cars?page=0",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"cars"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteCarById",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "CreateCar",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \n    \"price\": 100,\n     \"carFeatures\":[\n        {\n            \"dictionaryId\":3,\n            \"value\":\"RED\"\n        }\n     ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/cars",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"cars"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetCarById",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "SearchCars",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8080/cars?availability=NOT_A_STATUS",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"cars"
+					],
+					"query": [
+						{
+							"key": "availability",
+							"value": "NOT_A_STATUS"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CarImageUpload",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "GetCarImages",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "GetCarImageById",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteCarImageById",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "GetCarsParkly",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "ParklyCars",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8080/api/parkly/cars?&date.to=2026-01-30T00:00:00&features.brand=BMW",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"parkly",
+						"cars"
+					],
+					"query": [
+						{
+							"key": null,
+							"value": null
+						},
+						{
+							"key": "date.to",
+							"value": "2026-01-30T00:00:00"
+						},
+						{
+							"key": "features.brand",
+							"value": "BMW"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetFlats",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "SearchBooking",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "GetBookings",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "GetReferenceData",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "GetBookingById",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateBookingCollisionDates",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateBookingCollisionCar",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"pickupLocationId\": 2,\n  \"returnLocationId\": 1,\n  \"carBookingStatus\": \"CREATED\",\n  \"flatBookingStatus\": \"CREATED\",\n  \"carBookingDateFrom\": \"2026-02-02T00:00:00\",\n  \"carBookingDateTo\": \"2026-02-02T10:00:00\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/bookings/3",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"bookings",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateBookingSuccessful",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "CreateBookingSuccessful",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"userId\": 9,\n        \"carId\": 4,\n        \"pickupLocation\": {\n            \"id\": 1,\n            \"address\": \"Warsaw Central\",\n            \"latitude\": 52.2297000,\n            \"longitude\": 21.0122000\n        },\n        \"returnLocation\": {\n            \"id\": 3,\n            \"address\": \"Gdansk Old Town\",\n            \"latitude\": 54.3520000,\n            \"longitude\": 18.6466000\n        },\n        \"carStatus\": {\n            \"id\": 1,\n            \"name\": \"Created\"\n        },\n        \"flatStatus\": {\n            \"id\": 3,\n            \"name\": \"Cancelled\"\n        },\n        \"providerExternalBookingId\": null,\n        \"carBookingDateFrom\": \"2026-02-02T00:00:00.+0100\",\n        \"carBookingDateTo\": \"2026-02-05T00:00:00.+0100\"\n    }\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CreateBookingCollisionCar",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "CreateBookingCollisionDates",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "CreateBookingMissingCarId",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteBookingById",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "GetUsers",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "ParklyGetBooking",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "ParklyCreateBooking",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "ParklyCancelBooking",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "localhost:8080/api"
+		}
+	]
+}

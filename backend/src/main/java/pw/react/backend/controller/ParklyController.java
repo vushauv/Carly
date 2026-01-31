@@ -32,18 +32,13 @@ import static java.util.stream.Collectors.joining;
 @Slf4j
 @RequiredArgsConstructor
 public class ParklyController {
-    //TODO: Implement searchCars so that it accepts certain parameters (optional?)
-    //TODO (TBD): Decide whether Parkly has to provide our BookingId, or their BookingId!
-    //TODO: Add validation for parkly by userId
     public static final String PARKLY_PATH = PathResolver.Parkly.Base;
-
     private final ParklyService parklyService;
     private final CarMainService carService;
     private final ParklyCarMapper parklyCarMapper;
     private final CarSearchCriteriaMapper carSearchCriteriaMapper;
     private final ParklyBookingMapper parklyBookingMapper;
 
-    // TODO: fix parkly controller
     // Parkly integration for interacting with bookings
     @GetMapping(PathResolver.Parkly.CarBookings + "/{bookingId}")
     public ResponseEntity<ParklyGetBookingResponseDto> getCarBooking(@RequestHeader HttpHeaders headers,
