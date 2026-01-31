@@ -73,88 +73,76 @@ const UserRegisterPage = () => {
       )}
 
       <form onSubmit={handleSubmit} className={styles.userRegisterForm}>
-        <div className={styles.formSection}>
-          <h2>Personal Information</h2>
-          
-          <div className={styles.formField}>
-            <label>First Name <span className={styles.required}>*</span> (max 64 characters)</label>
-            <Input
-              type="text"
-              value={formData.firstName}
-              onChange={(value) => handleChange("firstName", value)}
-              placeholder="Enter first name"
-              maxLength={64}
-              required
-            />
-          </div>
-
-          <div className={styles.formField}>
-            <label>Second Name <span className={styles.required}>*</span> (max 64 characters)</label>
-            <Input
-              type="text"
-              value={formData.secondName}
-              onChange={(value) => handleChange("secondName", value)}
-              placeholder="Enter second name"
-              maxLength={64}
-              required
-            />
-          </div>
-
-          <div className={styles.formField}>
-            <label>Last Name <span className={styles.required}>*</span> (max 128 characters)</label>
-            <Input
-              type="text"
-              value={formData.lastName}
-              onChange={(value) => handleChange("lastName", value)}
-              placeholder="Enter last name"
-              maxLength={128}
-              required
-            />
-          </div>
+        <div className={styles.formField}>
+          <label>First Name <span className={styles.required}>*</span> (max 64 characters)</label>
+          <Input
+            type="text"
+            value={formData.firstName}
+            onChange={(value) => handleChange("firstName", value)}
+            placeholder="Enter first name"
+            maxLength={64}
+            required
+          />
         </div>
 
-        <div className={styles.formSection}>
-          <h2>Account Information</h2>
-          
-          <div className={styles.formField}>
-            <label>Email Address <span className={styles.required}>*</span> (max 256 characters)</label>
-            <Input
-              type="email"
-              value={formData.email}
-              onChange={(value) => handleChange("email", value)}
-              placeholder="Enter email address"
-              maxLength={256}
-              required
-            />
-          </div>
-
-          <div className={styles.formField}>
-            <label>Password <span className={styles.required}>*</span> (6-128 characters)</label>
-            <Input
-              type="password"
-              value={formData.password}
-              onChange={(value) => handleChange("password", value)}
-              placeholder="Enter password"
-              minLength={6}
-              maxLength={128}
-              required
-            />
-            <small className={styles.hint}>Password must be between 6 and 128 characters</small>
-          </div>
+        <div className={styles.formField}>
+          <label>Second Name <span className={styles.required}>*</span> (max 64 characters)</label>
+          <Input
+            type="text"
+            value={formData.secondName}
+            onChange={(value) => handleChange("secondName", value)}
+            placeholder="Enter second name"
+            maxLength={64}
+            required
+          />
         </div>
 
-        <div className={styles.formSection}>
-          <h2>Contact Information</h2>
-          
-          <div className={styles.formField}>
-            <label>Contact Number (optional)</label>
-            <Input
-              type="number"
-              value={formData.contactNumber?.toString() || ""}
-              onChange={(value) => handleChange("contactNumber", value ? parseInt(value) : undefined)}
-              placeholder="Enter contact number"
-            />
-          </div>
+        <div className={styles.formField}>
+          <label>Last Name <span className={styles.required}>*</span> (max 128 characters)</label>
+          <Input
+            type="text"
+            value={formData.lastName}
+            onChange={(value) => handleChange("lastName", value)}
+            placeholder="Enter last name"
+            maxLength={128}
+            required
+          />
+        </div>
+
+        <div className={styles.formField}>
+          <label>Email Address <span className={styles.required}>*</span> (max 256 characters)</label>
+          <Input
+            type="email"
+            value={formData.email}
+            onChange={(value) => handleChange("email", value)}
+            placeholder="Enter email address"
+            maxLength={256}
+            required
+          />
+        </div>
+
+        <div className={styles.formField}>
+          <label>Password <span className={styles.required}>*</span> (6-128 characters)</label>
+          <Input
+            type="password"
+            value={formData.password}
+            onChange={(value) => handleChange("password", value)}
+            placeholder="Enter password"
+            minLength={6}
+            maxLength={128}
+            required
+          />
+          <small className={styles.hint}>Password must be between 6 and 128 characters</small>
+        </div>
+
+        <div className={styles.formField}>
+          <label>Contact Number (optional)</label>
+          <Input
+            type="number"
+            value={formData.contactNumber?.toString() || ""}
+            onChange={(value) => handleChange("contactNumber", value ? parseInt(value) : undefined)}
+            placeholder="Enter contact number"
+          />
         </div>
 
         <div className={styles.formActions}>

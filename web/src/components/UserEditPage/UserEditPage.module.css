@@ -1,7 +1,7 @@
 .userEditPage {
   padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
 }
 
 .userEditHeader {
@@ -25,9 +25,11 @@
 }
 
 .userEditForm {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem 2rem;
+  align-items: start;
+  width: 100%;
 }
 
 .formSection {
@@ -44,15 +46,21 @@
 }
 
 .formField {
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
 }
 
 .formField label {
-  display: block;
   font-weight: 600;
   color: #555;
-  margin-bottom: 0.5rem;
   font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .hint {
@@ -64,10 +72,13 @@
 }
 
 .formActions {
+  grid-column: 1 / -1;
   display: flex;
   gap: 1rem;
+  justify-content: flex-start;
   padding: 1.5rem 0;
   border-top: 1px solid #e0e0e0;
+  margin-top: 1rem;
 }
 
 .error {
@@ -80,6 +91,12 @@
 }
 
 /* Responsive design */
+@media (max-width: 1200px) {
+  .userEditForm {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .userEditPage {
     padding: 1rem;
@@ -95,8 +112,13 @@
     justify-content: center;
   }
   
-  .formSection {
-    padding: 1rem;
+  .userEditForm {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .formField {
+    padding: 0.75rem;
   }
   
   .formActions {

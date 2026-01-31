@@ -126,83 +126,76 @@ const UserEditPage = () => {
       )}
 
       <form onSubmit={handleSubmit} className={styles.userEditForm}>
-        <div className={styles.formSection}>
-          <h2>Personal Information</h2>
-          
-          <div className={styles.formField}>
-            <label>First Name (max 64 characters)</label>
-            <Input
-              type="text"
-              value={formData.firstName || ""}
-              onChange={(value) => handleChange("firstName", value)}
-              placeholder="Enter first name"
-              maxLength={64}
-            />
-          </div>
-
-          <div className={styles.formField}>
-            <label>Second Name (max 64 characters)</label>
-            <Input
-              type="text"
-              value={formData.secondName || ""}
-              onChange={(value) => handleChange("secondName", value)}
-              placeholder="Enter second name"
-              maxLength={64}
-            />
-          </div>
-
-          <div className={styles.formField}>
-            <label>Last Name (max 128 characters)</label>
-            <Input
-              type="text"
-              value={formData.lastName || ""}
-              onChange={(value) => handleChange("lastName", value)}
-              placeholder="Enter last name"
-              maxLength={128}
-            />
-          </div>
+        <div className={styles.formField}>
+          <label>First Name (max 64 characters)</label>
+          <Input
+            type="text"
+            value={formData.firstName || ""}
+            onChange={(value) => handleChange("firstName", value)}
+            placeholder={`Current: ${user.firstName}`}
+            maxLength={64}
+          />
+          <small className={styles.hint}>Current value: {user.firstName}</small>
         </div>
 
-        <div className={styles.formSection}>
-          <h2>Contact Information</h2>
-          
-          <div className={styles.formField}>
-            <label>Email Address (max 256 characters)</label>
-            <Input
-              type="email"
-              value={formData.email || ""}
-              onChange={(value) => handleChange("email", value)}
-              placeholder="Enter email address"
-              maxLength={256}
-            />
-          </div>
-
-          <div className={styles.formField}>
-            <label>Contact Number (optional)</label>
-            <Input
-              type="number"
-              value={formData.contactNumber?.toString() || ""}
-              onChange={(value) => handleChange("contactNumber", value ? parseInt(value) : undefined)}
-              placeholder="Enter contact number"
-            />
-          </div>
+        <div className={styles.formField}>
+          <label>Second Name (max 64 characters)</label>
+          <Input
+            type="text"
+            value={formData.secondName || ""}
+            onChange={(value) => handleChange("secondName", value)}
+            placeholder={`Current: ${user.secondName}`}
+            maxLength={64}
+          />
+          <small className={styles.hint}>Current value: {user.secondName}</small>
         </div>
 
-        <div className={styles.formSection}>
-          <h2>Security</h2>
-          
-          <div className={styles.formField}>
-            <label>New Password (6-128 characters, optional)</label>
-            <Input
-              type="password"
-              value={formData.password || ""}
-              onChange={(value) => handleChange("password", value)}
-              placeholder="Leave empty to keep current password"
-              minLength={6}
-              maxLength={128}
-            />
-            <small className={styles.hint}>Leave empty to keep current password</small>
-          </div>
+        <div className={styles.formField}>
+          <label>Last Name (max 128 characters)</label>
+          <Input
+            type="text"
+            value={formData.lastName || ""}
+            onChange={(value) => handleChange("lastName", value)}
+            placeholder={`Current: ${user.lastName}`}
+            maxLength={128}
+          />
+          <small className={styles.hint}>Current value: {user.lastName}</small>
+        </div>
+
+        <div className={styles.formField}>
+          <label>Email Address (max 256 characters)</label>
+          <Input
+            type="email"
+            value={formData.email || ""}
+            onChange={(value) => handleChange("email", value)}
+            placeholder={`Current: ${user.email}`}
+            maxLength={256}
+          />
+          <small className={styles.hint}>Current value: {user.email}</small>
+        </div>
+
+        <div className={styles.formField}>
+          <label>Contact Number (optional)</label>
+          <Input
+            type="number"
+            value={formData.contactNumber?.toString() || ""}
+            onChange={(value) => handleChange("contactNumber", value ? parseInt(value) : undefined)}
+            placeholder={`Current: ${user.contactNumber || "Not set"}`}
+          />
+          <small className={styles.hint}>Current value: {user.contactNumber || "Not set"}</small>
+        </div>
+
+        <div className={styles.formField}>
+          <label>New Password (6-128 characters, optional)</label>
+          <Input
+            type="password"
+            value={formData.password || ""}
+            onChange={(value) => handleChange("password", value)}
+            placeholder="Leave empty to keep current password"
+            minLength={6}
+            maxLength={128}
+          />
+          <small className={styles.hint}>Leave empty to keep current password</small>
         </div>
 
         <div className={styles.formActions}>
