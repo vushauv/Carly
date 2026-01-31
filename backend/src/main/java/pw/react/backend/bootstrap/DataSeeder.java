@@ -41,7 +41,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Component
-@Profile({"mysql", "batch"})
+@Profile({"mysql", "batch", "azure-mysql"})
 @RequiredArgsConstructor
 public class DataSeeder implements ApplicationRunner {
     private final UserTypeDictionaryRepository userTypeDictionaryRepository;
