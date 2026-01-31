@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./UsersPage.module.css";
 import AddNewEntityComponent from "../AddNewEntityComponent/AddNewComponent";
@@ -7,7 +7,6 @@ import type { User } from "./types.ts";
 import { type Filters, defaultFilters, type UserFilterKey, userFilterFields } from "./filters.conf.ts";
 import DataTable from "../DataTable/DataTable";
 import { usersColumns, usersRowKey, usersActions } from "./datatable.conf.ts";
-import { useMemo } from "react";
 import Pagination from "../Pagination/Pagination.tsx";
 import { userService } from "./userService";
 
@@ -75,11 +74,17 @@ const ManageUsersPage = () => {
     loadUsersPage(0);
   }, []);
 
+  const actionsWithHandlers = useMemo(() => 
+    usersActions.map(action => ({
+      ...action,
+      onClick: (user: User) => handleUserAction(action.id, user)
+    })), [navigate]
+  );
+
   const columns = useMemo(
     () => usersColumns({ 
       primaryCell: styles.primaryCell, 
       status: styles.status,
-      onAction: handleUserAction 
     }),
     [styles.primaryCell, styles.status]
   );
@@ -121,9 +126,8 @@ const ManageUsersPage = () => {
           rows={users}
           rowKey={usersRowKey}
           columns={columns}
-          actions={usersActions}
+          actions={actionsWithHandlers}
           emptyText="No users found."
-          onAction={handleUserAction}
         />
       )}
 

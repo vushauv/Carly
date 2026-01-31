@@ -9,9 +9,11 @@ import Footer from "./components/Footer/Footer";
 import ManageCarsPage from "./components/ManageCarsPage/ManageCarsPage";
 import ManageBookingsPage from "./components/ManageBookingsPage/ManageBookingsPage";
 import UsersPage from "./components/UsersPage/UsersPage";
+import UserViewPage from "./components/UserViewPage/UserViewPage";
+import UserEditPage from "./components/UserEditPage/UserEditPage";
+import UserRegisterPage from "./components/UserRegisterPage/UserRegisterPage";
 
 import { Routes, Route, Navigate } from "react-router-dom";
-
 
 function App() {
   const [loggedIn, setLoggedIn] = useState<boolean>(true);
@@ -34,9 +36,22 @@ function App() {
             element={loggedIn ? <ManageCarsPage /> : <Navigate to="/login" />}
           />
 
+          {/* User Management Routes */}
           <Route
             path="/users"
             element={loggedIn ? <UsersPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/users/register"
+            element={loggedIn ? <UserRegisterPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/users/:id"
+            element={loggedIn ? <UserViewPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/users/:id/edit"
+            element={loggedIn ? <UserEditPage /> : <Navigate to="/login" />}
           />
 
           <Route
