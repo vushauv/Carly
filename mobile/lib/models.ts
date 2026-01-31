@@ -36,11 +36,9 @@ export type CarCard = {
   model: string;
   fuelType: FuelType;
   color: CarColor;
-
+    //todo: remove, we only support PLN
   currency: "PLN" | "EUR" | "USD";
   pricePerDay: number;
-
-  rating?: number;
 
   /** Back-compat: first image */
   imageUrl?: string;
@@ -65,7 +63,6 @@ export type FlatCard = {
   currency: "PLN" | "EUR" | "USD";
   pricePerNight: number;
 
-  rating?: number;
   imageUrls: string[]; // swipable images
   raw?: unknown;
 };

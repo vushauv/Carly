@@ -45,13 +45,13 @@ export default function LoginScreen() {
       // GET /users/{id} -> user info
       const info = await getUserById(userId);
 
-      const fullName = `${info.firstName ?? ""} ${info.lastName ?? ""}`.trim();
-
       await saveProfile({
         userId,
         email: info.email ?? e,
         phoneDigits: info.contactNumber ? String(info.contactNumber) : "",
-        fullName: fullName || "—",
+        firstName: info.firstName ?? "",
+        secondName: info.secondName ?? "",
+        lastName: info.lastName ?? "",
       });
 
       await clearCachedReferenceData();

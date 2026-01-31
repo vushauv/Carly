@@ -65,7 +65,6 @@ const SEED_BOOKINGS: Booking[] = [
       plate: "WA 55221",
       images: ["https://picsum.photos/seed/car_b3_1/900/600"],
     },
-    rating: 5,
     createdAtISO: new Date().toISOString(),
   },
   {
@@ -78,7 +77,6 @@ const SEED_BOOKINGS: Booking[] = [
       address: "Baker Street 221B",
       images: [],
     },
-    rating: 4,
     createdAtISO: new Date().toISOString(),
   },
 ];
@@ -112,7 +110,6 @@ export default function HomeTab() {
               address: `Flat #${fb.flatId}`,
               images: [],
             },
-        rating: undefined,
         createdAtISO: fb.createdAtISO,
         cancelledAtISO: fb.cancelledAtISO,
       };
@@ -288,10 +285,6 @@ function BookingCard({
           <Text style={styles.metaText}>
             {booking.startDate} - {booking.endDate}
           </Text>
-
-          {booking.status === "history" && booking.state !== "Cancelled" && typeof booking.rating === "number" ? (
-            <Stars value={booking.rating} />
-          ) : null}
         </View>
 
         <View style={styles.cardActions}>

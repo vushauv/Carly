@@ -1,20 +1,25 @@
 // lib/profileStorage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const KEY_PROFILE = "carly.profile.v4";
+const KEY_PROFILE = "carly.profile.v5";
 
 export type Profile = {
-  userId?: number; // <-- new
+  userId?: number;
   email: string;
-  phoneDigits: string; // store only digits, e.g. "123456789"
-  fullName: string;
+  phoneDigits: string;
+
+  firstName: string;
+  secondName?: string;
+  lastName: string;
 };
 
 const DEFAULT_PROFILE: Profile = {
   userId: undefined,
   email: "",
   phoneDigits: "",
-  fullName: "",
+  firstName: "",
+  secondName: "",
+  lastName: "",
 };
 
 async function readJson<T>(key: string, fallback: T): Promise<T> {

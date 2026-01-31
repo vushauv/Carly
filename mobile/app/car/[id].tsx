@@ -60,7 +60,6 @@ export default function CarDetails() {
               <Text style={styles.line}>Model: {car.model}</Text>
               <Text style={styles.line}>Fuel: {car.fuelType}</Text>
               <Text style={styles.line}>Color: {car.color}</Text>
-              <Text style={styles.line}>Rating: {car.rating?.toFixed(1) ?? "—"}</Text>
             </View>
           </>
         )}

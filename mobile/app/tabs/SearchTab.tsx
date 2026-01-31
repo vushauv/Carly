@@ -325,8 +325,8 @@ function CarCardContent({ car, onSeeMore }: { car: CarCard; onSeeMore: (c: CarCa
       title={car.title}
       subtitle={car.subtitle}
       images={images}
-      metaLeft={`🎨 ${car.color}`}
-      metaRight={`⭐ ${car.rating?.toFixed(1) ?? "—"}`}
+      metaLeft={`⛽ ${car.fuelType}`}
+      metaRight={`🎨 ${car.color}`}
       footerLeft={`${car.pricePerDay} ${car.currency} / day`}
       footerRight={
         <Pressable onPress={() => onSeeMore(car)} style={styles.seeMoreBtn}>

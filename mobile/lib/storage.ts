@@ -17,7 +17,6 @@ export type LikedCar = Pick<
   | "color"
   | "currency"
   | "pricePerDay"
-  | "rating"
 >;
 
 async function readJson<T>(key: string, fallback: T): Promise<T> {
@@ -61,7 +60,6 @@ export async function addLikedCar(car: CarCard): Promise<void> {
     color: car.color,
     currency: car.currency,
     pricePerDay: car.pricePerDay,
-    rating: car.rating,
   };
 
   // Dedup by id, newest first

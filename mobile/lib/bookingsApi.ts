@@ -28,7 +28,6 @@ export type Booking = {
   endDate: string;
   car?: BookingCar;
   flat?: BookingFlat; // currently we can't populate from booking response
-  rating?: number; // not in backend -> undefined
   createdAtISO: string; // not in backend -> set on fetch time
   cancelledAtISO?: string; // not in backend -> best-effort if CANCELLED
 };

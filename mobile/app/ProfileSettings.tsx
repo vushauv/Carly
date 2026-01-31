@@ -1,5 +1,4 @@
-// app/ProfileSettings.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -13,293 +12,330 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getProfile, saveProfile, type Profile } from "../lib/profileStorage";
+
+import { getProfile, saveProfile, clearProfile, type Profile } from "../lib/profileStorage";
 import { updateUserById, deleteUserById } from "../lib/userApi";
 
-function onlyDigits(s: string): string {
-  return (s || "").replace(/\D/g, "");
-}
-
-function formatPhone(digits: string): string {
-  const d = onlyDigits(digits).slice(0, 9);
-  const a = d.slice(0, 3);
-  const b = d.slice(3, 6);
-  const c = d.slice(6, 9);
-
-  if (d.length <= 3) return a;
-  if (d.length <= 6) return `${a}-${b}`;
-  return `${a}-${b}-${c}`;
-}
-
-function isValidEmail(email: string): boolean {
-  const e = email.trim();
-  if (!e) return false;
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(e);
-}
-
-function splitFullName(fullName: string): { firstName: string; secondName?: string; lastName: string } {
-  const parts = (fullName || "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return { firstName: "", lastName: "" };
-  if (parts.length === 1) return { firstName: parts[0], lastName: "" };
-  if (parts.length === 2) return { firstName: parts[0], lastName: parts[1] };
-
-  return {
-    firstName: parts[0],
-    secondName: parts.slice(1, -1).join(" "),
-    lastName: parts[parts.length - 1],
-  };
-}
+type PersonalDraft = {
+  email: string;
+  phoneDigits: string;
+  firstName: string;
+  secondName: string;
+  lastName: string;
+};
 
 export default function ProfileSettings() {
   const router = useRouter();
-
-  const [loading, setLoading] = useState(true);
 
   const [profile, setProfile] = useState<Profile>({
     userId: undefined,
     email: "",
     phoneDigits: "",
-    fullName: "",
+    firstName: "",
+    secondName: "",
+    lastName: "",
   });
 
   const [editingPersonal, setEditingPersonal] = useState(false);
-
-  const [personalDraft, setPersonalDraft] = useState({
+  const [personalDraft, setPersonalDraft] = useState<PersonalDraft>({
     email: "",
     phoneDigits: "",
-    fullName: "",
+    firstName: "",
+    secondName: "",
+    lastName: "",
   });
+
+  const [editingPassword, setEditingPassword] = useState(false);
+  const [pwdDraft, setPwdDraft] = useState({ newPassword: "", repeatPassword: "" });
 
   useEffect(() => {
     (async () => {
       const p = await getProfile();
       setProfile(p);
-
       setPersonalDraft({
-        email: p.email,
-        phoneDigits: p.phoneDigits,
-        fullName: p.fullName,
+        email: p.email ?? "",
+        phoneDigits: p.phoneDigits ?? "",
+        firstName: p.firstName ?? "",
+        secondName: p.secondName ?? "",
+        lastName: p.lastName ?? "",
       });
-
-      setLoading(false);
     })();
   }, []);
 
-  const hasUnsaved = useMemo(() => editingPersonal, [editingPersonal]);
+  /* ------------------ Personal ------------------ */
 
   function discardPersonal() {
     setPersonalDraft({
-      email: profile.email,
-      phoneDigits: profile.phoneDigits,
-      fullName: profile.fullName,
+      email: profile.email ?? "",
+      phoneDigits: profile.phoneDigits ?? "",
+      firstName: profile.firstName ?? "",
+      secondName: profile.secondName ?? "",
+      lastName: profile.lastName ?? "",
     });
     setEditingPersonal(false);
   }
 
   async function savePersonal() {
     const email = personalDraft.email.trim();
-    const phoneDigits = onlyDigits(personalDraft.phoneDigits).slice(0, 9);
-    const fullName = personalDraft.fullName.trim();
+    const phoneDigits = personalDraft.phoneDigits.trim();
+    const firstName = personalDraft.firstName.trim();
+    const secondName = personalDraft.secondName.trim();
+    const lastName = personalDraft.lastName.trim();
 
-    if (!isValidEmail(email)) {
-      Alert.alert("Invalid email", "Please enter a valid email address (e.g. name@example.com).");
+    if (!email) {
+      Alert.alert("Missing email", "Please enter your email.");
       return;
     }
-
-    if (!fullName) {
+    if (!firstName || !lastName) {
       Alert.alert("Missing name", "Please enter your name and surname.");
       return;
     }
-
-    if (phoneDigits.length > 0 && phoneDigits.length < 9) {
-      Alert.alert("Invalid phone", "Phone number must have 9 digits.");
+    if (phoneDigits && !/^\d+$/.test(phoneDigits)) {
+      Alert.alert("Invalid phone", "Phone number must contain digits only.");
       return;
     }
 
-    // If we have a server userId, sync it
-    if (profile.userId) {
-      const { firstName, secondName, lastName } = splitFullName(fullName);
-
-      try {
+    try {
+      if (profile.userId) {
         await updateUserById(profile.userId, {
-          firstName,
-          secondName,
-          lastName,
           email,
           contactNumber: phoneDigits ? Number(phoneDigits) : undefined,
+          firstName,
+          secondName: secondName || undefined,
+          lastName,
         });
-      } catch (e: any) {
-        Alert.alert("Save failed", e?.message ?? "Server update failed");
-        return; // don't apply local changes if server rejected
       }
+
+      const next: Profile = {
+        ...profile,
+        email,
+        phoneDigits,
+        firstName,
+        secondName: secondName || "",
+        lastName,
+      };
+
+      await saveProfile(next);
+      setProfile(next);
+      setEditingPersonal(false);
+
+      Alert.alert("Saved", "Your personal data has been updated.");
+    } catch (e: any) {
+      Alert.alert("Update failed", e?.message ?? "Server update failed");
     }
-
-    const next: Profile = { ...profile, email, phoneDigits, fullName };
-    await saveProfile(next);
-
-    setProfile(next);
-    setPersonalDraft({
-      email: next.email,
-      phoneDigits: next.phoneDigits,
-      fullName: next.fullName,
-    });
-
-    setEditingPersonal(false);
   }
 
-  function confirmLogout() {
-    Alert.alert("Log out?", "Are you sure you want to log out?", [
-      { text: "No", style: "cancel" },
+  /* ------------------ Password ------------------ */
+
+  function discardPassword() {
+    setPwdDraft({ newPassword: "", repeatPassword: "" });
+    setEditingPassword(false);
+  }
+
+  async function savePassword() {
+    if (!profile.userId) {
+      Alert.alert("Not available", "Please log in again to change your password.");
+      return;
+    }
+
+    const { newPassword, repeatPassword } = pwdDraft;
+
+    if (!newPassword || newPassword.length < 8) {
+      Alert.alert("Invalid password", "Password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== repeatPassword) {
+      Alert.alert("Passwords don't match", "Please repeat the same password.");
+      return;
+    }
+
+    try {
+      await updateUserById(profile.userId, { password: newPassword });
+      discardPassword();
+      Alert.alert("Saved", "Your password has been changed.");
+    } catch (e: any) {
+      Alert.alert("Password change failed", e?.message ?? "Server update failed");
+    }
+  }
+
+  /* ------------------ Logout / Delete ------------------ */
+
+  async function onLogout() {
+    Alert.alert("Log out?", "You will need to log in again.", [
+      { text: "Cancel", style: "cancel" },
       {
-        text: "Yes",
+        text: "Log out",
         style: "destructive",
-        onPress: () => {
+        onPress: async () => {
+          await clearProfile();
           router.replace("/");
         },
       },
     ]);
   }
 
-  function confirmDeleteAccount() {
-    Alert.alert("Delete the account?", "Are you sure you want to delete the account?", [
-      { text: "No", style: "cancel" },
-      {
-        text: "Yes",
-        style: "destructive",
-        onPress: async () => {
-          // Best-effort server delete if we have a userId
-          if (profile.userId) {
+  async function onDeleteAccount() {
+    if (!profile.userId) {
+      Alert.alert("Not available", "Please log in again.");
+      return;
+    }
+
+    Alert.alert(
+      "Delete account?",
+      "This action is irreversible. All your data will be removed.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
             try {
               await deleteUserById(profile.userId);
             } catch {
-              // don't block local delete
+              // even if backend fails, wipe local state
             }
-          }
-
-          await AsyncStorage.clear();
-          router.replace("/");
+            await clearProfile();
+            router.replace("/");
+          },
         },
-      },
-    ]);
-  }
-
-  function handleBack() {
-    if (!hasUnsaved) {
-      router.back();
-      return;
-    }
-
-    Alert.alert("Discard changes?", "You have unsaved changes. Discard and go back?", [
-      { text: "No", style: "cancel" },
-      {
-        text: "Yes",
-        style: "destructive",
-        onPress: () => {
-          discardPersonal();
-          router.back();
-        },
-      },
-    ]);
-  }
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-        <View style={styles.center}>
-          <Text style={styles.muted}>Loading…</Text>
-        </View>
-      </SafeAreaView>
+      ]
     );
   }
 
-  const phoneDisplay = formatPhone(personalDraft.phoneDigits);
+  /* ------------------ UI ------------------ */
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <View style={styles.header}>
-          <Pressable onPress={handleBack} style={styles.backBtn}>
-            <Text style={styles.backText}>← back</Text>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={styles.page}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Back */}
+          <Pressable style={styles.backBtn} onPress={() => router.back()}>
+            <Text style={styles.backText}>← Back</Text>
           </Pressable>
-        </View>
 
-        <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          <Text style={styles.pageTitle}>Profile settings</Text>
+          <Text style={styles.h1}>Profile settings</Text>
 
+          {/* -------- Personal -------- */}
           <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Personal:</Text>
+            <Text style={styles.sectionTitle}>Personal</Text>
 
             <Text style={styles.label}>email:</Text>
             <TextInput
               style={[styles.input, !editingPersonal && styles.inputReadOnly]}
               value={personalDraft.email}
+              editable={editingPersonal}
               onChangeText={(v) => setPersonalDraft((p) => ({ ...p, email: v }))}
-              editable={editingPersonal}
-              placeholder="name@example.com"
-              autoCapitalize="none"
-              keyboardType="email-address"
             />
 
-            <Text style={styles.label}>phone:</Text>
+            <Text style={styles.label}>phone number:</Text>
             <TextInput
               style={[styles.input, !editingPersonal && styles.inputReadOnly]}
-              value={phoneDisplay}
+              value={personalDraft.phoneDigits}
               editable={editingPersonal}
-              placeholder="123-456-789"
               keyboardType="number-pad"
-              onChangeText={(typed) => {
-                const digits = onlyDigits(typed).slice(0, 9);
-                setPersonalDraft((p) => ({ ...p, phoneDigits: digits }));
-              }}
+              onChangeText={(v) => setPersonalDraft((p) => ({ ...p, phoneDigits: v }))}
             />
-            {editingPersonal ? <Text style={styles.helper}>XXX-XXX-XXX</Text> : null}
 
-            <Text style={styles.label}>name and surname:</Text>
+            <Text style={styles.label}>name:</Text>
             <TextInput
               style={[styles.input, !editingPersonal && styles.inputReadOnly]}
-              value={personalDraft.fullName}
-              onChangeText={(v) => setPersonalDraft((p) => ({ ...p, fullName: v }))}
+              value={personalDraft.firstName}
               editable={editingPersonal}
-              placeholder="Rafal Trzaskowski"
+              onChangeText={(v) => setPersonalDraft((p) => ({ ...p, firstName: v }))}
+            />
+
+            <Text style={styles.label}>second name (optional):</Text>
+            <TextInput
+              style={[styles.input, !editingPersonal && styles.inputReadOnly]}
+              value={personalDraft.secondName}
+              editable={editingPersonal}
+              onChangeText={(v) => setPersonalDraft((p) => ({ ...p, secondName: v }))}
+            />
+
+            <Text style={styles.label}>surname:</Text>
+            <TextInput
+              style={[styles.input, !editingPersonal && styles.inputReadOnly]}
+              value={personalDraft.lastName}
+              editable={editingPersonal}
+              onChangeText={(v) => setPersonalDraft((p) => ({ ...p, lastName: v }))}
             />
 
             <View style={styles.btnRow}>
               {!editingPersonal ? (
-                <Pressable
-                  style={[styles.btn, styles.btnEdit]}
-                  onPress={() => {
-                    setEditingPersonal(true);
-                    setPersonalDraft({
-                      email: profile.email,
-                      phoneDigits: profile.phoneDigits,
-                      fullName: profile.fullName,
-                    });
-                  }}
-                >
-                  <Text style={styles.btnTextDark}>Edit</Text>
+                <Pressable style={styles.btn} onPress={() => setEditingPersonal(true)}>
+                  <Text style={styles.btnText}>Edit</Text>
                 </Pressable>
               ) : (
                 <>
-                  <Pressable style={[styles.btn, styles.btnSave]} onPress={savePersonal}>
-                    <Text style={styles.btnTextDark}>Save</Text>
+                  <Pressable style={styles.btn} onPress={savePersonal}>
+                    <Text style={styles.btnText}>Save</Text>
                   </Pressable>
-                  <Pressable style={[styles.btn, styles.btnDiscard]} onPress={discardPersonal}>
-                    <Text style={styles.btnTextDark}>Discard</Text>
+                  <Pressable style={styles.btnAlt} onPress={discardPersonal}>
+                    <Text style={styles.btnText}>Discard</Text>
                   </Pressable>
                 </>
               )}
             </View>
           </View>
 
-          <View style={styles.bottomActions}>
-            <Pressable style={[styles.bigBtn, styles.bigBtnLogout]} onPress={confirmLogout}>
-              <Text style={styles.bigBtnTextDark}>Log out</Text>
+          {/* -------- Security -------- */}
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Security</Text>
+
+            <Text style={styles.label}>new password:</Text>
+            <TextInput
+              style={[styles.input, !editingPassword && styles.inputReadOnly]}
+              value={pwdDraft.newPassword}
+              editable={editingPassword}
+              secureTextEntry
+              onChangeText={(v) => setPwdDraft((p) => ({ ...p, newPassword: v }))}
+            />
+
+            <Text style={styles.label}>repeat new password:</Text>
+            <TextInput
+              style={[styles.input, !editingPassword && styles.inputReadOnly]}
+              value={pwdDraft.repeatPassword}
+              editable={editingPassword}
+              secureTextEntry
+              onChangeText={(v) => setPwdDraft((p) => ({ ...p, repeatPassword: v }))}
+            />
+
+            <View style={styles.btnRow}>
+              {!editingPassword ? (
+                <Pressable style={styles.btn} onPress={() => setEditingPassword(true)}>
+                  <Text style={styles.btnText}>Change</Text>
+                </Pressable>
+              ) : (
+                <>
+                  <Pressable style={styles.btn} onPress={savePassword}>
+                    <Text style={styles.btnText}>Save</Text>
+                  </Pressable>
+                  <Pressable style={styles.btnAlt} onPress={discardPassword}>
+                    <Text style={styles.btnText}>Discard</Text>
+                  </Pressable>
+                </>
+              )}
+            </View>
+          </View>
+
+          {/* -------- Danger zone -------- */}
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Account</Text>
+
+            <Pressable style={styles.btnAlt} onPress={onLogout}>
+              <Text style={styles.btnText}>Log out</Text>
             </Pressable>
 
-            <Pressable style={[styles.bigBtn, styles.bigBtnDelete]} onPress={confirmDeleteAccount}>
-              <Text style={styles.bigBtnTextDark}>Delete the account</Text>
+            <Pressable style={styles.btnDanger} onPress={onDeleteAccount}>
+              <Text style={styles.btnText}>Delete account</Text>
             </Pressable>
           </View>
 
@@ -312,11 +348,11 @@ export default function ProfileSettings() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#FFFBEB" },
+  page: { padding: 16, gap: 14 },
 
-  header: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 },
   backBtn: {
     alignSelf: "flex-start",
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 10,
     backgroundColor: "#FFFFFF",
@@ -325,61 +361,61 @@ const styles = StyleSheet.create({
   },
   backText: { fontWeight: "900", color: "#111827" },
 
-  page: { paddingHorizontal: 16, paddingBottom: 16, gap: 14 },
-  pageTitle: { fontSize: 22, fontWeight: "900", color: "#111827", marginTop: 4 },
+  h1: { fontSize: 22, fontWeight: "900", color: "#111827" },
 
   sectionCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 14,
     borderWidth: 1,
     borderColor: "#FDE68A",
     gap: 8,
   },
-  sectionTitle: { fontSize: 16, fontWeight: "900", color: "#111827", marginBottom: 2 },
+  sectionTitle: { fontSize: 16, fontWeight: "900", color: "#111827" },
 
-  label: { color: "#111827", fontWeight: "900", marginTop: 6 },
+  label: { fontWeight: "900", color: "#111827", marginTop: 6 },
+
   input: {
     backgroundColor: "#FFFBEB",
     borderWidth: 1,
     borderColor: "#FDE68A",
-    borderRadius: 10,
+    borderRadius: 12,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    paddingVertical: 12,
-    fontWeight: "700",
+    fontWeight: "800",
     color: "#111827",
   },
-  inputReadOnly: { opacity: 0.85 },
+  inputReadOnly: {
+    backgroundColor: "#F9FAFB",
+    borderColor: "#E5E7EB",
+    color: "#374151",
+  },
 
-  helper: { marginTop: 6, color: "#6B7280", fontWeight: "700" },
-
-  btnRow: { flexDirection: "row", gap: 10, marginTop: 10 },
+  btnRow: { flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" },
   btn: {
-    paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 10,
-    alignItems: "center",
-    minWidth: 92,
-    borderWidth: 1,
-  },
-
-  btnEdit: { backgroundColor: "#DBEAFE", borderColor: "#93C5FD" },
-  btnSave: { backgroundColor: "#DCFCE7", borderColor: "#86EFAC" },
-  btnDiscard: { backgroundColor: "#FEF3C7", borderColor: "#FDE68A" },
-  btnTextDark: { fontWeight: "900", color: "#111827" },
-
-  bottomActions: { gap: 10, marginTop: 4, alignItems: "center" },
-  bigBtn: {
-    width: "70%",
-    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderRadius: 12,
-    alignItems: "center",
     borderWidth: 1,
+    borderColor: "#FDE68A",
+    backgroundColor: "#FDE68A",
   },
-  bigBtnLogout: { backgroundColor: "#DBEAFE", borderColor: "#93C5FD" },
-  bigBtnDelete: { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" },
-  bigBtnTextDark: { fontWeight: "900", color: "#111827" },
+  btnAlt: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    backgroundColor: "#FFF7ED",
+  },
+  btnDanger: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+    backgroundColor: "#FEE2E2",
+  },
 
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  muted: { color: "#6B7280", fontWeight: "800" },
+  btnText: { fontWeight: "900", color: "#111827" },
 });

@@ -112,14 +112,15 @@ export default function RegisterScreen() {
       // If this fails, backend did NOT store/commit the user.
       const info = await getUserById(userId);
 
-      const fullName = `${info.firstName ?? n} ${info.lastName ?? s}`.trim();
-
       await saveProfile({
         userId,
         email: info.email ?? e,
-        phoneDigits: info.contactNumber ? String(info.contactNumber) : pDigits,
-        fullName: fullName || "—",
+        phoneDigits: info.contactNumber ? String(info.contactNumber) : "",
+        firstName: info.firstName ?? n,
+        secondName: info.secondName ?? "",
+        lastName: info.lastName ?? s,
       });
+
 
       await clearCachedReferenceData();
       resetSearchLookupsMemo();
