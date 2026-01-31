@@ -88,6 +88,19 @@ export default function LikedCarsTab() {
     await load();
   }
 
+    function confirmClearAll() {
+      Alert.alert("Clear all?", "Are you sure you want to clear all liked cars?", [
+        { text: "No", style: "cancel" },
+        {
+          text: "Yes",
+          style: "destructive",
+          onPress: () => {
+            onClearAll();
+          },
+        },
+      ]);
+    }
+
   // -----------------------
   // Date validation helpers
   // -----------------------
@@ -256,7 +269,7 @@ export default function LikedCarsTab() {
           </View>
         ) : (
           <>
-            <Pressable style={styles.clearBtn} onPress={onClearAll}>
+            <Pressable style={styles.clearBtn} onPress={confirmClearAll}>
               <Text style={styles.clearBtnText}>Clear all</Text>
             </Pressable>
 
