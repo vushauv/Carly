@@ -29,7 +29,15 @@
   display: flex;
   justify-content: center;
   margin-bottom: 1.25rem;
+  
 }
+
+.topActions  div {
+  width: 250px;
+  display: flex;
+  justify-content: space-between;
+}
+
 
 .filters {
   display: flex;

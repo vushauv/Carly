@@ -1,4 +1,4 @@
-import type { ColumnDef, RowAction } from "../../components/DataTable/DataTable";
+import type { ColumnDef, RowAction } from "../../Elements/DataTable/DataTable";
 import type { BookingDetails } from "./types";
 
 
@@ -21,7 +21,7 @@ export const bookingsColumns = (styles: {
   },
   {
     id: "customer",
-    header: "user Id",
+    header: "User Id",
     cell: (booking) => (
       <div className={styles.customer}>
         {booking.userId}
@@ -61,8 +61,6 @@ export const bookingsColumns = (styles: {
         <div className={styles.dates}>
           {formatDate(booking.carBookingDateFrom)} –{" "}
           {formatDate(booking.carBookingDateTo)}
-          <br />
-          <small>{booking.pickupLocation?.address ?? "—"}</small>
         </div>
       );
     },
@@ -107,33 +105,7 @@ export const bookingsColumns = (styles: {
     width: "200px",
   },
   
-  {
-    id: "car_status",
-    header: "Car Status",
-    cell: (booking) => {
-      const getStatusColor = (status: string): string => {
-        switch (status) {
-          case "CREATED": return "#ffc107";
-          case "CONFIRMED": return "#17a2b8";
-          case "ACTIVE": return "#28a745";
-          case "COMPLETED": return "#6c757d";
-          case "CANCELLED": return "#dc3545";
-          default: return "#6c757d";
-        }
-      };
-
-      return (
-        <span 
-          className={styles.status}
-          style={{ backgroundColor: getStatusColor(booking.carStatus.name), color: 'white' }}
-        >
-          {booking.carStatus.name}
-        </span>
-      );
-    },
-    cellClassName: styles.status,
-    width: "120px",
-  },
+  
   {
     id: "flat_status",
     header: "Flat Status",

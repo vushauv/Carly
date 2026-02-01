@@ -5,7 +5,8 @@ export const API_CONFIG = {
     USERS: '/users',
     CARS: '/cars',
     BOOKINGS: '/bookings',
-    REFERENCE: '/reference/data'
+    REFERENCE: '/reference/data',
+    PARKLY: '/parkly/car-bookings',
   }
 } as const;
 

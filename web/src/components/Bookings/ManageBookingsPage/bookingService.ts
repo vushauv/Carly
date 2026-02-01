@@ -124,6 +124,16 @@ async updateBooking(
     console.log("Booking deleted successfully");
   },
 
+  async cancelBooking(bookingId: number): Promise<void> {
+    
+    console.log(`Canceling booking ${bookingId}`);
+    const url = buildApiUrl(API_CONFIG.ENDPOINTS.PARKLY, bookingId, 'cancel');
+
+    await apiRequest<void>(url,{
+      method: "POST"
+    });
+  },
+
   /**
    * Helper method to search bookings with filters
    */
