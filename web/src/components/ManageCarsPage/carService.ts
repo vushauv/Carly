@@ -156,15 +156,24 @@ export const carService = {
   async uploadCarImage(carId: number, file: File): Promise<CarImage> {
     console.log(`Uploading image for car ${carId}:`, file.name);
   
+    let uploadFile = file;
+  
+    // compress if larger than 900KB (safe margin)
+    if (file.size > 900 * 1024) {
+      uploadFile = await compressImage(file);
+      console.log(
+        `Compressed from ${file.size} → ${uploadFile.size}`
+      );
+    }
+  
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", uploadFile);
   
     const url = buildApiUrl(API_CONFIG.ENDPOINTS.CARS, carId, "images");
   
     const response = await fetch(url, {
       method: "POST",
       body: formData,
-      // credentials: "include"  // only if backend uses cookies
     });
   
     if (!response.ok) {
@@ -174,6 +183,7 @@ export const carService = {
   
     return await response.json();
   },
+  
   
   
 
@@ -212,11 +222,37 @@ export const carService = {
   },
 };
 
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file); // produces data:image/png;base64,...
+
+
+const compressImage = async (
+  file: File,
+  maxWidth = 1600,
+  quality = 0.8
+): Promise<File> => {
+  const imageBitmap = await createImageBitmap(file);
+
+  const scale = Math.min(1, maxWidth / imageBitmap.width);
+  const width = imageBitmap.width * scale;
+  const height = imageBitmap.height * scale;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas not supported");
+
+  ctx.drawImage(imageBitmap, 0, 0, width, height);
+
+  const blob: Blob = await new Promise((resolve) =>
+    canvas.toBlob(
+      (b) => resolve(b!),
+      "image/jpeg",
+      quality
+    )
+  );
+
+  return new File([blob], file.name.replace(/\.\w+$/, ".jpg"), {
+    type: "image/jpeg",
   });
 };
