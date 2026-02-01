@@ -14,6 +14,11 @@ public interface UserService {
 
     List<User> getAllUsers(int pageNumber, int pageSize);
 
+    List<User> searchUsers(int pageNumber, int pageSize, Integer userId, String name, String email);
+
+    List<User> searchUsers(Integer userId, String name, String email, int pageNumber, int pageSize);
+
+
     User getUserByID(Integer id) throws ResourceNotFoundException;
 
     void deleteUserById(Integer id);
