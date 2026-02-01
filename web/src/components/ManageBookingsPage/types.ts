@@ -49,6 +49,7 @@ export interface UpdateBookingRequest {
 }
 
 export interface BookingSearchFilters {
+  bookingId?: number;
   userId?: number;
   carId?: number;
   status?: "PENDING" | "CONFIRMED" | "ACTIVE" | "COMPLETED" | "CANCELLED";

@@ -11,6 +11,7 @@ const BookingViewPage = () => {
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const loadBooking = async () => {
@@ -41,6 +42,29 @@ const BookingViewPage = () => {
 
     loadBooking();
   }, [id]);
+
+  const handleDeleteBooking = async () => {
+    if (!booking) {
+      setError("Booking data not available");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to delete this booking? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      await bookingService.deleteBooking(booking.bookingId);
+      // Navigate back to bookings list after successful deletion
+      navigate("/manage-bookings");
+    } catch (err) {
+      console.error("Failed to delete booking:", err);
+      setError("Failed to delete booking. Please try again.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -104,6 +128,7 @@ const BookingViewPage = () => {
         <h1 className={styles.title}>Booking Details #{booking.bookingId}</h1>
         <div className={styles.actions}>
           <Button label="Edit Booking" onClick={() => navigate(`/bookings/${booking.bookingId}/edit`)} />
+          <Button label="Delete Booking" onClick={handleDeleteBooking} disabled={deleting} />
           <Button label="Back to Bookings" onClick={() => navigate("/manage-bookings")} />
         </div>
       </div>

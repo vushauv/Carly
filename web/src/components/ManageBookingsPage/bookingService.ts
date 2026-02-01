@@ -7,7 +7,7 @@ export const bookingService = {
    * Retrieves a paginated list of bookings with optional filtering
    * Maps to: GET /api/bookings with query parameters
    */
-  async getAllBookings(pageNumber: number = 0, pageSize: number = 3, filters?: Partial<BookingSearchFilters>): Promise<{bookings: BookingDetails[], totalCount: number}> {
+  async getAllBookings(pageNumber: number = 0, pageSize: number = 3, filters?: Partial<BookingSearchFilters>): Promise<BookingDetails[]> {
     console.log(`[BookingService] Fetching bookings: page ${pageNumber}, size ${pageSize}`, filters ? `with filters: ${JSON.stringify(filters)}` : '');
     
     const params = new URLSearchParams({
@@ -17,10 +17,16 @@ export const bookingService = {
 
     // Add filters as individual query parameters based on API docs
     if (filters) {
+      if (filters.bookingId) params.append('bookingId', filters.bookingId.toString());
       if (filters.userId) params.append('userId', filters.userId.toString());
+      if (filters.carId) params.append('carId', filters.carId.toString());
       if (filters.status) params.append('status', filters.status);
+      if (filters.userEmail) params.append('userEmail', filters.userEmail);
+      if (filters.pickupLocation) params.append('pickupLocation', filters.pickupLocation);
       if (filters.startDateFrom) params.append('dateFrom', filters.startDateFrom);
       if (filters.startDateTo) params.append('dateTo', filters.startDateTo);
+      if (filters.priceMin) params.append('priceMin', filters.priceMin.toString());
+      if (filters.priceMax) params.append('priceMax', filters.priceMax.toString());
     }
 
     const url = buildApiUrl(API_CONFIG.ENDPOINTS.BOOKINGS) + `?${params}`;
@@ -30,14 +36,11 @@ export const bookingService = {
       const response = await apiRequest<BookingDetails[]>(url);
       console.log(`[BookingService] Raw response:`, response);
       
-      // API returns array directly, not paginated response object
+      // API returns array directly
       const bookings = Array.isArray(response) ? response : [];
       console.log(`[BookingService] Extracted bookings:`, bookings);
       
-      return {
-        bookings: bookings,
-        totalCount: bookings.length // For now, using array length
-      };
+      return bookings;
     } catch (error) {
       console.error(`[BookingService] Error in getAllBookings:`, error);
       throw error;
