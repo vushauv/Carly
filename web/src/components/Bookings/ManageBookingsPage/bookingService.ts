@@ -134,6 +134,13 @@ async updateBooking(
     });
   },
 
+  async cancelFlatBooking(bookingId: number): Promise<void> {
+    const url = buildApiUrl(API_CONFIG.ENDPOINTS.FLATLY, bookingId);
+    await apiRequest(url, {
+      method: "DELETE",
+    });
+  }
+
   /**
    * Helper method to search bookings with filters
    */

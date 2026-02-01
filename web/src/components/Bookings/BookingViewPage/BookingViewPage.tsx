@@ -15,6 +15,33 @@ const BookingViewPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const handleCancelFlatBooking = async () => {
+    if (!booking) {
+      setError("Booking data not available");
+      return;
+    }
+  
+    if (
+      !window.confirm(
+        "Are you sure you want to cancel this Flat booking? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+  
+    try {
+      setDeleting(true);
+      await bookingService.cancelFlatBooking(booking.id);
+      navigate("/manage-bookings");
+    } catch (err) {
+      console.error("Failed to cancel flat booking:", err);
+      setError("Failed to cancel flat booking. Please try again.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+  
+
   useEffect(() => {
     const loadBooking = async () => {
       if (!id) {
@@ -123,7 +150,23 @@ const BookingViewPage = () => {
         <h1 className={styles.title}>Booking Details #{booking.id}</h1>
         <div className={styles.actions}>
           <Button label="Edit Booking" color="secondary" onClick={() => navigate(`/bookings/${booking.id}/edit`)} />
-          <Button label="Delete Booking" color="danger" onClick={handleDeleteBooking} disabled={deleting} />
+          
+          {booking.providerExternalBookingId != null ? (
+              <Button
+                label="Cancel Flat Booking"
+                color="danger"
+                onClick={handleCancelFlatBooking}
+                disabled={deleting}
+              />
+            ) : (
+              <Button
+                label="Delete Booking"
+                color="danger"
+                onClick={handleDeleteBooking}
+                disabled={deleting}
+              />
+            )}
+          
           <Button label="Back to Bookings" onClick={() => navigate("/manage-bookings")} />
         </div>
       </div>

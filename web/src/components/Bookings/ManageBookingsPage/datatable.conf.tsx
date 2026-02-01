@@ -106,33 +106,33 @@ export const bookingsColumns = (styles: {
   },
   
   
-  {
-    id: "flat_status",
-    header: "Flat Status",
-    cell: (booking) => {
-      const getStatusColor = (status: string): string => {
-        switch (status) {
-          case "CREATED": return "#ffc107";
-          case "CONFIRMED": return "#17a2b8";
-          case "ACTIVE": return "#28a745";
-          case "COMPLETED": return "#6c757d";
-          case "CANCELLED": return "#dc3545";
-          default: return "#6c757d";
-        }
-      };
+  // {
+  //   id: "flat_status",
+  //   header: "Flat Status",
+  //   cell: (booking) => {
+  //     const getStatusColor = (status: string): string => {
+  //       switch (status) {
+  //         case "CREATED": return "#ffc107";
+  //         case "CONFIRMED": return "#17a2b8";
+  //         case "ACTIVE": return "#28a745";
+  //         case "COMPLETED": return "#6c757d";
+  //         case "CANCELLED": return "#dc3545";
+  //         default: return "#6c757d";
+  //       }
+  //     };
 
-      return (
-        <span 
-          className={styles.status}
-          style={{ backgroundColor: getStatusColor(booking.flatStatus ?? "NONE" ), color: 'white' }}
-        >
-          {booking.flatStatus ?? "NONE"}
-        </span>
-      );
-    },
-    cellClassName: styles.status,
-    width: "120px",
-  }
+  //     return (
+  //       <span 
+  //         className={styles.status}
+  //         style={{ backgroundColor: getStatusColor(booking.flatStatus ?? "NONE" ), color: 'white' }}
+  //       >
+  //         {booking.flatStatus ?? "NONE"}
+  //       </span>
+  //     );
+  //   },
+  //   cellClassName: styles.status,
+  //   width: "120px",
+  // }
 
 ];
 
