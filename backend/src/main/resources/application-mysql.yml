@@ -2,9 +2,8 @@
 spring:
   datasource:
     url: jdbc:mysql://${mysql.hostname:localhost}:3306/backend?createDatabaseIfNotExist=true&sslMode=PREFERRED&serverTimezone=UTC&useLegacyDatetimeCode=false&allowPublicKeyRetrieval=true
-    ## CHANGED THIS FOR LOCAL TESTING
     username: react
-    password: MysqL12!@
+    password: dupa
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
       driver-class-name: com.mysql.cj.jdbc.Driver
@@ -43,5 +42,4 @@ spring:
     generate-ddl: true
     # Hibernate ddl auto (create, create-drop, validate, update)
     hibernate:
-      # CHANGED THIS FOR TESTING
-      ddl-auto: create-drop
+      ddl-auto: update
