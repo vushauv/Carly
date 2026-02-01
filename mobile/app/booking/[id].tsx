@@ -14,6 +14,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import CarCardView from "../components/CarCardView";
 
+import { ApiError } from "../../lib/api/apiClient";
+
 import {
   cancelCarBookingOnBackend,
   getBookingByIdFromBackend,
@@ -25,6 +27,11 @@ import {
   getFlatBookingDetails,
   type FlatlyBookingDetailsResponse,
 } from "../../lib/api/flatlyApi";
+
+import {
+  markFlatlyCancelled,
+  upsertFlatlyBooking,
+} from "../../lib/storage/flatlyBookingsStorage";
 
 // -----------------------------
 // Helpers
@@ -62,13 +69,16 @@ export default function BookingDetails() {
   const [booking, setBooking] = useState<Booking | null>(null);
 
   // Flatly booking details (from partner endpoint)
-  const [flatlyDetails, setFlatlyDetails] = useState<FlatlyBookingDetailsResponse | null>(null);
+  const [flatlyDetails, setFlatlyDetails] =
+    useState<FlatlyBookingDetailsResponse | null>(null);
 
   // Partner API error message (shown in UI)
   const [partnerError, setPartnerError] = useState<string | null>(null);
 
   // Local cancellation flag for Flatly bookings (Flatly details schema doesn't include status)
-  const [flatlyCancelledAtISO, setFlatlyCancelledAtISO] = useState<string | null>(null);
+  const [flatlyCancelledAtISO, setFlatlyCancelledAtISO] = useState<string | null>(
+    null
+  );
 
   const isFlat = useMemo(() => (id ? isFlatlyId(id) : false), [id]);
 
@@ -107,7 +117,7 @@ export default function BookingDetails() {
         try {
           const dto = await getFlatBookingDetails(flatBookingId);
           setFlatlyDetails(dto);
-        } catch (e: any) {
+        } catch {
           setPartnerError(
             "Couldn’t load Flatly booking details (partner API might be down)."
           );
@@ -116,7 +126,7 @@ export default function BookingDetails() {
         setLoading(false);
       }
     })();
-  }, [id, isFlat]);
+  }, [id, isFlat, flatBookingId]);
 
   // -----------------------------
   // Cancel handler
@@ -136,18 +146,55 @@ export default function BookingDetails() {
             try {
               if (isFlat) {
                 if (!flatBookingId) throw new Error("Invalid Flatly booking id.");
-                await cancelFlatlyBooking(flatBookingId);
-                if (!flatBookingId) throw new Error("Invalid Flatly booking id.");
+
+                // Persist a snapshot so it can't disappear even if partner stops returning it
+                if (flatlyDetails) {
+                  const f = flatlyDetails.flat;
+                  const b = flatlyDetails.booking;
+
+                  const imgUrls =
+                    Array.isArray(flatlyDetails.flatImages) &&
+                    flatlyDetails.flatImages.length
+                      ? flatlyDetails.flatImages
+                          .map((x: any) => String(x?.image_url ?? "").trim())
+                          .filter(Boolean)
+                      : [];
+
+                  await upsertFlatlyBooking({
+                    flatBookingId,
+                    dateFromDayISO: dateOnly(String(b?.checkInDate ?? "")),
+                    dateToDayISO: dateOnly(String(b?.checkOutDate ?? "")),
+                    flatSnapshot: {
+                      title: String(f?.name ?? "Flat"),
+                      addressLine: String(f?.address_line ?? f?.location ?? ""),
+                      city: String(f?.city ?? ""),
+                      country: String(f?.country ?? ""),
+                      imageUrls: imgUrls,
+                    },
+                  });
+                }
 
                 try {
                   await cancelFlatlyBooking(flatBookingId);
                 } catch (e: any) {
+                  // 422 = mistake contacting partner API -> keep in current
+                  if (e instanceof ApiError && e.status === 422) {
+                    Alert.alert(
+                      "Cancel failed",
+                      "There was a mistake contacting the partner API (422). Your booking was NOT cancelled."
+                    );
+                    return;
+                  }
+
                   Alert.alert(
                     "Cancel failed",
                     "Flatly partner API seems unavailable right now. Please try again later."
                   );
                   return;
                 }
+
+                // Only move to history on SUCCESS
+                await markFlatlyCancelled(flatBookingId);
 
                 setFlatlyCancelledAtISO(new Date().toISOString());
                 Alert.alert("Cancelled", "Your Flat booking was cancelled.");
@@ -181,7 +228,6 @@ export default function BookingDetails() {
 
   const showCancel = useMemo(() => {
     if (cancelled) return false;
-    // car booking is current -> show cancel; flatly bookings always treated as cancellable unless already cancelled
     if (!isFlat) return booking?.status === "current";
     return !!flatlyDetails; // only if we actually loaded it
   }, [cancelled, isFlat, booking, flatlyDetails]);
@@ -223,15 +269,15 @@ export default function BookingDetails() {
 
   const flatSubtitle = useMemo(() => {
     const f = flatlyDetails?.flat;
-    const address = safeText(f?.address_line ?? f?.location ?? "—", "—");
-    const city = safeText(f?.city ?? "—", "—");
+    const address = safeText((f as any)?.address_line ?? (f as any)?.location ?? "—", "—");
+    const city = safeText((f as any)?.city ?? "—", "—");
     return `${address} • ${city}`;
   }, [flatlyDetails]);
 
   const flatImages = useMemo(() => {
     const imgs =
-      Array.isArray(flatlyDetails?.flatImages) && flatlyDetails!.flatImages.length
-        ? flatlyDetails!.flatImages
+      Array.isArray(flatlyDetails?.flatImages) && flatlyDetails.flatImages.length
+        ? flatlyDetails.flatImages
             .map((x: any) => String(x?.image_url ?? "").trim())
             .filter(Boolean)
         : [];
@@ -240,9 +286,8 @@ export default function BookingDetails() {
 
   const flatDates = useMemo(() => {
     const b = flatlyDetails?.booking;
-    // booking has checkInDate/checkOutDate per your API schema usage in other screens
-    const from = safeText(b?.checkInDate, "");
-    const to = safeText(b?.checkOutDate, "");
+    const from = safeText((b as any)?.checkInDate, "");
+    const to = safeText((b as any)?.checkOutDate, "");
     return {
       from: from ? dateOnly(from) : "—",
       to: to ? dateOnly(to) : "—",
@@ -253,7 +298,10 @@ export default function BookingDetails() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFBEB" }} edges={["top"]}>
-      <ScrollView contentContainerStyle={styles.page} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.page}
+        showsVerticalScrollIndicator={false}
+      >
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backText}>← Back</Text>
         </Pressable>
@@ -297,7 +345,9 @@ export default function BookingDetails() {
                   subtitle={carSubtitle}
                   images={carImages}
                   fallbackSource={require("../../assets/images/no-images.png")}
-                  metaLeft={booking.car.fuelType ? `⛽ ${booking.car.fuelType}` : "🚗 Car"}
+                  metaLeft={
+                    booking.car.fuelType ? `⛽ ${booking.car.fuelType}` : "🚗 Car"
+                  }
                   metaRight={statusLabel}
                   footerLeft={carFooterLeft}
                   imageHeight={240}
@@ -306,8 +356,12 @@ export default function BookingDetails() {
                 <View style={styles.infoCard}>
                   <Text style={styles.line}>Brand: {booking.car.brand}</Text>
                   <Text style={styles.line}>Model: {booking.car.model}</Text>
-                  {booking.car.fuelType ? <Text style={styles.line}>Fuel: {booking.car.fuelType}</Text> : null}
-                  {booking.car.color ? <Text style={styles.line}>Color: {booking.car.color}</Text> : null}
+                  {booking.car.fuelType ? (
+                    <Text style={styles.line}>Fuel: {booking.car.fuelType}</Text>
+                  ) : null}
+                  {booking.car.color ? (
+                    <Text style={styles.line}>Color: {booking.car.color}</Text>
+                  ) : null}
                 </View>
               </>
             ) : null}
@@ -319,7 +373,9 @@ export default function BookingDetails() {
                 dates: {dateOnly(booking.startDate)} - {dateOnly(booking.endDate)}
               </Text>
               {booking.cancelledAtISO ? (
-                <Text style={styles.hint}>cancelled at: {dateOnly(booking.cancelledAtISO)}</Text>
+                <Text style={styles.hint}>
+                  cancelled at: {dateOnly(booking.cancelledAtISO)}
+                </Text>
               ) : null}
             </View>
           </>
@@ -340,24 +396,28 @@ export default function BookingDetails() {
 
             <View style={styles.infoCard}>
               <Text style={styles.line}>
-                City: {safeText(flatlyDetails.flat?.city, "—")}
+                City: {safeText((flatlyDetails.flat as any)?.city, "—")}
               </Text>
               <Text style={styles.line}>
-                Country: {safeText(flatlyDetails.flat?.country, "—")}
+                Country: {safeText((flatlyDetails.flat as any)?.country, "—")}
               </Text>
               <Text style={styles.line}>
-                Guests: {safeText(flatlyDetails.booking?.guestsCount, "—")}
+                Guests: {safeText((flatlyDetails.booking as any)?.guestsCount, "—")}
               </Text>
             </View>
 
             <View style={styles.card}>
               <Text style={styles.line}>id: {flatBookingId}</Text>
-              <Text style={styles.line}>status: {cancelled ? "Cancelled" : "Booked"}</Text>
+              <Text style={styles.line}>
+                status: {cancelled ? "Cancelled" : "Booked"}
+              </Text>
               <Text style={styles.line}>
                 dates: {flatDates.from} - {flatDates.to}
               </Text>
               {flatlyCancelledAtISO ? (
-                <Text style={styles.hint}>cancelled at: {dateOnly(flatlyCancelledAtISO)}</Text>
+                <Text style={styles.hint}>
+                  cancelled at: {dateOnly(flatlyCancelledAtISO)}
+                </Text>
               ) : null}
             </View>
           </>
@@ -381,7 +441,11 @@ const styles = StyleSheet.create({
   },
   backText: { fontWeight: "900", color: "#111827" },
 
-  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   title: { fontSize: 28, fontWeight: "900", color: "#111827" },
 
   cancelBtn: {

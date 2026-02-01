@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-
+import { ApiError } from "../../lib/api/apiClient";
 import CarCardView from "../components/CarCardView";
 
 import {
@@ -27,7 +27,13 @@ import {
   type BookingStatus,
 } from "../../lib/api/bookingsApi";
 
-type CancelledFlatlyMap = Record<string, string>; // flatBookingId(uuid) -> cancelledAtISO
+import {
+  getFlatlyBookings,
+  markFlatlyCancelled,
+  upsertFlatlyBooking,
+  type FlatlyBookingRecord,
+} from "../../lib/storage/flatlyBookingsStorage";
+
 
 function dateOnly(input?: string | null): string {
   const s = String(input ?? "").trim();
@@ -38,6 +44,30 @@ function dateOnly(input?: string | null): string {
 
 function flatlyIdFromUiId(uiId: string): string {
   return String(uiId ?? "").replace("flatly-", "");
+}
+
+function mapLocalFlatlyRecordToBooking(rec: FlatlyBookingRecord): Booking {
+  const nowISO = new Date().toISOString();
+
+  return {
+    id: `flatly-${rec.flatBookingId}`,
+    status: rec.status === "CANCELLED" ? "history" : "current",
+    state: rec.status === "CANCELLED" ? "Cancelled" : "Booked",
+    startDate: rec.dateFromDayISO || nowISO,
+    endDate: rec.dateToDayISO || nowISO,
+    car: undefined,
+    flat: rec.flatSnapshot
+      ? {
+          address: `${rec.flatSnapshot.title}, ${rec.flatSnapshot.city}${rec.flatSnapshot.country ? ` (${rec.flatSnapshot.country})` : ""}`,
+          images: rec.flatSnapshot.imageUrls ?? [],
+        }
+      : {
+          address: "Flat",
+          images: [],
+        },
+    createdAtISO: rec.createdAtISO ?? nowISO,
+    cancelledAtISO: rec.cancelledAtISO,
+  };
 }
 
 function mapFlatlyToBooking(
@@ -89,10 +119,6 @@ export default function HomeTab() {
   const [selected, setSelected] = useState<BookingStatus>("current");
   const [all, setAll] = useState<Booking[]>([]);
 
-  // In-memory cancellation tracker for Flatly bookings.
-  // (Your Flatly booking details schema doesn’t include status, so we keep the UI behavior
-  // of “moves to History as Cancelled” by tracking successful cancels client-side.)
-  const [cancelledFlatly, setCancelledFlatly] = useState<CancelledFlatlyMap>({});
 
   const load = useCallback(async () => {
     const carBookings = await getBookingsFromBackend();
@@ -103,18 +129,40 @@ export default function HomeTab() {
     let flatBookings: Booking[] = [];
     if (typeof userId === "number") {
       try {
-        const rows = await getUserFlatBookings(userId);
+        const [rows, local] = await Promise.all([
+          getUserFlatBookings(userId),
+          getFlatlyBookings(),
+        ]);
 
+        const localById = new Map(local.map((r) => [r.flatBookingId, r]));
+        const liveIds = new Set<string>();
+
+        // Live partner bookings (optionally marked cancelled if local says so)
         flatBookings = (Array.isArray(rows) ? rows : [])
           .map((dto) => {
             const flatBookingId = String(dto?.booking?.id ?? "").trim();
-            const cancelledAtISO = flatBookingId ? cancelledFlatly[flatBookingId] : undefined;
+            if (!flatBookingId) return null;
+
+            liveIds.add(flatBookingId);
+
+            const localRec = localById.get(flatBookingId);
+            const cancelledAtISO =
+              localRec?.status === "CANCELLED" ? localRec.cancelledAtISO : undefined;
+
             return mapFlatlyToBooking(dto, cancelledAtISO);
           })
           .filter((x): x is Booking => !!x);
+
+        // Add locally-cancelled bookings that partner no longer returns
+        for (const rec of local) {
+          if (rec.status === "CANCELLED" && !liveIds.has(rec.flatBookingId)) {
+            flatBookings.push(mapLocalFlatlyRecordToBooking(rec));
+          }
+        }
       } catch {
-        // If Flatly endpoint is down, keep car bookings visible.
-        flatBookings = [];
+        // Partner down: show locally stored flat bookings (current + history)
+          const local = await getFlatlyBookings();
+          flatBookings = local.map(mapLocalFlatlyRecordToBooking);
       }
     }
 
@@ -126,7 +174,7 @@ export default function HomeTab() {
     );
 
     setAll(merged);
-  }, [cancelledFlatly]);
+  }, []);
 
   useEffect(() => {
     void load();
@@ -171,23 +219,45 @@ export default function HomeTab() {
                   return;
                 }
 
-                // Partner cancel (can fail / be down) -> catch and show friendly message
+                // Persist a minimal snapshot so cancelled bookings never disappear
+                const b = all.find((x) => x.id === id);
+                if (b?.flat) {
+                  await upsertFlatlyBooking({
+                    flatBookingId,
+                    dateFromDayISO: dateOnly(b.startDate),
+                    dateToDayISO: dateOnly(b.endDate),
+                    flatSnapshot: {
+                      title: "Flat",
+                      addressLine: b.flat.address,
+                      city: "",
+                      imageUrls: b.flat.images ?? [],
+                    },
+                  });
+                }
+
                 try {
                   await cancelFlatlyBooking(flatBookingId);
                 } catch (e: any) {
+                  // ✅ 422 = we messed up contacting partner
+                  if (e instanceof ApiError && e.status === 422) {
+                    Alert.alert(
+                      "Cancel failed",
+                      "There was a mistake contacting the partner API (422). Your booking was NOT cancelled."
+                    );
+                    return; // ✅ stays in current
+                  }
+
                   Alert.alert(
                     "Cancel failed",
                     "Flatly partner API seems unavailable right now (or booking was not found). Please try again later."
                   );
-                  return;
+                  return; // ✅ stays in current
                 }
 
-                // Mark as cancelled (client-side) so it moves to History
-                setCancelledFlatly((prev) => ({
-                  ...prev,
-                  [flatBookingId]: new Date().toISOString(),
-                }));
-              } else {
+                // ✅ Only move to history on SUCCESS
+                await markFlatlyCancelled(flatBookingId);
+              }
+                else {
                 // Carly car cancel
                 try {
                   await cancelCarBookingOnBackend(id);

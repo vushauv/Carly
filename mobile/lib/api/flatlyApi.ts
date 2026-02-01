@@ -168,15 +168,14 @@ export async function cancelFlatlyBooking(flatBookingId: string): Promise<void> 
   try {
     await apiRequest<string>(`/flatly/bookings/${encodeURIComponent(id)}`, { method: "DELETE" });
   } catch (e) {
+    // ✅ keep HTTP status so UI can handle 422
+    if (e instanceof ApiError) throw e;
+
     const ui = friendlyFlatlyError(e);
     throw new Error(ui.message);
   }
 }
 
-/**
- * GET /flatly/flat-bookings/{flatBookingId}
- * Returns FlatlyBookingDetailsResponse
- */
 export async function getFlatBookingDetails(flatBookingId: string): Promise<FlatlyBookingDetailsResponse> {
   const id = String(flatBookingId ?? "").trim();
   if (!id) throw new Error("Invalid Flatly booking id.");
@@ -186,6 +185,8 @@ export async function getFlatBookingDetails(flatBookingId: string): Promise<Flat
       method: "GET",
     });
   } catch (e) {
+    if (e instanceof ApiError) throw e;
+
     const ui = friendlyFlatlyError(e);
     throw new Error(ui.message);
   }
