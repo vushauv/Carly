@@ -11,21 +11,14 @@ import java.util.Optional;
 
 public interface BookingService
 {
-    //void updateBooking(Integer id, Booking booking) throws ResourceNotFoundException;
     void updateBooking(Integer id, Booking updatedBooking) throws ResourceNotFoundException;
-
     boolean deleteBooking(Integer bookingId);
-
-    List<Booking> batchSave(List<Booking> bookings) throws BadRequestException;
-
+    List<Booking> batchSave(List<Booking> bookings) throws BadRequestException, ResourceNotFoundException;
     Optional<Booking> getById(Integer bookingId);
-
     List<Booking> getAll();
-
     List<Booking> getBookingsPage(int page, int size);
     Page<Booking> search(BookingSearchCriteria criteria, int page, int size);
-
-    void cancelCarBooking(Integer bookingId);
-    void cancelFlatBooking(Integer bookingId);
+    void cancelCarBooking(Integer bookingId) throws ResourceNotFoundException;
+    void cancelFlatBooking(Integer bookingId) throws ResourceNotFoundException;
 
 }

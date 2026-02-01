@@ -7,10 +7,10 @@ import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.booking.Location;
 import pw.react.backend.domain.enums.BookingStatus;
 import pw.react.backend.domain.user.User;
-import pw.react.backend.dto.request.booking.CreateBookingRequest;
+import pw.react.backend.dto.request.booking.CreateBookingRequestDto;
 import pw.react.backend.dto.request.booking.UpdateBookingRequestDto;
 import pw.react.backend.dto.response.booking.BookingResponse;
-import pw.react.backend.dto.response.booking.GetBookingResponse;
+import pw.react.backend.dto.response.booking.GetBookingResponseDto;
 import pw.react.backend.utils.converters.response.DisplayNameConverter;
 
 import java.util.List;
@@ -29,20 +29,8 @@ public interface BookingMapper {
             @Mapping(target = "pickupLocation", source = "pickupLocationId", qualifiedByName = "locationFromId"),
             @Mapping(target = "returnLocation", source = "returnLocationId", qualifiedByName = "locationFromId"),
     })
-    Booking createRequestToBooking(CreateBookingRequest createBookingRequest);
-    List<Booking> createRequestToBookingList(List<CreateBookingRequest> createBookingRequests);
-
-
-    // UPDATE
-    @Mappings({
-            @Mapping(target = "bookingId", ignore = true),
-            @Mapping(target = "pickupLocation", source = "pickupLocationId", qualifiedByName = "locationFromId"),
-            @Mapping(target = "returnLocation", source = "returnLocationId", qualifiedByName = "locationFromId"),
-            @Mapping(target = "carBookingStatus", source = "carBookingStatus", qualifiedByName = "statusFromEnum"),
-            @Mapping(target = "flatBookingStatus", source = "flatBookingStatus", qualifiedByName = "statusFromEnum")
-    })
-    Booking updateRequestToBooking(UpdateBookingRequestDto updateBookingRequest);
-
+    Booking createRequestToBooking(CreateBookingRequestDto createBookingRequest);
+    List<Booking> createRequestToBookingList(List<CreateBookingRequestDto> createBookingRequests);
 
     /**
      * Apply patch-like update: only overwrite fields that are non-null in the request.
@@ -56,10 +44,7 @@ public interface BookingMapper {
     })
     void applyUpdate(UpdateBookingRequestDto request, @MappingTarget Booking booking);
 
-
-    // -------------------------
-    // RESPONSES
-    // -------------------------
+    // OUT:
     @Mapping(target = "id", source = "bookingId")
     BookingResponse bookingToResponse(Booking booking);
 
@@ -76,9 +61,9 @@ public interface BookingMapper {
             @Mapping(target = "carStatus.id", source = "carBookingStatus.bookingStatusDictionaryId"),
             @Mapping(target = "flatStatus.id", source = "flatBookingStatus.bookingStatusDictionaryId")
     })
-    GetBookingResponse bookingToGetBookingResponse(Booking booking);
+    GetBookingResponseDto bookingToGetBookingResponse(Booking booking);
 
-    List<GetBookingResponse> bookingToGetBookingResponseList(List<Booking> bookings);
+    List<GetBookingResponseDto> bookingToGetBookingResponseList(List<Booking> bookings);
 
     // Helper methods:
     @Named("toDisplayName")

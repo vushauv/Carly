@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import FilterBar from "../FilterBar/FilterBar";
+import FilterBar from "../FilterBarLayout/FilterBarLayout";
 import styles from "./KPIPage.module.css";
 
 type KPI = { label: string; value: number };

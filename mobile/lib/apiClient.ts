@@ -2,7 +2,8 @@
 import { Platform } from "react-native";
 
 // THIS HSA TO BE YOUR LOCAL IP WHEN RUNNING EXPO ON PC!!!!!!!!!!!!!!!!!!!!!!
-const DEV_MACHINE_IP = "http://192.168.1.29:8080";
+//const DEV_MACHINE_IP = "http://192.168.1.29:8080";
+const DEV_MACHINE_IP = "https://carly-fucker-v2.azurewebsites.net";
 
 function pickBaseUrl(): string {
   // If you're on iOS SIMULATOR, localhost works.
@@ -17,7 +18,7 @@ function pickBaseUrl(): string {
     }
 
     // Android emulator special-case:
-    return "http://10.0.2.2:8080";
+    return "https://carly-fucker-v2.azurewebsites.net";
   }
 
   // production fallback (adjust later)

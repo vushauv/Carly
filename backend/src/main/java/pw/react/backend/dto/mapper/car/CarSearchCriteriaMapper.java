@@ -47,7 +47,6 @@ public interface CarSearchCriteriaMapper {
         return carFeatures;
     }
 
-
     private void addFeature(List<CarFeature> carFeatures, String dictName, String value)
     {
         // If the value is not provided - do not include it in the list

@@ -3,26 +3,26 @@ import styles from "./Button.module.css";
 import type { ButtonHTMLAttributes } from "react";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children: string;
-  color?: "primary" | "secondary";
+  label: string;
+  color?: "primary" | "secondary" | "danger";
 }
 
 const Button = ({
-  children,
+  label,
   className,
   color = "primary",
-  ...props
+  ...rest
 }: ButtonProps) => {
-  //...props to pass any other button attributes like onClick, disabled, etc.
   return (
     <button
+      {...rest}
       className={cn(styles.button, className, {
         [styles.primary]: color === "primary",
         [styles.secondary]: color === "secondary",
+        [styles.danger]: color === "danger",
       })}
-      {...props}
     >
-      {children}
+      {label}
     </button>
   );
 };

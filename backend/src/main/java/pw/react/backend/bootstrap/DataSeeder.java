@@ -1,6 +1,5 @@
 package pw.react.backend.bootstrap;
 
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -42,7 +41,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Component
-@Profile({"mysql", "batch"})
+@Profile({"mysql", "batch", "azure-mysql"})
 @RequiredArgsConstructor
 public class DataSeeder implements ApplicationRunner {
     private final UserTypeDictionaryRepository userTypeDictionaryRepository;

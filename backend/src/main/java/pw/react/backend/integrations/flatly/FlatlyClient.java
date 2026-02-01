@@ -24,7 +24,7 @@ public class FlatlyClient {
     private final RestTemplate restTemplate;
 
     //path to application.yml param
-    @Value("${integrations.flatly.base-url}")
+    @Value("$http://localhost:8080")
     private String baseUrl;
 
     // Toggle for tests

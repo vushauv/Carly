@@ -1,0 +1,15 @@
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* centers pagination horizontally */
+  
+    gap: 12px;               /* space between buttons and text */
+    margin: 24px 0;          /* vertical spacing from content */
+  }
+  
+  .pageInfo {
+    margin: 0 4px;
+    font-size: 0.95rem;
+    opacity: 0.85;
+    white-space: nowrap;    /* prevents line break: "Page 1 / 10" */
+  }
