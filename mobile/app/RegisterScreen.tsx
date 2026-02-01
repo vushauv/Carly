@@ -13,10 +13,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-
 import { saveProfile } from "../lib/profileStorage";
 import { registerUser, getUserById } from "../lib/userApi";
 import { ApiError } from "../lib/apiClient";
+import { clearCachedReferenceData } from "../lib/referenceDataStorage";
+import { resetSearchLookupsMemo } from "../lib/carlyApi";
+import { purgeLegacyCarPrefsGlobalKeys } from "../lib/storage";
+import { purgeLegacyFlatlyBookingsGlobalKey } from "../lib/flatlyBookingsStorage";
 
 function onlyDigits(s: string): string {
   return (s || "").replace(/\D/g, "");
@@ -111,26 +114,41 @@ export default function RegisterScreen() {
       // If this fails, backend did NOT store/commit the user.
       const info = await getUserById(userId);
 
-      const fullName = `${info.firstName ?? n} ${info.lastName ?? s}`.trim();
-
       await saveProfile({
         userId,
         email: info.email ?? e,
-        phoneDigits: info.contactNumber ? String(info.contactNumber) : pDigits,
-        fullName: fullName || "—",
+        phoneDigits: info.contactNumber ? String(info.contactNumber) : "",
+        firstName: info.firstName ?? n,
+        secondName: info.secondName ?? "",
+        lastName: info.lastName ?? s,
       });
+      await purgeLegacyCarPrefsGlobalKeys();
+      await purgeLegacyFlatlyBookingsGlobalKey();
+      
+      await clearCachedReferenceData();
+      resetSearchLookupsMemo();
 
       router.replace("/tabs/SearchTab");
     } catch (err) {
-      const msg = prettyApiError(err);
+        if (err instanceof ApiError) {
+          const body = err.body as any;
+          const code: string | undefined =
+            body && typeof body === "object" ? String(body.code ?? body.message ?? "") : undefined;
 
-      // This message makes it obvious what failed.
-      Alert.alert(
-        "Register failed",
-        msg.includes("404")
-          ? `${msg}\n\nServer returned a userId but GET /users/{id} failed. That usually means the backend did NOT persist the user.`
-          : msg
-      );
+          if (err.status === 409 || code === "USER_ALREADY_EXISTS" || code === "EMAIL_ALREADY_IN_USE") {
+              Alert.alert("Account exists", "An account with this email already exists. Try logging in.");
+              return;
+          }
+
+          if (err.status === 422) {
+            Alert.alert("Invalid input", "Please check the form fields and try again.");
+            return;
+          }
+        }
+
+        // fallback
+        const msg = prettyApiError(err);
+        Alert.alert("Register failed", msg);
     } finally {
       setLoading(false);
     }

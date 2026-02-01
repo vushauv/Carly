@@ -108,7 +108,19 @@ export default function SearchTab() {
       const res = await searchCars({ ...(nextFilters as any), __page: nextPage });
 
       setCars((prev) => {
-        const incoming = filterOutSeen(res, likedSet, dislikedSet);
+        // ✅ When user changes filters (mode === "replace"), show matches even if seen before.
+        // Otherwise you can easily end up with "No more cars" while backend returned data.
+        const incoming =
+          mode === "replace"
+            ? res
+            : filterOutSeen(res, likedSet, dislikedSet);
+
+        if (__DEV__) {
+          console.log(
+            `[CARS][UI] mode=${mode} page=${nextPage} backend=${res.length} incoming=${incoming.length} liked=${likedSet.size} disliked=${dislikedSet.size}`
+          );
+        }
+
         return mode === "replace" ? incoming : [...prev, ...incoming];
       });
 
@@ -121,6 +133,7 @@ export default function SearchTab() {
       setPrefetching(false);
     }
   }
+
 
   useEffect(() => {
     (async () => {
@@ -300,21 +313,20 @@ function Chip({ label }: { label: string }) {
 
 function CarCardContent({ car, onSeeMore }: { car: CarCard; onSeeMore: (c: CarCard) => void }) {
   const images = useMemo(() => {
-    const base = car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id)}/900/600`;
-    return [
-      base,
-      `https://picsum.photos/seed/${encodeURIComponent(car.id + "_2")}/900/600`,
-      `https://picsum.photos/seed/${encodeURIComponent(car.id + "_3")}/900/600`,
-    ];
-  }, [car.id, car.imageUrl]);
+    // ✅ Use backend images (variable length)
+    if (Array.isArray(car.imageUrls) && car.imageUrls.length > 0) return car.imageUrls;
+
+    // ✅ Safety fallback: exactly ONE random
+    return [car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id + "_" + Date.now())}/900/600`];
+  }, [car.id, car.imageUrl, car.imageUrls]);
 
   return (
     <CarCardView
       title={car.title}
       subtitle={car.subtitle}
       images={images}
-      metaLeft={`🎨 ${car.color}`}
-      metaRight={`⭐ ${car.rating?.toFixed(1) ?? "—"}`}
+      metaLeft={`⛽ ${car.fuelType}`}
+      metaRight={`🎨 ${car.color}`}
       footerLeft={`${car.pricePerDay} ${car.currency} / day`}
       footerRight={
         <Pressable onPress={() => onSeeMore(car)} style={styles.seeMoreBtn}>
@@ -325,6 +337,7 @@ function CarCardContent({ car, onSeeMore }: { car: CarCard; onSeeMore: (c: CarCa
     />
   );
 }
+
 
 function ActionButton({
   variant,

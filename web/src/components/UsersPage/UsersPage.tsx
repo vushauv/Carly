@@ -22,7 +22,9 @@ const ManageUsersPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const loadUsersPage = async (page: number) => {
+    console.log(`[UsersPage] loadUsersPage called with page:`, page);
     try {
+      console.log(`[UsersPage] Setting loading to true`);
       setLoading(true);
 
       const usersData = await userService.getAllUsers(page, PAGE_SIZE + 1);
@@ -43,6 +45,7 @@ const ManageUsersPage = () => {
     } catch (err) {
       console.error("[UsersPage] Failed to load users:", err);
     } finally {
+      console.log(`[UsersPage] Setting loading to false`);
       setLoading(false);
     }
   };

@@ -54,13 +54,14 @@ public class FlatlyService {
         outbound.setFlatId(request.getFlatId());
         outbound.setDateFrom(request.getDateFrom());
         outbound.setDateTo(request.getDateTo());
-        outbound.setGuestsCount(request.getGuestsCount());     // REQUIRED
+        outbound.setGuestsCount(request.getGuestsCount());
         outbound.setSourceRef(booking.getBookingId());
 
         log.info(
-                "Calling Flatly createBooking: sourceRef={}, flatId={}, dateFrom={}, dateTo={}",
+                "Calling Flatly createBooking: sourceRef={}, flatId={}, guestCount={}, dateFrom={}, dateTo={}",
                 outbound.getSourceRef(),
                 outbound.getFlatId(),
+                outbound.getGuestsCount(),
                 outbound.getDateFrom(),
                 outbound.getDateTo()
         );

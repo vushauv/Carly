@@ -41,7 +41,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Component
-@Profile({"mysql", "batch"})
+@Profile({"mysql", "batch", "azure-mysql"}) //without azure-mysql specified here, I think the DataSeeder will not run on Azure
 @RequiredArgsConstructor
 public class DataSeeder implements ApplicationRunner {
     private final UserTypeDictionaryRepository userTypeDictionaryRepository;
@@ -297,12 +297,12 @@ public class DataSeeder implements ApplicationRunner {
     }
 
     private Booking makeBooking(User user, Car car,
-            BookingStatusDictionary carBookingStatus,
-            BookingStatusDictionary flatBookingStatus,
-            Location pickupLocation,
-            Location returnLocation,
-            LocalDateTime from,
-            LocalDateTime to) {
+                                BookingStatusDictionary carBookingStatus,
+                                BookingStatusDictionary flatBookingStatus,
+                                Location pickupLocation,
+                                Location returnLocation,
+                                LocalDateTime from,
+                                LocalDateTime to) {
         Booking b = new Booking();
         b.setUser(user);
         b.setCar(car);

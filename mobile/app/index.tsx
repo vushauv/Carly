@@ -14,9 +14,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-
+import { clearCachedReferenceData } from "../lib/referenceDataStorage";
+import { resetSearchLookupsMemo } from "../lib/carlyApi";
 import { loginUser, getUserById } from "../lib/userApi";
 import { saveProfile } from "../lib/profileStorage";
+import { purgeLegacyCarPrefsGlobalKeys } from "../lib/storage";
+import { purgeLegacyFlatlyBookingsGlobalKey } from "../lib/flatlyBookingsStorage";
+import { ApiError } from "../lib/apiClient";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -44,17 +48,57 @@ export default function LoginScreen() {
       // GET /users/{id} -> user info
       const info = await getUserById(userId);
 
-      const fullName = `${info.firstName ?? ""} ${info.lastName ?? ""}`.trim();
-
       await saveProfile({
         userId,
         email: info.email ?? e,
         phoneDigits: info.contactNumber ? String(info.contactNumber) : "",
-        fullName: fullName || "—",
+        firstName: info.firstName ?? "",
+        secondName: info.secondName ?? "",
+        lastName: info.lastName ?? "",
       });
 
+      await purgeLegacyCarPrefsGlobalKeys();
+      await purgeLegacyFlatlyBookingsGlobalKey();
+
+      await clearCachedReferenceData();
+      resetSearchLookupsMemo();
       router.replace("/tabs/SearchTab");
-    } catch (err: any) {
+     } catch (err: any) {
+      if (err instanceof ApiError) {
+        // If backend returns ExceptionDetails, it's likely in err.body
+        const body = err.body as any;
+
+        // Support BOTH shapes:
+        // 1) { code: "EMAIL_NOT_FOUND", message: "..." }
+        // 2) { message: "EMAIL_NOT_FOUND", ... }
+        const code: string | undefined =
+          (body && typeof body === "object" && (body.code || body.message)) || undefined;
+
+        if (err.status === 422) {
+          Alert.alert("Invalid input", "Please enter a valid email and password.");
+          return;
+        }
+
+        if (err.status === 401) {
+          if (code === "EMAIL_NOT_FOUND") {
+            Alert.alert("Login failed", "No account exists for this email.");
+            return;
+          }
+          if (code === "INVALID_PASSWORD") {
+            Alert.alert("Login failed", "Wrong password.");
+            return;
+          }
+
+          // fallback if backend doesn't send code
+          Alert.alert("Login failed", "Invalid email or password.");
+          return;
+        }
+
+        // Other HTTP errors
+        Alert.alert("Error", err.message);
+        return;
+      }
+
       Alert.alert("Login failed", err?.message ?? "Unknown error");
     } finally {
       setLoading(false);

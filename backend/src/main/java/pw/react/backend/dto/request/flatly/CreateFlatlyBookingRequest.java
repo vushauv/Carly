@@ -30,8 +30,8 @@ public class CreateFlatlyBookingRequest {
     @NotNull(message = "Date to is mandatory")
     private LocalDateTime dateTo;
 
-    //TODO: decide if we wanna prompt users for the guest count in the app, a default of 1 for now
-    private Integer guestsCount = 1;
+    @NotNull(message = "Guests count is mandatory")
+    private Integer guestsCount;
 
 }
 

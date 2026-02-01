@@ -6,74 +6,16 @@ import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import CarCardView from "../components/CarCardView";
 import { useLocalSearchParams } from "expo-router";
+import { cancelFlatlyBooking } from "../../lib/flatlyApi";
+import { getFlatlyBookings, markFlatlyCancelled } from "../../lib/flatlyBookingsStorage";
 
-import { cancelBooking, getBookings, seedBookingsIfEmpty, type Booking, type BookingStatus } from "../../lib/bookingsStorage";
+import {
+  cancelCarBookingOnBackend,
+  getBookingsFromBackend,
+  type Booking,
+  type BookingStatus,
+} from "../../lib/bookingsApi";
 
-const SEED_BOOKINGS: Booking[] = [
-  {
-    id: "b1",
-    status: "current",
-    state: "Booked",
-    startDate: "2026-02-01",
-    endDate: "2026-02-10",
-    car: {
-      brand: "VW",
-      model: "Golf",
-      plate: "WZ 12345",
-      images: [
-        "https://picsum.photos/seed/car_b1_1/900/600",
-        "https://picsum.photos/seed/car_b1_2/900/600",
-      ],
-    },
-    createdAtISO: new Date().toISOString(),
-  },
-  {
-    id: "b2",
-    status: "current",
-    state: "Booked",
-    startDate: "2026-03-03",
-    endDate: "2026-03-07",
-    car: {
-      brand: "BMW",
-      model: "X1",
-      plate: "WX 99887",
-      images: [],
-    },
-    flat: {
-      address: "Sesame Street 123",
-      images: ["https://picsum.photos/seed/flat_b2_1/900/600"],
-    },
-    createdAtISO: new Date().toISOString(),
-  },
-  {
-    id: "b3",
-    status: "history",
-    state: "Booked",
-    startDate: "2025-12-12",
-    endDate: "2025-12-18",
-    car: {
-      brand: "VW",
-      model: "Polo",
-      plate: "WA 55221",
-      images: ["https://picsum.photos/seed/car_b3_1/900/600"],
-    },
-    rating: 5,
-    createdAtISO: new Date().toISOString(),
-  },
-  {
-    id: "b4",
-    status: "history",
-    state: "Booked",
-    startDate: "2025-11-01",
-    endDate: "2025-11-04",
-    flat: {
-      address: "Baker Street 221B",
-      images: [],
-    },
-    rating: 4,
-    createdAtISO: new Date().toISOString(),
-  },
-];
 
 export default function HomeTab() {
   const router = useRouter();
@@ -83,10 +25,41 @@ export default function HomeTab() {
   const [all, setAll] = useState<Booking[]>([]);
 
   const load = useCallback(async () => {
-    await seedBookingsIfEmpty(SEED_BOOKINGS);
-    const items = await getBookings();
-    setAll(items);
+    const carBookings = await getBookingsFromBackend();
+
+    const flatly = await getFlatlyBookings();
+    const flatBookings: Booking[] = flatly.map((fb) => {
+      const cancelled = fb.status === "CANCELLED";
+      return {
+        id: `flatly-${fb.flatBookingId}`, // keep unique + routeable
+        status: cancelled ? "history" : "current",
+        state: cancelled ? "Cancelled" : "Booked",
+        startDate: fb.dateFromDayISO,
+        endDate: fb.dateToDayISO,
+        car: undefined,
+        flat: fb.flatSnapshot
+          ? {
+              address: `${fb.flatSnapshot.addressLine}, ${fb.flatSnapshot.city}`,
+              images: fb.flatSnapshot.imageUrls,
+            }
+          : {
+              address: `Flat #${fb.flatId}`,
+              images: [],
+            },
+        createdAtISO: fb.createdAtISO,
+        cancelledAtISO: fb.cancelledAtISO,
+      };
+    });
+
+    const merged = [...carBookings, ...flatBookings];
+
+    // optional: newest first by createdAtISO (or fallback)
+    merged.sort((a, b) => String(b.createdAtISO ?? "").localeCompare(String(a.createdAtISO ?? "")));
+
+    setAll(merged);
+
   }, []);
+
 
   useEffect(() => {
     void load();
@@ -109,6 +82,8 @@ export default function HomeTab() {
   const bookings = useMemo(() => all.filter((b) => b.status === selected), [all, selected]);
 
   async function onCancel(id: string) {
+    const isFlatly = id.startsWith("flatly-");
+
     Alert.alert(
       "Cancel booking?",
       "Are you sure? This will move it to History as Cancelled.",
@@ -118,13 +93,53 @@ export default function HomeTab() {
           text: "Yes, cancel",
           style: "destructive",
           onPress: async () => {
-            await cancelBooking(id);
-            await load();
+            try {
+              if (isFlatly) {
+                const raw = id.replace("flatly-", "");
+                const flatBookingId = Number(raw);
+
+                if (!Number.isFinite(flatBookingId)) {
+                  Alert.alert("Cancel failed", "Invalid Flatly booking id.");
+                  return;
+                }
+
+                // Partner cancel (can fail / be down) -> catch and show friendly message
+                try {
+                  await cancelFlatlyBooking(flatBookingId);
+                } catch (e: any) {
+                  Alert.alert(
+                    "Cancel failed",
+                    "Flatly partner API seems unavailable right now (or booking was not found). Please try again later."
+                  );
+                  return; // IMPORTANT: don't mark local cancelled
+                }
+
+                // Only mark locally cancelled after partner cancel succeeds
+                await markFlatlyCancelled(flatBookingId);
+              } else {
+                // Carly car cancel
+                try {
+                  await cancelCarBookingOnBackend(id);
+                } catch (e: any) {
+                  Alert.alert("Cancel failed", e?.message ?? "Could not cancel car booking.");
+                  return;
+                }
+              }
+
+              // Refresh UI after successful cancel
+              await load();
+              Alert.alert("Cancelled", "Your booking was cancelled.");
+            } catch (e: any) {
+              // Last-resort catch so nothing becomes "Uncaught (in promise)"
+              Alert.alert("Cancel failed", e?.message ?? "Unknown error");
+            }
           },
         },
       ]
     );
   }
+
+
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -176,6 +191,13 @@ export default function HomeTab() {
   );
 }
 
+function dateOnly(input?: string | null): string {
+  const s = String(input ?? "").trim();
+  if (!s) return "—";
+  if (s.length >= 10) return s.slice(0, 10);
+  return s;
+}
+
 function BookingCard({
   booking,
   onSeeMore,
@@ -187,17 +209,27 @@ function BookingCard({
 }) {
   const cancelled = booking.state === "Cancelled";
 
+  const carSubtitle =
+    booking.car?.fuelType || booking.car?.color
+      ? [booking.car?.fuelType, booking.car?.color].filter(Boolean).join(" • ")
+      : null;
+
   return (
     <View style={styles.card}>
       {booking.car && booking.flat ? (
         <>
           <CarCardView
             title={`${booking.car.brand} ${booking.car.model}`}
-            subtitle={`Plate: ${booking.car.plate}`}
+            subtitle={carSubtitle}
             images={booking.car.images}
             fallbackSource={require("../../assets/images/no-images.png")}
-            metaLeft={"🚗 Car"}
+            metaLeft={booking.car.fuelType ? `⛽ ${booking.car.fuelType}` : "🚗 Car"}
             metaRight={cancelled ? "❌ Cancelled" : "✅ Booked"}
+            footerLeft={
+              typeof booking.car.pricePerDay === "number" && booking.car.currency
+                ? `${booking.car.pricePerDay} ${booking.car.currency} / day`
+                : undefined
+            }
             imageHeight={200}
           />
 
@@ -216,11 +248,16 @@ function BookingCard({
       ) : booking.car ? (
         <CarCardView
           title={`${booking.car.brand} ${booking.car.model}`}
-          subtitle={`Plate: ${booking.car.plate}`}
+          subtitle={carSubtitle}
           images={booking.car.images}
           fallbackSource={require("../../assets/images/no-images.png")}
-          metaLeft={"🚗 Car"}
+          metaLeft={booking.car.fuelType ? `⛽ ${booking.car.fuelType}` : "🚗 Car"}
           metaRight={cancelled ? "❌ Cancelled" : "✅ Booked"}
+          footerLeft={
+            typeof booking.car.pricePerDay === "number" && booking.car.currency
+              ? `${booking.car.pricePerDay} ${booking.car.currency} / day`
+              : undefined
+          }
           imageHeight={200}
         />
       ) : booking.flat ? (
@@ -238,12 +275,8 @@ function BookingCard({
       <View style={styles.bottomInfo}>
         <View style={styles.bottomRow}>
           <Text style={styles.metaText}>
-            {booking.startDate} - {booking.endDate}
+            {dateOnly(booking.startDate)} - {dateOnly(booking.endDate)}
           </Text>
-
-          {booking.status === "history" && booking.state !== "Cancelled" && typeof booking.rating === "number" ? (
-            <Stars value={booking.rating} />
-          ) : null}
         </View>
 
         <View style={styles.cardActions}>
@@ -260,12 +293,6 @@ function BookingCard({
       </View>
     </View>
   );
-}
-
-function Stars({ value }: { value: number }) {
-  const n = Math.max(0, Math.min(5, Math.floor(value)));
-  const out = "★★★★★☆☆☆☆☆".slice(5 - n, 10 - n);
-  return <Text style={styles.stars}>{out}</Text>;
 }
 
 const styles = StyleSheet.create({

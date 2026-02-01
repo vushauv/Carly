@@ -2,6 +2,7 @@
 import type { CarCard, CarColor, CarSearchFilters, FuelType } from "./models";
 import { getReferenceData } from "./referenceDataApi";
 import { getCachedReferenceData, setCachedReferenceData } from "./referenceDataStorage";
+import { apiRequest, ApiError } from "./apiClient";
 
 export type SearchLookups = {
   brands: string[];
@@ -10,29 +11,41 @@ export type SearchLookups = {
   fuels: FuelType[]; // not currently used by UI (fuel UI is hardcoded), but useful later
 };
 
+export function resetSearchLookupsMemo(): void {
+  MEMO_LOOKUPS = null;
+}
+
 // ---------------------
 // Fallback (if backend down)
 // ---------------------
 const FALLBACK_LOOKUPS: SearchLookups = {
-  brands: ["Volkswagen", "BMW", "Audi", "Toyota", "Skoda"],
+  brands: ["BMW", "Audi", "Toyota", "Skoda", "Mercedes"],
   modelsByBrand: {
-    "*": ["Passat", "Golf", "Polo", "3 Series", "1 Series", "X1", "A4", "A3", "Q3", "Corolla", "Yaris", "RAV4", "Octavia", "Fabia", "Superb"],
+    "*": ["X5", "A4", "Corolla", "Octavia", "C-Class"],
+    BMW: ["X5", "3 Series", "5 Series"],
+    Audi: ["A3", "A4", "Q5"],
+    Toyota: ["Corolla", "Yaris", "RAV4"],
+    Skoda: ["Octavia", "Fabia", "Superb"],
+    Mercedes: ["C-Class", "E-Class", "GLA"],
   },
   colors: ["black", "white", "silver", "gray", "red", "blue", "green", "yellow", "orange", "brown"],
   fuels: ["gas", "diesel", "electric", "hybrid"],
 };
 
+// ---------------------
+// In-memory memo for lookups
+// ---------------------
 let MEMO_LOOKUPS: SearchLookups | null = null;
 
+// ---------------------
+// Small utils
+// ---------------------
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// ---------------------
-// Normalizers
-// ---------------------
-function normalizeKey(name: unknown): string {
-  return String(name ?? "")
+function normalizeKey(s: any): string {
+  return String(s ?? "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " "); // "Fuel type" -> "fuel type"
@@ -166,7 +179,16 @@ export async function getSearchLookups(): Promise<SearchLookups> {
 
     if (__DEV__) {
       console.log("[REFDATA] parsed lookups", lookups);
-      console.log("[REFDATA] brands#", lookups.brands.length, "models#", lookups.modelsByBrand["*"]?.length ?? 0, "colors#", lookups.colors.length, "fuels#", lookups.fuels.length);
+      console.log(
+        "[REFDATA] brands#",
+        lookups.brands.length,
+        "models#",
+        lookups.modelsByBrand["*"]?.length ?? 0,
+        "colors#",
+        lookups.colors.length,
+        "fuels#",
+        lookups.fuels.length
+      );
     }
 
     return lookups;
@@ -180,25 +202,30 @@ export async function getSearchLookups(): Promise<SearchLookups> {
 }
 
 // ---------------------
-// Mock car generation (still local for now)
+// Mocked cars (old approach)
+// (kept for offline fallback / debug, but searchCars now hits backend)
 // ---------------------
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-function seededNumber(seed: string) {
+function seededNumber(seed: string): number {
   let h = 2166136261;
   for (let i = 0; i < seed.length; i++) {
     h ^= seed.charCodeAt(i);
     h = Math.imul(h, 16777619);
   }
-  return ((h >>> 0) % 10000) / 10000;
+  // 0..1
+  return (h >>> 0) / 4294967295;
 }
 
 function makeMockCars(seed: string, count: number, lookups: SearchLookups): CarCard[] {
   const cars: CarCard[] = [];
+
   const brands = lookups.brands.length ? lookups.brands : FALLBACK_LOOKUPS.brands;
-  const models = (lookups.modelsByBrand["*"] ?? []).length ? (lookups.modelsByBrand["*"] ?? []) : (FALLBACK_LOOKUPS.modelsByBrand["*"] ?? []);
+  const models = (lookups.modelsByBrand["*"] ?? []).length
+    ? lookups.modelsByBrand["*"] ?? []
+    : FALLBACK_LOOKUPS.modelsByBrand["*"] ?? [];
   const colors = lookups.colors.length ? lookups.colors : FALLBACK_LOOKUPS.colors;
   const fuels = lookups.fuels.length ? lookups.fuels : FALLBACK_LOOKUPS.fuels;
 
@@ -248,17 +275,209 @@ function applyFilters(all: CarCard[], filters: CarSearchFilters): CarCard[] {
   return out;
 }
 
-export async function searchCars(filters: CarSearchFilters & { __page?: number }): Promise<CarCard[]> {
-  // Keeping your original mocked paging behavior
-  await sleep(220);
+// ---------------------
+// Backend DTOs (from OpenAPI)
+// ---------------------
+type CarFeatureDto = {
+  dictionaryId?: number;
+  name?: string;
+  value: string;
+};
 
-  const lookups = await getSearchLookups();
+type GetCarResponseDto = {
+  carId: number;
+  carFeatures?: CarFeatureDto[];
+  urls?: string[];
+  price?: number;
+};
 
-  const page = filters.__page ?? 0;
-  const seed = JSON.stringify({ filters, page });
+// ---------------------
+// DTO -> UI mapping
+// ---------------------
+function extractFeatureValue(features: CarFeatureDto[] | undefined, wanted: string): string | undefined {
+  if (!Array.isArray(features)) return undefined;
+  const w = normalizeKey(wanted);
 
-  const all = makeMockCars(seed, 12, lookups);
-  return applyFilters(all, filters);
+  for (const f of features) {
+    const k = normalizeKey(f?.name);
+    if (!k) continue;
+    if (k === w) return String(f.value ?? "").trim() || undefined;
+
+    // common variants
+    if (w === "fuel type" && (k === "fuel" || k === "fuel type")) return String(f.value ?? "").trim() || undefined;
+  }
+  return undefined;
+}
+
+function normalizeFuelMaybe(v: string | undefined): FuelType | null {
+  if (!v) return null;
+  return normalizeFuel(v);
+}
+
+function normalizeColorMaybe(v: string | undefined): CarColor | null {
+  if (!v) return null;
+  return normalizeColor(v);
+}
+
+function makeSinglePlaceholderUrl(carId: string): string {
+  // "random" but stable per car within a session (good enough)
+  const seed = `${carId}_${Math.floor(Math.random() * 1_000_000_000)}`;
+  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/900/600`;
+}
+
+function dtoToCard(dto: GetCarResponseDto): CarCard | null {
+  const id = String(dto.carId);
+
+  const brand = extractFeatureValue(dto.carFeatures, "brand") ?? "—";
+  const model = extractFeatureValue(dto.carFeatures, "model") ?? "—";
+
+  const fuelRaw = extractFeatureValue(dto.carFeatures, "fuel type") ?? extractFeatureValue(dto.carFeatures, "fuel");
+  const colorRaw = extractFeatureValue(dto.carFeatures, "color");
+
+  if (__DEV__) console.log("[CARS] dto colorRaw:", colorRaw);
+
+  const fuelType = (normalizeFuelMaybe(fuelRaw) ?? "gas") as FuelType;
+  const color = (normalizeColorMaybe(colorRaw) ?? "black") as CarColor;
+
+  const pricePerDay = typeof dto.price === "number" ? dto.price : 0;
+
+  const backendUrls =
+    Array.isArray(dto.urls) ? dto.urls.filter((u): u is string => typeof u === "string" && u.trim().length > 0) : [];
+
+  // ✅ If backend has images: use all of them.
+  // ✅ If backend has none: generate exactly ONE placeholder.
+  const imageUrls = backendUrls.length > 0 ? backendUrls : [makeSinglePlaceholderUrl(id)];
+
+  // back-compat: keep first imageUrl for places still using it
+  const imageUrl = imageUrls[0];
+
+  const title = `${brand} ${model}`.trim();
+  const subtitle = `${fuelType} • ${color}`;
+
+  return {
+    id,
+    title: title || "Car",
+    subtitle,
+
+    brand,
+    model,
+    fuelType,
+    color,
+
+    currency: "PLN",
+    pricePerDay,
+
+    rating: undefined,
+
+    imageUrl,
+    imageUrls, // ✅ NEW
+
+    raw: dto,
+  };
+}
+
+function toBackendEnum(v: string | undefined | null): string | undefined {
+  const s = String(v ?? "").trim();
+  return s ? s.toUpperCase() : undefined;
+}
+
+function normCi(s: any): string {
+  return String(s ?? "").trim().toLowerCase();
+}
+function eqCi(a: any, b: any): boolean {
+  const na = normCi(a);
+  const nb = normCi(b);
+  return !!na && !!nb && na === nb;
+}
+function applyLocalFiltersCaseInsensitive(cards: CarCard[], filters: CarSearchFilters): CarCard[] {
+  let out = cards;
+
+  if (filters.brand) out = out.filter((c) => eqCi(c.brand, filters.brand));
+  if (filters.model) out = out.filter((c) => eqCi(c.model, filters.model));
+  if (filters.color) out = out.filter((c) => eqCi(c.color, filters.color));
+  if (filters.fuelType) out = out.filter((c) => eqCi(c.fuelType, filters.fuelType));
+
+  const min = filters.priceRange?.min ?? 0;
+  const max = filters.priceRange?.max ?? Number.POSITIVE_INFINITY;
+  out = out.filter((c) => c.pricePerDay >= min && c.pricePerDay <= max);
+
+  return out;
+}
+
+export async function searchCars(
+  filters: CarSearchFilters & { __page?: number }
+): Promise<CarCard[]> {
+  const uiPage = filters.__page ?? 0;
+  const uiPageSize = 12;
+
+  const hasFeatureFilters = !!(filters.brand || filters.model || filters.color || filters.fuelType);
+
+  // Normalize outgoing filters to backend ALL CAPS
+  const bBrand = toBackendEnum(filters.brand);
+  const bModel = toBackendEnum(filters.model);
+  const bColor = toBackendEnum(filters.color);
+  const bFuel = toBackendEnum(filters.fuelType);
+
+  // Price range -> backend params
+  const minPrice = filters.priceRange?.min;
+  const maxPrice = filters.priceRange?.max;
+
+  // -------------------------
+  // FAST PATH (no feature filters): use backend paging
+  // -------------------------
+  if (!hasFeatureFilters) {
+    const qs = new URLSearchParams();
+    qs.set("page", String(uiPage));
+    qs.set("size", String(uiPageSize));
+
+    if (typeof minPrice === "number") qs.set("minPrice", String(minPrice));
+    if (typeof maxPrice === "number") qs.set("maxPrice", String(maxPrice));
+
+    if (__DEV__) console.log("[CARS] GET /cars (PAGED)", qs.toString());
+
+    const dtos = await apiRequest<GetCarResponseDto[]>(`/cars?${qs.toString()}`, { method: "GET" });
+
+    const mapped = (Array.isArray(dtos) ? dtos : [])
+      .map(dtoToCard)
+      .filter((x): x is CarCard => !!x);
+
+    // ✅ No UI-side filtering knows better than backend
+    return mapped;
+  }
+
+  // -------------------------
+  // FILTERS ON: DO NOT send page/size
+  // Backend returns the filtered set; we paginate locally for the UI deck.
+  // -------------------------
+  const qs = new URLSearchParams();
+
+  if (bBrand) qs.set("features.brand", bBrand);
+  if (bModel) qs.set("features.model", bModel);
+  if (bColor) qs.set("features.color", bColor);
+  if (bFuel) qs.set("features.fuelType", bFuel);
+
+  if (typeof minPrice === "number") qs.set("minPrice", String(minPrice));
+  if (typeof maxPrice === "number") qs.set("maxPrice", String(maxPrice));
+
+  if (__DEV__) console.log("[CARS] GET /cars (UNPAGED, filtered)", qs.toString());
+
+  const dtosAll = await apiRequest<GetCarResponseDto[]>(`/cars?${qs.toString()}`, { method: "GET" });
+
+  const mappedAll = (Array.isArray(dtosAll) ? dtosAll : [])
+    .map(dtoToCard)
+    .filter((x): x is CarCard => !!x);
+
+  // Local pagination only (NOT filtering)
+  const start = uiPage * uiPageSize;
+  const end = start + uiPageSize;
+
+  // Keep your existing "don't show no more cars" behavior
+  if (uiPage > 0 && mappedAll.length <= start) {
+    if (__DEV__) console.log("[CARS] end of filtered results, returning [] to prevent empty-state");
+    return [];
+  }
+
+  return mappedAll.slice(start, end);
 }
 
 // These exist because SearchTab calls them (even though they do nothing now)

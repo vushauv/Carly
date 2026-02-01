@@ -13,23 +13,32 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { Calendar } from "react-native-calendars";
-import { addBooking, updateBooking, type Booking } from "../../lib/bookingsStorage";
+import { createCarBookingOnBackend } from "../../lib/bookingsApi";
 import { useRouter } from "expo-router";
-
+import { ApiError } from "../../lib/apiClient";
 import type { FlatCard } from "../../lib/models";
 import type { LikedCar } from "../../lib/storage";
 import { clearLikedCars, getLikedCars, removeLikedCar } from "../../lib/storage";
 import { bookFlat, getPartnerFlatsForPeriod } from "../../lib/carlyApi";
 import CarCardView from "../components/CarCardView";
+import { createFlatlyBooking, getAvailableFlats } from "../../lib/flatlyApi";
+import { addFlatlyBooking } from "../../lib/flatlyBookingsStorage";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-type FlowStep = "none" | "bookCar" | "carSuccess" | "browseFlats" | "flatSuccess";
+type FlowStep =
+  | "none"
+  | "bookCar"
+  | "carSuccess"
+  | "browseFlats"
+  | "flatGuests"
+  | "flatSuccess";
 
 export default function LikedCarsTab() {
   const [liked, setLiked] = useState<LikedCar[]>([]);
@@ -40,6 +49,8 @@ export default function LikedCarsTab() {
   // Flow state
   const [step, setStep] = useState<FlowStep>("none");
   const [car, setCar] = useState<LikedCar | null>(null);
+  const [guestsCount, setGuestsCount] = useState<string>("1");
+  const [flatBookingSubmitting, setFlatBookingSubmitting] = useState(false);
 
   // car booking dates
   const [dateFrom, setDateFrom] = useState<string>("");
@@ -144,6 +155,8 @@ export default function LikedCarsTab() {
     setFlatIndex(0);
     setFlatImgIndex({});
     setBookingId("");
+    setGuestsCount("1");
+    setFlatBookingSubmitting(false);
   }
     function goToCurrentBookings() {
       // Close the flow UI so user doesn't return to success screen
@@ -156,52 +169,87 @@ export default function LikedCarsTab() {
       });
     }
 
-    function makeId(): string {
-      return `bk_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+
+ function toLocalDateTimeString(dayISO: string, hhmmss = "12:00:00"): string {
+   // Backend expects LocalDateTime, so no timezone suffix.
+   // Example: "2026-05-01T12:00:00"
+   return `${dayISO}T${hhmmss}`;
+ }
+
+ async function confirmCarBooking() {
+   if (!car) return;
+
+   if (!dateFrom || dateFrom < minFrom) {
+     Alert.alert("Invalid Date From", "Date From must be today or later.");
+     return;
+   }
+   if (!dateTo || dateTo < minTo) {
+     Alert.alert("Invalid Date To", "Date To must be after Date From.");
+     return;
+   }
+
+   try {
+     const fromLocal = toLocalDateTimeString(dateFrom, "12:00:00");
+     const toLocal = toLocalDateTimeString(dateTo, "12:00:00");
+
+     const newBookingId = await createCarBookingOnBackend({
+       carId: Number(car.id),
+       dateFromISO: fromLocal,
+       dateToISO: toLocal,
+       // pickupLocationId / returnLocationId later
+     });
+
+     setBookingId(newBookingId);
+     setStep("carSuccess");
+   } catch (err) {
+       const ui = friendlyBookingError(err);
+       Alert.alert(ui.title, ui.message);
+   }
+ }
+
+function friendlyBookingError(err: unknown): { title: string; message: string } {
+  if (err instanceof ApiError) {
+    const body = err.body as any;
+    const code =
+      body && typeof body === "object"
+        ? String(body.code ?? body.message ?? "")
+        : "";
+
+    // Conflicts (typical for "already booked / overlaps")
+    if (err.status === 409 || code.includes("CONFLICT") || code.includes("OVERLAP")) {
+      return {
+        title: "Booking unavailable",
+        message:
+          "Those dates aren’t available anymore (someone else likely booked it). Please pick different dates and try again.",
+      };
     }
 
-    function makePlate(): string {
-      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      const a = letters[Math.floor(Math.random() * letters.length)];
-      const b = letters[Math.floor(Math.random() * letters.length)];
-      const nums = String(Math.floor(10000 + Math.random() * 89999));
-      return `${a}${b} ${nums}`;
+    // Validation problems
+    if (err.status === 422) {
+      return {
+        title: "Invalid booking data",
+        message: "Please check the dates / guest count and try again.",
+      };
     }
 
-  async function confirmCarBooking() {
-    if (!car) return;
-
-    if (!dateFrom || dateFrom < minFrom) {
-      Alert.alert("Invalid Date From", "Date From must be today or later.");
-      return;
-    }
-    if (!dateTo || dateTo < minTo) {
-      Alert.alert("Invalid Date To", "Date To must be after Date From.");
-      return;
+    // Auth/permission
+    if (err.status === 401 || err.status === 403) {
+      return {
+        title: "Not allowed",
+        message: "Please log in again and retry.",
+      };
     }
 
-    const id = makeId();
-    const booking: Booking = {
-      id,
-      status: "current",
-      state: "Booked",
-      startDate: dateFrom,
-      endDate: dateTo,
-      car: {
-        brand: car.brand,
-        model: car.model,
-        plate: makePlate(),
-        images: [car.imageUrl || "https://picsum.photos/seed/booked_car/900/600"],
-      },
-      createdAtISO: new Date().toISOString(),
+    // Generic
+    return {
+      title: "Booking failed",
+      message: "We couldn’t complete the booking right now. Please try again later.",
     };
-
-    await addBooking(booking);
-    setBookingId(id);
-
-    setStep("carSuccess");
   }
 
+  return { title: "Booking failed", message: "Something went wrong. Please try again." };
+}
 
   async function openBrowseFlats() {
     if (!dateFrom || !dateTo) {
@@ -211,7 +259,7 @@ export default function LikedCarsTab() {
     setStep("browseFlats");
     setFlatsLoading(true);
     try {
-      const res = await getPartnerFlatsForPeriod(dateFrom, dateTo);
+      const res = await getAvailableFlats(dateFrom, dateTo);
       setFlats(res);
       setFlatIndex(0);
       setFlatImgIndex({});
@@ -223,27 +271,82 @@ export default function LikedCarsTab() {
     }
   }
 
-  async function onBookFlat() {
+  function onBookFlat() {
     const f = flats[flatIndex];
     if (!f) return;
 
-    try {
-      await bookFlat(f.id, dateFrom, dateTo);
+    // Default guest count to 1, but clamp to maxGuests if we know it.
+    const maxGuests =
+      typeof (f as any)?.raw?.max_guests === "number"
+        ? Number((f as any).raw.max_guests)
+        : undefined;
 
-      if (bookingId) {
-        await updateBooking(bookingId, {
-          flat: {
-            address: `${f.addressLine}, ${f.city}`,
-            images: f.imageUrls,
-          },
-        });
-      }
+    const startDefault = "1";
+    const clamped =
+      maxGuests && Number(startDefault) > maxGuests ? String(maxGuests) : startDefault;
+
+    setGuestsCount(clamped);
+    setStep("flatGuests");
+  }
+
+  async function submitFlatBooking() {
+    const f = flats[flatIndex];
+    if (!f) return;
+
+    const maxGuests =
+      typeof (f as any)?.raw?.max_guests === "number"
+        ? Number((f as any).raw.max_guests)
+        : undefined;
+
+    const n = Number(String(guestsCount ?? "").trim());
+
+    if (!Number.isFinite(n) || n < 1) {
+      Alert.alert("Invalid guest count", "Please enter a number >= 1.");
+      return;
+    }
+
+    if (maxGuests && n > maxGuests) {
+      Alert.alert("Too many guests", `This flat allows up to ${maxGuests} guests.`);
+      return;
+    }
+
+    setFlatBookingSubmitting(true);
+    try {
+      const flatBookingId = await createFlatlyBooking({
+        flatId: Number(f.id),
+        dateFromDayISO: dateFrom,
+        dateToDayISO: dateTo,
+        guestsCount: n, // ✅ passed to backend
+      });
+
+      await addFlatlyBooking({
+        flatBookingId,
+        flatId: Number(f.id),
+        dateFromDayISO: dateFrom,
+        dateToDayISO: dateTo,
+        flatSnapshot: {
+          title: f.title,
+          addressLine: f.addressLine,
+          city: f.city,
+          imageUrls: f.imageUrls,
+          currency: f.currency,
+          pricePerNight: f.pricePerNight,
+        },
+      });
 
       setStep("flatSuccess");
-    } catch (e: any) {
-      Alert.alert("Booking failed", e?.message ?? "Unknown error");
+    } catch (err) {
+      const ui = friendlyBookingError(err);
+      Alert.alert(ui.title, ui.message);
+      // Return to browsing flats so they can try again
+      setStep("browseFlats");
+    } finally {
+      setFlatBookingSubmitting(false);
     }
   }
+
+
+
 
 
   const modalOpen = step !== "none";
@@ -278,7 +381,7 @@ export default function LikedCarsTab() {
                 key={c.id}
                 title={c.title}
                 subtitle={c.subtitle}
-                images={[c.imageUrl || "https://picsum.photos/900/600"]}
+                images={(c as any).imageUrls?.length ? (c as any).imageUrls : [c.imageUrl || "https://picsum.photos/900/600"]}
                 metaLeft={`⛽ ${c.fuelType}`}
                 metaRight={`🎨 ${c.color}`}
                 footerLeft={`${c.pricePerDay} ${c.currency} / day`}
@@ -305,7 +408,7 @@ export default function LikedCarsTab() {
       <Modal visible={modalOpen} transparent={false} animationType="slide" onRequestClose={closeFlow}>
         <SafeAreaView style={[styles.flowSafe, { paddingTop: insets.top, paddingBottom: insets.bottom }]} edges={[]}>
 
-          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
             {/* Header */}
             <View style={[styles.flowHeader, { paddingTop: 6 }]}>
               <Text style={styles.flowTitle}>
@@ -502,6 +605,73 @@ export default function LikedCarsTab() {
                     </View>
                   </>
                 )}
+              </View>
+            ) : null}
+
+            {step === "flatGuests" ? (
+              <View style={{ flex: 1, padding: 16, gap: 12 }}>
+                <Text style={{ fontSize: 22, fontWeight: "900", color: "#111827" }}>
+                  Guest count
+                </Text>
+
+                <Text style={{ fontWeight: "800", color: "#6B7280" }}>
+                  How many guests will stay in this flat?
+                </Text>
+
+                <TextInput
+                  value={guestsCount}
+                  onChangeText={setGuestsCount}
+                  keyboardType="number-pad"
+                  placeholder="1"
+                  style={{
+                    backgroundColor: "#FFFBEB",
+                    borderWidth: 1,
+                    borderColor: "#FDE68A",
+                    borderRadius: 12,
+                    paddingVertical: 12,
+                    paddingHorizontal: 12,
+                    fontWeight: "900",
+                    color: "#111827",
+                  }}
+                />
+
+                <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
+                  <Pressable
+                    onPress={() => setStep("browseFlats")}
+                    disabled={flatBookingSubmitting}
+                    style={{
+                      flex: 1,
+                      borderRadius: 14,
+                      paddingVertical: 14,
+                      alignItems: "center",
+                      borderWidth: 1,
+                      borderColor: "#FDE68A",
+                      backgroundColor: "#FEF3C7",
+                      opacity: flatBookingSubmitting ? 0.6 : 1,
+                    }}
+                  >
+                    <Text style={{ fontWeight: "900", color: "#111827" }}>Back</Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => void submitFlatBooking()}
+                    disabled={flatBookingSubmitting}
+                    style={{
+                      flex: 1,
+                      borderRadius: 14,
+                      paddingVertical: 14,
+                      alignItems: "center",
+                      borderWidth: 1,
+                      borderColor: "#F59E0B",
+                      backgroundColor: "#FACC15",
+                      opacity: flatBookingSubmitting ? 0.6 : 1,
+                    }}
+                  >
+                    <Text style={{ fontWeight: "900", color: "#111827" }}>
+                      {flatBookingSubmitting ? "Booking…" : "Confirm booking"}
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
             ) : null}
 

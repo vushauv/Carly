@@ -36,14 +36,19 @@ export type CarCard = {
   model: string;
   fuelType: FuelType;
   color: CarColor;
-
+    //todo: remove, we only support PLN
   currency: "PLN" | "EUR" | "USD";
   pricePerDay: number;
 
-  rating?: number;
+  /** Back-compat: first image */
   imageUrl?: string;
+
+  /** ✅ 0..N images from backend. If backend returns none, we store exactly ONE placeholder. */
+  imageUrls?: string[];
+
   raw?: unknown;
 };
+
 
 // --------------------
 // Flatly partner models
@@ -58,7 +63,6 @@ export type FlatCard = {
   currency: "PLN" | "EUR" | "USD";
   pricePerNight: number;
 
-  rating?: number;
   imageUrls: string[]; // swipable images
   raw?: unknown;
 };
