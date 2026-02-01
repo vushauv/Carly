@@ -1,6 +1,6 @@
 // API Configuration - centralized hostname management
 export const API_CONFIG = {
-  BASE_URL: 'https://carly-fucker-v2.azurewebsites.net',
+  BASE_URL: 'http://localhost:8080/api',
   ENDPOINTS: {
     USERS: '/users',
     CARS: '/cars',

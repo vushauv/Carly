@@ -94,8 +94,8 @@ const BookingEditPage = () => {
       returnLocationId: form.returnLocationId,
       carBookingStatus: form.carBookingStatus,
       flatBookingStatus: form.flatBookingStatus,
-      carBookingDateFrom: form.carBookingDateFrom,
-      carBookingDateTo: form.carBookingDateTo,
+      carBookingDateFrom: form.carBookingDateFrom.split(".+")[0],
+      carBookingDateTo: form.carBookingDateTo.split(".+")[0],
     };
 
     try {

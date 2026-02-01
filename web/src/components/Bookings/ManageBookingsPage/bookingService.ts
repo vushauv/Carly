@@ -98,6 +98,15 @@ async updateBooking(
 
   console.log(`Updating booking ${bookingId}:`);
 
+  data.carBookingStatus = data.carBookingStatus.toUpperCase();
+  if (data.carBookingDateTo.endsWith("23:59:59"))
+    data.carBookingDateTo = data.carBookingDateTo + "T23:59:59";
+  if (data.carBookingDateTo.startsWith("T"))
+    data.carBookingDateTo = data.carBookingDateTo.substring(1);
+  if (data.carBookingDateFrom.endsWith("00:00:00"))
+    data.carBookingDateFrom = data.carBookingDateFrom + "T00:00:00";
+  if (data.carBookingDateFrom.startsWith("T"))
+    data.carBookingDateFrom = data.carBookingDateFrom.substring(1);
   console.log(data);
 
   return apiRequest<void>(url, {
