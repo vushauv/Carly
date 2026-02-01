@@ -1,6 +1,14 @@
 //mobile/app/booking/[id].tsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View, ActivityIndicator } from "react-native";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -12,9 +20,11 @@ import {
   type Booking,
 } from "../../lib/api/bookingsApi";
 
-import { cancelFlatlyBooking, getFlatBookingDetails, getFlatDetails } from "../../lib/api/flatlyApi";
-import { getFlatlyBookings, markFlatlyCancelled, type FlatlyBookingRecord } from "../../lib/storage/flatlyBookingsStorage";
-import type { FlatCard } from "../../lib/models";
+import {
+  cancelFlatlyBooking,
+  getFlatBookingDetails,
+  type FlatlyBookingDetailsResponse,
+} from "../../lib/api/flatlyApi";
 
 // -----------------------------
 // Helpers
@@ -22,7 +32,6 @@ import type { FlatCard } from "../../lib/models";
 function dateOnly(input?: string | null): string {
   const s = String(input ?? "").trim();
   if (!s) return "—";
-  // "2025-02-18T12:00:00+01:00" -> "2025-02-18"
   if (s.length >= 10) return s.slice(0, 10);
   return s;
 }
@@ -31,47 +40,13 @@ function isFlatlyId(id: string): boolean {
   return String(id ?? "").startsWith("flatly-");
 }
 
-function parseFlatlyBookingId(id: string): number | null {
-  const raw = String(id ?? "").replace("flatly-", "");
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : null;
+function flatlyBookingIdFromRoute(id: string): string {
+  return String(id ?? "").replace("flatly-", "").trim();
 }
 
-// Minimal mapping from Flatly dto -> FlatCard (same spirit as lib/flatlyApi.ts)
-function placeholder(seed: string): string {
-  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/900/600`;
-}
-
-function pickPricePerNight(dto: any): number {
-  const rules = Array.isArray(dto?.pricing) ? dto.pricing : [];
-  const active = rules.find((r: any) => r?.is_active && typeof r.price_per_night === "number");
-  const anyRule = rules.find((r: any) => typeof r?.price_per_night === "number");
-  return (active?.price_per_night ?? anyRule?.price_per_night ?? 0) as number;
-}
-
-function mapFlatDtoToCard(dto: any): FlatCard {
-  const id = String(dto?.id ?? "");
-  const title = String(dto?.name ?? "Flat").trim() || "Flat";
-  const addressLine = String(dto?.address_line ?? dto?.location ?? "—").trim() || "—";
-  const city = String(dto?.city ?? "—").trim() || "—";
-
-  const imgsRaw = Array.isArray(dto?.images) ? dto.images : [];
-  const urls = imgsRaw
-    .map((x: any) => String(x?.image_url ?? "").trim())
-    .filter((u: string) => u.length > 0);
-
-  const imageUrls = urls.length ? urls : [placeholder(`flat_${id}`)];
-
-  return {
-    id,
-    title,
-    addressLine,
-    city,
-    currency: "PLN",
-    pricePerNight: pickPricePerNight(dto),
-    imageUrls,
-    raw: dto,
-  };
+function safeText(v: unknown, fallback = "—"): string {
+  const s = String(v ?? "").trim();
+  return s.length ? s : fallback;
 }
 
 // -----------------------------
@@ -83,30 +58,28 @@ export default function BookingDetails() {
 
   const [loading, setLoading] = useState<boolean>(true);
 
-  // For Carly bookings (car booking)
+  // Carly booking (car booking)
   const [booking, setBooking] = useState<Booking | null>(null);
 
-  // For Flatly bookings
-  const [flatlyRec, setFlatlyRec] = useState<FlatlyBookingRecord | null>(null);
-  const [flatCard, setFlatCard] = useState<FlatCard | null>(null);
+  // Flatly booking details (from partner endpoint)
+  const [flatlyDetails, setFlatlyDetails] = useState<FlatlyBookingDetailsResponse | null>(null);
 
   // Partner API error message (shown in UI)
   const [partnerError, setPartnerError] = useState<string | null>(null);
 
-  const cancelled =
-    (booking?.state === "Cancelled") ||
-    (flatlyRec?.status === "CANCELLED");
+  // Local cancellation flag for Flatly bookings (Flatly details schema doesn't include status)
+  const [flatlyCancelledAtISO, setFlatlyCancelledAtISO] = useState<string | null>(null);
 
-  const showCancel =
-    !cancelled &&
-    (
-      // car booking is "current"
-      (booking?.status === "current") ||
-      // flatly record is not cancelled (and we treat it as current)
-      (!!flatlyRec && flatlyRec.status !== "CANCELLED")
-    );
+  const isFlat = useMemo(() => (id ? isFlatlyId(id) : false), [id]);
 
+  const flatBookingId = useMemo(() => {
+    if (!id) return "";
+    return isFlat ? flatlyBookingIdFromRoute(id) : "";
+  }, [id, isFlat]);
+
+  // -----------------------------
   // Load logic: car vs flatly
+  // -----------------------------
   useEffect(() => {
     (async () => {
       if (!id) return;
@@ -114,87 +87,36 @@ export default function BookingDetails() {
       setLoading(true);
       setPartnerError(null);
       setBooking(null);
-      setFlatlyRec(null);
-      setFlatCard(null);
+      setFlatlyDetails(null);
+      setFlatlyCancelledAtISO(null);
 
       try {
-        if (!isFlatlyId(id)) {
-          // Carly booking (numeric)
+        if (!isFlat) {
+          // Carly booking
           const b = await getBookingByIdFromBackend(id);
           setBooking(b);
           return;
         }
 
-        // Flatly booking
-        const flatBookingId = parseFlatlyBookingId(id);
+        // Flatly booking (UUID)
         if (!flatBookingId) {
           setPartnerError("Invalid Flatly booking id.");
           return;
         }
 
-        // 1) Read local snapshot first (so UI can render even if partner API is down)
-        const all = await getFlatlyBookings();
-        const rec = all.find((x) => x.flatBookingId === flatBookingId) ?? null;
-        setFlatlyRec(rec);
-
-        // If we have snapshot, use it immediately
-        if (rec?.flatSnapshot) {
-          setFlatCard({
-            id: String(rec.flatId),
-            title: rec.flatSnapshot.title,
-            addressLine: rec.flatSnapshot.addressLine,
-            city: rec.flatSnapshot.city,
-            currency: rec.flatSnapshot.currency,
-            pricePerNight: rec.flatSnapshot.pricePerNight,
-            imageUrls: rec.flatSnapshot.imageUrls,
-            raw: rec.flatSnapshot,
-          });
-        }
-
-        // 2) Best-effort dynamic download (partner API can be down)
-        //    booking details -> gives flatId (authoritative)
         try {
-          const bookingDto = await getFlatBookingDetails(flatBookingId);
-
-          const flatId =
-            Number(bookingDto?.flat_id ?? bookingDto?.flatId ?? rec?.flatId);
-
-          if (Number.isFinite(flatId)) {
-            const flatDto = await getFlatDetails(flatId);
-            const card = mapFlatDtoToCard(flatDto);
-            setFlatCard(card);
-
-            // If local record was missing, synthesize minimal one for UI
-            if (!rec) {
-              setFlatlyRec({
-                flatBookingId,
-                flatId,
-                dateFromDayISO: dateOnly(bookingDto?.date_from ?? bookingDto?.dateFrom),
-                dateToDayISO: dateOnly(bookingDto?.date_to ?? bookingDto?.dateTo),
-                status: "CREATED",
-                flatSnapshot: {
-                  title: card.title,
-                  addressLine: card.addressLine,
-                  city: card.city,
-                  imageUrls: card.imageUrls,
-                  currency: card.currency,
-                  pricePerNight: card.pricePerNight,
-                },
-                createdAtISO: new Date().toISOString(),
-              });
-            }
-          }
+          const dto = await getFlatBookingDetails(flatBookingId);
+          setFlatlyDetails(dto);
         } catch (e: any) {
-          // Partner API unavailable (or any other failure)
           setPartnerError(
-            "Couldn’t load live Flatly details (partner API might be down). Showing cached info if available."
+            "Couldn’t load Flatly booking details (partner API might be down)."
           );
         }
       } finally {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, isFlat]);
 
   // -----------------------------
   // Cancel handler
@@ -212,15 +134,14 @@ export default function BookingDetails() {
           style: "destructive",
           onPress: async () => {
             try {
-              if (isFlatlyId(id)) {
-                const flatBookingId = parseFlatlyBookingId(id);
+              if (isFlat) {
+                if (!flatBookingId) throw new Error("Invalid Flatly booking id.");
+                await cancelFlatlyBooking(flatBookingId);
                 if (!flatBookingId) throw new Error("Invalid Flatly booking id.");
 
                 try {
-                  // Partner cancel (can fail)
                   await cancelFlatlyBooking(flatBookingId);
                 } catch (e: any) {
-                  // IMPORTANT: show message if partner API is unavailable
                   Alert.alert(
                     "Cancel failed",
                     "Flatly partner API seems unavailable right now. Please try again later."
@@ -228,14 +149,7 @@ export default function BookingDetails() {
                   return;
                 }
 
-                // Local mark cancelled
-                await markFlatlyCancelled(flatBookingId);
-
-                // Update UI immediately
-                setFlatlyRec((prev) =>
-                  prev ? { ...prev, status: "CANCELLED", cancelledAtISO: new Date().toISOString() } : prev
-                );
-
+                setFlatlyCancelledAtISO(new Date().toISOString());
                 Alert.alert("Cancelled", "Your Flat booking was cancelled.");
                 return;
               }
@@ -243,7 +157,7 @@ export default function BookingDetails() {
               // Carly booking cancel (car booking)
               await cancelCarBookingOnBackend(id);
 
-              // Reload the booking details (best-effort)
+              // Reload booking details (best-effort)
               const b = await getBookingByIdFromBackend(id);
               setBooking(b);
 
@@ -260,6 +174,21 @@ export default function BookingDetails() {
   // -----------------------------
   // Derived UI bits
   // -----------------------------
+  const cancelled = useMemo(() => {
+    if (!isFlat) return booking?.state === "Cancelled";
+    return !!flatlyCancelledAtISO;
+  }, [booking, isFlat, flatlyCancelledAtISO]);
+
+  const showCancel = useMemo(() => {
+    if (cancelled) return false;
+    // car booking is current -> show cancel; flatly bookings always treated as cancellable unless already cancelled
+    if (!isFlat) return booking?.status === "current";
+    return !!flatlyDetails; // only if we actually loaded it
+  }, [cancelled, isFlat, booking, flatlyDetails]);
+
+  const statusLabel = cancelled ? "❌ Cancelled" : "✅ Booked";
+
+  // Carly car booking derived fields
   const carTitle = useMemo(() => {
     if (!booking?.car) return "";
     return `${booking.car.brand} ${booking.car.model}`.trim();
@@ -286,42 +215,41 @@ export default function BookingDetails() {
     return "";
   }, [booking]);
 
+  // Flatly derived fields
   const flatTitle = useMemo(() => {
-    if (!flatCard && flatlyRec?.flatSnapshot) return flatlyRec.flatSnapshot.title;
-    if (!flatCard) return "Flat";
-    return flatCard.title;
-  }, [flatCard, flatlyRec]);
+    const f = flatlyDetails?.flat;
+    return safeText(f?.name ?? "Flat", "Flat");
+  }, [flatlyDetails]);
 
   const flatSubtitle = useMemo(() => {
-    if (!flatCard && flatlyRec?.flatSnapshot) {
-      return `${flatlyRec.flatSnapshot.addressLine} • ${flatlyRec.flatSnapshot.city}`;
-    }
-    if (!flatCard) return null;
-    return `${flatCard.addressLine} • ${flatCard.city}`;
-  }, [flatCard, flatlyRec]);
+    const f = flatlyDetails?.flat;
+    const address = safeText(f?.address_line ?? f?.location ?? "—", "—");
+    const city = safeText(f?.city ?? "—", "—");
+    return `${address} • ${city}`;
+  }, [flatlyDetails]);
 
   const flatImages = useMemo(() => {
-    const urls =
-      flatCard?.imageUrls ??
-      flatlyRec?.flatSnapshot?.imageUrls ??
-      [];
-    return Array.isArray(urls) ? urls : [];
-  }, [flatCard, flatlyRec]);
+    const imgs =
+      Array.isArray(flatlyDetails?.flatImages) && flatlyDetails!.flatImages.length
+        ? flatlyDetails!.flatImages
+            .map((x: any) => String(x?.image_url ?? "").trim())
+            .filter(Boolean)
+        : [];
+    return imgs;
+  }, [flatlyDetails]);
 
-  const flatFooterLeft = useMemo(() => {
-    const currency = flatCard?.currency ?? flatlyRec?.flatSnapshot?.currency;
-    const price = flatCard?.pricePerNight ?? flatlyRec?.flatSnapshot?.pricePerNight;
-    if (typeof price === "number" && currency) return `${price} ${currency} / night`;
-    if (typeof price === "number") return `${price} / night`;
-    return "";
-  }, [flatCard, flatlyRec]);
+  const flatDates = useMemo(() => {
+    const b = flatlyDetails?.booking;
+    // booking has checkInDate/checkOutDate per your API schema usage in other screens
+    const from = safeText(b?.checkInDate, "");
+    const to = safeText(b?.checkOutDate, "");
+    return {
+      from: from ? dateOnly(from) : "—",
+      to: to ? dateOnly(to) : "—",
+    };
+  }, [flatlyDetails]);
 
-  const statusLabel = cancelled ? "❌ Cancelled" : "✅ Booked";
-
-  // -----------------------------
-  // Render
-  // -----------------------------
-  const hasAny = !!booking || !!flatlyRec || !!flatCard;
+  const hasAny = !!booking || !!flatlyDetails;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFBEB" }} edges={["top"]}>
@@ -398,7 +326,7 @@ export default function BookingDetails() {
         ) : null}
 
         {/* Flatly booking details */}
-        {!loading && (flatlyRec || flatCard) ? (
+        {!loading && flatlyDetails ? (
           <>
             <CarCardView
               title={flatTitle}
@@ -407,31 +335,29 @@ export default function BookingDetails() {
               fallbackSource={require("../../assets/images/no-images.png")}
               metaLeft={"🏠 Flat"}
               metaRight={statusLabel}
-              footerLeft={flatFooterLeft}
               imageHeight={240}
             />
 
             <View style={styles.infoCard}>
               <Text style={styles.line}>
-                Address: {flatCard ? `${flatCard.addressLine}, ${flatCard.city}` : "—"}
+                City: {safeText(flatlyDetails.flat?.city, "—")}
               </Text>
-              {typeof (flatCard?.pricePerNight ?? flatlyRec?.flatSnapshot?.pricePerNight) === "number" ? (
-                <Text style={styles.line}>
-                  Price: {flatFooterLeft}
-                </Text>
-              ) : null}
+              <Text style={styles.line}>
+                Country: {safeText(flatlyDetails.flat?.country, "—")}
+              </Text>
+              <Text style={styles.line}>
+                Guests: {safeText(flatlyDetails.booking?.guestsCount, "—")}
+              </Text>
             </View>
 
             <View style={styles.card}>
-              <Text style={styles.line}>id: {id}</Text>
+              <Text style={styles.line}>id: {flatBookingId}</Text>
               <Text style={styles.line}>status: {cancelled ? "Cancelled" : "Booked"}</Text>
-
               <Text style={styles.line}>
-                dates: {dateOnly(flatlyRec?.dateFromDayISO)} - {dateOnly(flatlyRec?.dateToDayISO)}
+                dates: {flatDates.from} - {flatDates.to}
               </Text>
-
-              {flatlyRec?.cancelledAtISO ? (
-                <Text style={styles.hint}>cancelled at: {dateOnly(flatlyRec.cancelledAtISO)}</Text>
+              {flatlyCancelledAtISO ? (
+                <Text style={styles.hint}>cancelled at: {dateOnly(flatlyCancelledAtISO)}</Text>
               ) : null}
             </View>
           </>
@@ -441,75 +367,61 @@ export default function BookingDetails() {
   );
 }
 
-// -----------------------------
-// Styles
-// -----------------------------
 const styles = StyleSheet.create({
-  page: {
-    padding: 16,
-    flexGrow: 1,
-    gap: 12,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-  },
+  page: { padding: 16, paddingBottom: 20, gap: 12 },
+
   backBtn: {
     alignSelf: "flex-start",
+    paddingHorizontal: 12,
     paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    backgroundColor: "#FFFFFF",
+    borderRadius: 999,
+    backgroundColor: "#FFFBEB",
     borderWidth: 1,
     borderColor: "#FDE68A",
   },
   backText: { fontWeight: "900", color: "#111827" },
 
-  title: { fontSize: 22, fontWeight: "900", color: "#111827", flex: 1 },
+  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  title: { fontSize: 28, fontWeight: "900", color: "#111827" },
 
   cancelBtn: {
-    paddingVertical: 10,
+    backgroundColor: "#FEE2E2",
     paddingHorizontal: 14,
-    borderRadius: 12,
-    backgroundColor: "#111827",
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
   },
-  cancelBtnText: {
-    color: "#fff",
-    fontWeight: "900",
-  },
+  cancelBtnText: { fontWeight: "900", color: "#B91C1C" },
 
-  loadingWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 6,
-  },
+  loadingWrap: { paddingVertical: 14, alignItems: "center", gap: 8 },
   muted: { color: "#6B7280", fontWeight: "800" },
 
   warnCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 14,
+    backgroundColor: "#fff",
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: "#FCA5A5",
+    padding: 14,
     gap: 6,
   },
-  warnTitle: { fontWeight: "900", color: "#991B1B" },
-  warnText: { fontWeight: "800", color: "#7F1D1D" },
+  warnTitle: { fontWeight: "900", color: "#991B1B", fontSize: 18 },
+  warnText: { color: "#991B1B", fontWeight: "800" },
 
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 14,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: "#FDE68A",
-  },
+  notFound: { color: "#6B7280", fontWeight: "800" },
+
   infoCard: {
     backgroundColor: "#fff",
-    borderRadius: 16,
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    gap: 6,
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
     padding: 14,
     borderWidth: 1,
     borderColor: "#FDE68A",
@@ -517,6 +429,5 @@ const styles = StyleSheet.create({
   },
 
   line: { fontWeight: "800", color: "#111827" },
-  hint: { color: "#6B7280", marginTop: 8, fontWeight: "800" },
-  notFound: { color: "#6B7280", fontWeight: "800" },
+  hint: { color: "#6B7280", fontWeight: "800" },
 });
