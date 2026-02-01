@@ -21,8 +21,8 @@ public class BookingAutoCompletionJob {
     private final BookingRepository bookingRepository;
     private final BookingStatusDictionaryRepository statusRepository;
 
-    // Run at the top of every hour (UTC)
-    @Scheduled(cron = "0 0 * * * *", zone = "UTC")
+    // Runs daily at midnight Warsaw time
+    @Scheduled(cron = "0 0 0 * * *", zone = "Europe/Warsaw")
     @Transactional
     public void completeOverdueBookings() {
         var completed = statusRepository.findByName(BookingStatus.COMPLETED.name())
