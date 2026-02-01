@@ -1,6 +1,6 @@
 // User API service - connects to localhost:8080
 import type { User, RegisterUserRequest, UpdateUserRequest } from "./types";
-import { API_CONFIG, buildApiUrl, apiRequest } from "../../shared/api.config";
+import { API_CONFIG, buildApiUrl, apiRequest } from "../../../shared/api.config";
 
 export type UserFilters = {
   userId?: number;

@@ -1,14 +1,14 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./UsersPage.module.css";
-import AddNewEntityComponent from "../AddNewEntityComponent/AddNewComponent";
-import FiltersForm from "../FiltersForm/FiltersForm";
-import type { User } from "./types.ts";
-import { defaultFilters, type UserFilterKey, userFilterFields } from "./filters.conf.ts";
-import DataTable from "../DataTable/DataTable";
-import { usersColumns, usersRowKey, usersActions } from "./datatable.conf.ts";
-import Pagination from "../Pagination/Pagination.tsx";
-import { userService } from "./userService.ts";
+import AddNewEntityComponent from "../../AddNewEntityComponent/AddNewComponent";
+import FiltersForm from "../../FiltersForm/FiltersForm";
+import type { User } from "../services/types.ts";
+import { defaultFilters, type UserFilterKey, userFilterFields } from "../services/filters.conf.ts";
+import DataTable from "../../DataTable/DataTable";
+import { usersColumns, usersRowKey, usersActions } from "../services/datatable.conf.ts";
+import Pagination from "../../Pagination/Pagination.tsx";
+import { userService } from "../services/userService.ts";
 
 const PAGE_SIZE = 3; // Reduced for testing
 

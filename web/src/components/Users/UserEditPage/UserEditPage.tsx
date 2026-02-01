@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import styles from "./UserEditPage.module.css";
-import Button from "../Button/Button";
-import Input from "../Input/Input";
-import { userService } from "../UsersPage/userService";
-import type { User, UpdateUserRequest } from "../UsersPage/types";
+import Button from "../../Button/Button";
+import Input from "../../Input/Input";
+import { userService } from "../services/userService";
+import type { User, UpdateUserRequest } from "../services/types";
 
 const UserEditPage = () => {
   const { id } = useParams<{ id: string }>();
