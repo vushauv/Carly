@@ -1,5 +1,5 @@
 // Booking API service - connects to localhost:8080
-import type { BookingDetails, CreateBookingRequest, UpdateBookingRequest, BookingSearchFilters } from "./types";
+import type { BookingDetails, CreateBookingRequest, BookingUpdateRequest, BookingSearchFilters } from "./types";
 import { API_CONFIG, buildApiUrl, apiRequest } from "../../../shared/api.config";
 
 export const bookingService = {
@@ -76,17 +76,39 @@ export const bookingService = {
   /**
    * Updates an existing booking's information
    */
-  async updateBooking(id: number, data: UpdateBookingRequest): Promise<void> {
-    console.log(`Updating booking ${id}:`, data);
+  // async updateBooking(id: number, data: BookingUpdateRequest): Promise<void> {
+  //   console.log(`Updating booking ${id}:`, data);
     
-    const url = buildApiUrl(API_CONFIG.ENDPOINTS.BOOKINGS, id);
-    await apiRequest<void>(url, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+  //   const url = buildApiUrl(API_CONFIG.ENDPOINTS.BOOKINGS, id);
+  //   await apiRequest<void>(url, {
+  //     method: 'PUT',
+  //     body: JSON.stringify(data),
+  //   });
     
-    console.log("Booking updated successfully");
-  },
+  //   console.log("Booking updated successfully");
+  // },
+
+  // bookingService.ts
+
+async updateBooking(
+  bookingId: number,
+  data: BookingUpdateRequest
+): Promise<void> {
+  const url = buildApiUrl(API_CONFIG.ENDPOINTS.BOOKINGS, bookingId);
+
+  console.log(`Updating booking ${bookingId}:`);
+
+  console.log(data);
+
+  return apiRequest<void>(url, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+},
+
 
   /**
    * Permanently removes a booking from the system
@@ -105,10 +127,10 @@ export const bookingService = {
   /**
    * Helper method to search bookings with filters
    */
-  async searchBookings(filters: Partial<BookingSearchFilters>, pageNumber: number = 0, pageSize: number = 10): Promise<{bookings: BookingDetails[], totalCount: number}> {
-    console.log(`Searching bookings with filters:`, filters);
-    return this.getAllBookings(pageNumber, pageSize, filters);
-  },
+  // async searchBookings(filters: Partial<BookingSearchFilters>, pageNumber: number = 0, pageSize: number = 10): Promise<{bookings: BookingDetails[], totalCount: number}> {
+  //   console.log(`Searching bookings with filters:`, filters);
+  //   return this.getAllBookings(pageNumber, pageSize, filters);
+  // },
 
   /**
    * Helper method to get total booking count for pagination

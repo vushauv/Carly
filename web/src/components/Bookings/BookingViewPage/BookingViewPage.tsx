@@ -122,8 +122,8 @@ const BookingViewPage = () => {
       <div className={styles.header}>
         <h1 className={styles.title}>Booking Details #{booking.id}</h1>
         <div className={styles.actions}>
-          <Button label="Edit Booking" onClick={() => navigate(`/bookings/${booking.id}/edit`)} />
-          <Button label="Delete Booking" onClick={handleDeleteBooking} disabled={deleting} />
+          <Button label="Edit Booking" color="secondary" onClick={() => navigate(`/bookings/${booking.id}/edit`)} />
+          <Button label="Delete Booking" color="danger" onClick={handleDeleteBooking} disabled={deleting} />
           <Button label="Back to Bookings" onClick={() => navigate("/manage-bookings")} />
         </div>
       </div>

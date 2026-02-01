@@ -1,5 +1,5 @@
 .page {
-  max-width: 1200px;
+  max-width: 1400px; /* Increased from 1200px to 1400px */
   margin: 0 auto;
   padding: 20px;
 }
@@ -21,6 +21,7 @@
 }
 
 .actions {
+  margin-left: 30px;
   display: flex;
   gap: 12px;
 }

@@ -1,6 +1,19 @@
 // Booking types based on rental car business logic
 
 
+export type BookingStatus = "CREATED" | "CONFIRMED" | "CANCELLED" | "FINISHED";
+
+export type BookingUpdateRequest = {
+  pickupLocationId: number;
+  returnLocationId: number;
+  carBookingStatus: BookingStatus;
+  flatBookingStatus: BookingStatus;
+  carBookingDateFrom: string; // LocalDateTime
+  carBookingDateTo: string;
+};
+
+
+
 export interface BookingDetails  {
   id: number;
 
@@ -52,13 +65,7 @@ export type CreateBookingRequest = {
 
 
 
-export interface UpdateBookingRequest {
-  startDate?: string;
-  endDate?: string;
-  status?: "PENDING" | "CONFIRMED" | "ACTIVE" | "COMPLETED" | "CANCELLED";
-  pickupLocation?: string;
-  dropoffLocation?: string;
-}
+
 
 export interface BookingSearchFilters {
   bookingId?: number;
