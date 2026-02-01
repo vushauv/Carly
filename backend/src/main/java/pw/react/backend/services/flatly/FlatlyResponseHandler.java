@@ -4,6 +4,8 @@ import lombok.experimental.UtilityClass;
 import org.springframework.http.HttpStatusCode;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 
+import java.util.UUID;
+
 @UtilityClass
 public class FlatlyResponseHandler {
 
@@ -27,7 +29,7 @@ public class FlatlyResponseHandler {
         throw new IllegalStateException("Flatly: unexpected response status=" + code + " during create booking.");
     }
 
-    public void assertCancelBooking(HttpStatusCode status, int flatBookingId) {
+    public void assertCancelBooking(HttpStatusCode status, UUID flatBookingId) {
         int code = status.value();
 
         if (code == 200) return;

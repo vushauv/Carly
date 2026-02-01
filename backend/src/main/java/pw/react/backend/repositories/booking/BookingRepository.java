@@ -12,15 +12,19 @@ import pw.react.backend.domain.booking.Booking;
 
 import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface BookingRepository extends JpaRepository<Booking, Integer>, JpaSpecificationExecutor<Booking> {
-    //used to check if Parkly already made a specific booking - kinda optional
-    Optional<Booking> findByUser_UserIdAndProviderExternalBookingId(Integer userId, Integer providerExternalBookingId);
     //finds the latest booking for a given user
     Optional<Booking> findFirstByUser_UserIdOrderByBookingIdDesc(Integer userId);
     Page<Booking> findAllByUser_UserId(Integer userId, Pageable pageable);
     Optional<Booking> findByUser_UserIdAndBookingId(Integer userId, Integer bookingId);
+
+    Optional<Booking> findByProviderExternalBookingId(UUID providerExternalBookingId);
+    Optional<Booking> findByUser_UserIdAndProviderExternalBookingId(Integer userId, UUID providerExternalBookingId);
+    List<Booking> findAllByUser_UserIdAndProviderExternalBookingIdIsNotNullOrderByBookingIdDesc(Integer userId);
 
     @Modifying
     @Transactional
@@ -32,9 +36,10 @@ public interface BookingRepository extends JpaRepository<Booking, Integer>, JpaS
           and (b.car_booking_status_id is null or b.car_booking_status_id not in (:excludedStatusIds))
         """, nativeQuery = true)
     int bulkCompleteOverdue(
-        @Param("completedId") short completedId,
-        @Param("nowUtc") Timestamp nowUtc,
-        @Param("excludedStatusIds") Collection<Short> excludedStatusIds
+            @Param("completedId") short completedId,
+            @Param("nowUtc") Timestamp nowUtc,
+            @Param("excludedStatusIds") Collection<Short> excludedStatusIds
     );
+
 
 }

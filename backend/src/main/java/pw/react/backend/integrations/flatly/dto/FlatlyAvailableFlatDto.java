@@ -1,18 +1,17 @@
 package pw.react.backend.integrations.flatly.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Getter
 @Setter
-public class FlatlyFlatDto {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class FlatlyAvailableFlatDto {
     private UUID id;
     private String name;
     private String city;
@@ -22,5 +21,8 @@ public class FlatlyFlatDto {
     @JsonProperty("maxGuests")
     private Integer maxGuests;
 
-    private List<FlatlyFlatImageDto> images;
+    private BigDecimal lat;
+
+    // API uses "lon" not "lng"
+    private BigDecimal lon;
 }
