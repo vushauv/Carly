@@ -87,7 +87,7 @@ public class BookingMainService implements BookingService {
             var dateRange = new DateRange(booking.getCarBookingDateFrom(), booking.getCarBookingDateTo());
             var now = LocalDateTime.now();
 
-            if(dateRange.getFrom().isBefore(now))
+            if(dateRange.getFrom().toLocalDate().isBefore(now.toLocalDate()))
                 throw new BadRequestException("The dateFrom cannot be before current time");
             // Checks if a valid dateRange is provided
             DateUtils.normaliseDates(dateRange);
