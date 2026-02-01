@@ -1,54 +1,57 @@
-import { useState, type InputHTMLAttributes } from "react";
-import styles from "./Input.module.css";
+import { useState } from "react";
 import cn from "classnames";
+import styles from "./Input.module.css";
 
-export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> {
+type NativeInputProps = Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "onChange" | "value"
+>;
+
+export interface InputProps extends NativeInputProps {
   type: string;
+
+  value?: string;
+  onChange?: (value: string) => void;
+
   hint?: string;
-  placeholder?: string;
   errorMessage?: string;
   isRequired?: boolean;
-
-  value: string;                    // ✅ allow controlled input
-  onChange?: (value: string) => void; // ✅ your pages use this shape
 }
 
 function Input({
   type,
+  value = "",
+  onChange,
+
   hint = "",
-  placeholder = "",
   errorMessage = "",
   isRequired = false,
-  value,
-  onChange,
+
   ...rest
 }: InputProps) {
-
   const [hintVisibility, setHintVisibility] = useState(false);
   const [error, setError] = useState(false);
 
   return (
     <div>
       <div
-        /*Classnames is a library which lets you combine multiple styles - also provide optional styles - based on condition*/
         className={cn(styles.inputWrapper, {
-          [styles.error]: error, // means - add styles.error when condition error is true
+          [styles.error]: error,
         })}
       >
         <input
           {...rest}
           type={type}
           className={styles.input}
-          placeholder={placeholder}
-          aria-describedby="input-desc"
           value={value}
-          onInvalid={() => setError(true)}
-          onInvalidCapture={(e) => e.preventDefault()}
-          required={isRequired}
+          aria-describedby="input-desc"
           onChange={(e) => {
             if (error) setError(false);
             onChange?.(e.target.value);
           }}
+          onInvalid={() => setError(true)}
+          onInvalidCapture={(e) => e.preventDefault()}
+          required={isRequired}
         />
 
         <img
@@ -56,14 +59,12 @@ function Input({
           alt="Hint"
           onClick={() => setHintVisibility((state) => !state)}
           onMouseDown={(e) => e.preventDefault()}
-        //On mouseDown prevents the input to lose focus when the hint button is clicked
-        ></img>
+        />
       </div>
+
       {hintVisibility ? (
         <p
-          className={cn(styles.formNote, {
-            [styles.error]: error,
-          })}
+          className={cn(styles.formNote, { [styles.error]: error })}
           id="input-desc"
         >
           {error ? errorMessage : hint}

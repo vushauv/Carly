@@ -14,38 +14,34 @@ const PAGE_SIZE = 3; // Reduced for testing
 
 const ManageUsersPage = () => {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [users, setUsers] = useState<User[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(0); // API uses 0-based pagination
   const [hasNextPage, setHasNextPage] = useState<boolean>(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [appliedFilters, setAppliedFilters] = useState<Record<UserFilterKey, string>>(defaultFilters);
 
-  const loadUsersPage = async (page: number) => {
+
+  const loadUsersPage = async (page: number, f: Record<UserFilterKey, string>) => {
     try {
       setLoading(true);
 
-      const usersData = await userService.getAllUsers(page, PAGE_SIZE + 1);
-
-      // If page doesn't exist anymore (empty), go back one page
-      if (usersData.length === 0 && page > 0) {
-        const prevPage = page - 1;
-        const prevData = await userService.getAllUsers(prevPage, PAGE_SIZE + 1);
-
-        setUsers(prevData.slice(0, PAGE_SIZE));
-        setHasNextPage(prevData.length > PAGE_SIZE);
-        setCurrentPage(prevPage);
-        return;
-      }
+      const usersData = await userService.getAllUsers(page, PAGE_SIZE + 1, {
+        userId: f.userId ? Number(f.userId) : undefined,
+        name: f.nameOrSurname?.trim() || undefined,
+        email: f.email?.trim() || undefined,
+        // you can later pass isEnabled if you add it to backend params
+        // isEnabled: f.isEnabled?.trim() || undefined,
+      });
 
       setUsers(usersData.slice(0, PAGE_SIZE));
       setHasNextPage(usersData.length > PAGE_SIZE);
-    } catch (err) {
-      console.error("[UsersPage] Failed to load users:", err);
     } finally {
       setLoading(false);
     }
   };
+
+
 
 
 
@@ -99,8 +95,10 @@ const ManageUsersPage = () => {
 
   useEffect(() => {
     setCurrentPage(0);
-    loadUsersPage(0);
+    setAppliedFilters(defaultFilters);
+    loadUsersPage(0, defaultFilters);
   }, []);
+
 
   const actionsWithHandlers = useMemo(
     () =>
@@ -127,12 +125,18 @@ const ManageUsersPage = () => {
       <FiltersForm<UserFilterKey>
         fields={userFilterFields}
         onApply={(values) => {
-          console.log("APPLY", values);
+          setAppliedFilters(values);
+          setCurrentPage(0);
+          loadUsersPage(0, values);
         }}
+
         onReset={() => {
-          console.log("RESET");
+          setAppliedFilters(defaultFilters);
+          setCurrentPage(0);
+          loadUsersPage(0, defaultFilters);
         }}
       />
+
 
       <AddNewEntityComponent
         title="Users"
@@ -162,13 +166,13 @@ const ManageUsersPage = () => {
           if (currentPage === 0) return;
           const newPage = currentPage - 1;
           setCurrentPage(newPage);
-          loadUsersPage(newPage);
+          loadUsersPage(newPage, appliedFilters);
         }}
         onNext={() => {
           if (!hasNextPage) return;
           const newPage = currentPage + 1;
           setCurrentPage(newPage);
-          loadUsersPage(newPage);
+          loadUsersPage(newPage, appliedFilters);
         }}
       />
 

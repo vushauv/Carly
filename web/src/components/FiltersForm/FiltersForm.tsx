@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import FilterBarLayout from "../FilterBarLayout/FilterBarLayout";
 import Input from "../Input/Input";
-import styles from "./FiltersForm.module.css"; // or reuse UsersPage.module.css
+import styles from "./FiltersForm.module.css";
 
 type FilterFieldType = "text" | "number" | "date";
 
@@ -9,7 +9,6 @@ type FilterFieldDef<K extends string = string> = {
   key: K;
   label: string;
   type: FilterFieldType;
-
   placeholder?: string;
   hint: string;
   errorMessage: string;
@@ -19,8 +18,6 @@ type FilterFieldDef<K extends string = string> = {
 type FiltersFormProps<K extends string> = {
   fields: FilterFieldDef<K>[];
   initialValues?: Partial<Record<K, string>>;
-
-  // IMPORTANT: these are what you connect to API calls
   onApply: (values: Record<K, string>) => void;
   onReset?: () => void;
 };
@@ -43,36 +40,36 @@ function FiltersForm<K extends string>({
 
   return (
     <>
-    <h3 className={styles.subTitle}>Search criterias</h3>
+      <h3 className={styles.subTitle}>Search criterias</h3>
 
-    <FilterBarLayout
-      onApply={() => onApply(values)}
-      onReset={() => {
-        setValues(defaults);
-        onReset?.();
-      }}
-    >
-      <div className={styles.filters}>
-        {fields.map((f) => (
-          <div key={f.key} className={styles.field}>
-            <span className={styles.label}>{f.label}</span>
+      <FilterBarLayout
+        onApply={() => onApply(values)}
+        onReset={() => {
+          setValues(defaults);
+          onReset?.();
+        }}
+      >
+        <div className={styles.filters}>
+          {fields.map((f) => (
+            <div key={f.key} className={styles.field}>
+              <span className={styles.label}>{f.label}</span>
 
-            <Input
-              type={f.type}
-              placeholder={f.placeholder ?? ""}
-              hint={f.hint}
-              errorMessage={f.errorMessage}
-              isRequired={f.isRequired ?? false}
-              value={values[f.key]}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setValues((prev) => ({ ...prev, [f.key]: e.target.value }))
-              }
-            />
-          </div>
-        ))}
-      </div>
+              <Input
+                type={f.type}
+                placeholder={f.placeholder ?? ""}
+                hint={f.hint}
+                errorMessage={f.errorMessage}
+                isRequired={f.isRequired ?? false}
+                value={values[f.key] ?? ""}
+                onChange={(val) =>
+                  setValues((prev) => ({ ...prev, [f.key]: val }))
+                }
+              />
 
-    </FilterBarLayout>
+            </div>
+          ))}
+        </div>
+      </FilterBarLayout>
     </>
   );
 }

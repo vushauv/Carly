@@ -98,7 +98,10 @@ const UserRegisterPage = () => {
             onChange={(value) => handleChange("secondName", value)}
             placeholder="Enter second name"
             maxLength={64}
+            hint="Optional, max 64 characters"
+            errorMessage="Second name is invalid"
           />
+
 
         </div>
 
