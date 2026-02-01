@@ -1,10 +1,33 @@
-export type ReferenceItem = {
-    id: number;
-    value: string;
-  };
-  
-  export type ReferenceDictionary = {
-    id: number;
-    name: string; // CAR_BRANDS, CAR_COLORS, etc
-    values: ReferenceItem[];
-  };
+// referenceService.ts
+import { API_CONFIG, apiRequest } from "./api.config";
+
+export type ReferenceValue = {
+  id: number;
+  value: string;
+};
+
+export type ReferenceDictionary = {
+  dictionaryId: number;
+  name: string;          // "Color", "Brand", ...
+  values: ReferenceValue[];
+};
+
+export type ReferenceResponse = {
+  referenceData: ReferenceDictionary[];
+};
+
+export const referenceService = {
+  getCarReferences: async () => {
+    const params = new URLSearchParams();
+    [
+      "CAR_COLORS",
+      "CAR_BRANDS",
+      "CAR_FUEL_TYPES",
+      "CAR_MODELS",
+      "CAR_STATUSES"
+    ].forEach(v => params.append("include", v));
+
+    const url = `${API_CONFIG.BASE_URL}/reference/data?${params.toString()}`;
+    return apiRequest<ReferenceResponse>(url);
+  }
+};
