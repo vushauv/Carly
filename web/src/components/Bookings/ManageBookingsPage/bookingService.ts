@@ -139,7 +139,7 @@ async updateBooking(
     await apiRequest(url, {
       method: "DELETE",
     });
-  }
+  },
 
   /**
    * Helper method to search bookings with filters

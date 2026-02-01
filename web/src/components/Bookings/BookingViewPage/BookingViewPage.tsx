@@ -180,7 +180,7 @@ const BookingViewPage = () => {
               <span className={styles.value}>{booking.id}</span>
             </div>
 
-            <div className={styles.detailItem}>
+            {/* <div className={styles.detailItem}>
               <span className={styles.label}>Status:</span>
               <span
                 className={`${styles.value} ${styles.status}`}
@@ -188,7 +188,7 @@ const BookingViewPage = () => {
               >
                 {booking.carStatus.name}
               </span>
-            </div>
+            </div> */}
 
           </div>
         </div>
