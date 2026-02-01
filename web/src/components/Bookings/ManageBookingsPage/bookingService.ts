@@ -60,12 +60,15 @@ export const bookingService = {
   /**
    * Creates a new booking in the system
    */
-  async createBooking(data: CreateBookingRequest): Promise<{ bookingId: number }> {
+  async createBooking(
+    data: CreateBookingRequest[]
+  ): Promise<{ id: number }[]> {
     console.log("Creating new booking:", data);
-    
+  
     const url = buildApiUrl(API_CONFIG.ENDPOINTS.BOOKINGS);
-    return await apiRequest<{ bookingId: number }>(url, {
-      method: 'POST',
+  
+    return apiRequest<{ id: number }[]>(url, {
+      method: "POST",
       body: JSON.stringify(data),
     });
   },

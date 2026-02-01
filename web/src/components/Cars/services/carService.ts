@@ -127,31 +127,6 @@ export const carService = {
     return response.images || [];
   },
 
-  /**
-   * Uploads a new image for a car
-   * Maps to: POST /api/cars/{carId}/images
-   */
-  // async uploadCarImage(carId: number, file: File): Promise<CarImage> {
-  //   console.log(`Uploading image for car ${carId}:`, file.name);
-    
-  //   const formData = new FormData();
-  //   formData.append('file', file);
-    
-  //   const url = buildApiUrl(API_CONFIG.ENDPOINTS.CARS, carId, 'images');
-    
-  //   // Use fetch directly for multipart/form-data
-  //   const response = await fetch(url, {
-  //     method: 'POST',
-  //     body: formData,
-  //   });
-    
-  //   if (!response.ok) {
-  //     const errorText = await response.text();
-  //     throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
-  //   }
-    
-  //   return await response.json();
-  // },
 
   async uploadCarImage(carId: number, file: File): Promise<CarImage> {
     console.log(`Uploading image for car ${carId}:`, file.name);
@@ -186,13 +161,6 @@ export const carService = {
   
   
   
-
-  
-
-  /**
-   * Deletes a specific image from a car
-   * Maps to: DELETE /api/cars/{carId}/images/{imageId}
-   */
   async deleteCarImage(carId: number, imageId: number): Promise<void> {
     console.log(`Deleting image ${imageId} from car ${carId}`);
     
@@ -204,17 +172,12 @@ export const carService = {
     console.log("Car image deleted successfully");
   },
 
-  /**
-   * Helper method to search cars with filters
-   */
+
   async searchCars(filters: Partial<CarSearchFilters>, pageNumber: number = 0, pageSize: number = 10): Promise<{cars: Car[], totalCount: number}> {
     console.log(`Searching cars with filters:`, filters);
     return this.getAllCars(pageNumber, pageSize, filters);
   },
 
-  /**
-   * Helper method to get total car count for pagination
-   */
   async getTotalCars(): Promise<number> {
     const url = buildApiUrl(API_CONFIG.ENDPOINTS.CARS, 'count');
     const response = await apiRequest<{count: number}>(url);

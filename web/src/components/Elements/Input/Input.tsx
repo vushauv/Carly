@@ -13,6 +13,7 @@ export interface InputProps extends NativeInputProps {
   value?: string;
   onChange?: (value: string) => void;
 
+  
   hint?: string;
   errorMessage?: string;
   isRequired?: boolean;

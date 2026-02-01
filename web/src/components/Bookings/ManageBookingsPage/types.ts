@@ -34,15 +34,23 @@ export interface BookingDetails  {
   providerExternalBookingId: string | null;
 }
 
+export type PickupLocation = {
+  id: number;
+  address: string;
+  latitude: number;
+  longitude: number;
+};
 
-export interface CreateBookingRequest {
+export type CreateBookingRequest = {
   userId: number;
   carId: number;
-  startDate: string;
-  endDate: string;
-  pickupLocation: string;
-  dropoffLocation: string;
-}
+  pickupLocationId: number;
+  returnLocationId: number;
+  carBookingDateFrom: string;
+  carBookingDateTo: string;
+};
+
+
 
 export interface UpdateBookingRequest {
   startDate?: string;

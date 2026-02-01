@@ -190,7 +190,7 @@ const BookingViewPage = () => {
             <div className={styles.detailItem}>
               <span className={styles.label}>Car ID:</span>
               <Link
-                to={`/users/${booking.carId}`}
+                to={`/cars/${booking.carId}`}
                 className={styles.link}
               >
                 {booking.carId}
