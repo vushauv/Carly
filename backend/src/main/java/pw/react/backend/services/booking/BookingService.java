@@ -19,6 +19,6 @@ public interface BookingService
     List<Booking> getBookingsPage(int page, int size);
     Page<Booking> search(BookingSearchCriteria criteria, int page, int size);
     void cancelCarBooking(Integer bookingId) throws ResourceNotFoundException;
-    void cancelFlatBooking(Integer bookingId) throws ResourceNotFoundException;
+    //void cancelFlatBooking(Integer bookingId) throws ResourceNotFoundException;
 
 }

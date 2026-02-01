@@ -135,6 +135,8 @@ public class BookingMainService implements BookingService {
         int size = (pageSize <= 0 ? defaultPageSize : pageSize);
 
         // TODO: IntelliSense tells me 'where' is deprecated
+        // WSE: so what, let it complain :)
+        
         //some ORM magic, but allows to filer based on the input criteria
         Specification<Booking> spec = Specification.where(BookingSpecifications.isEnabled())
                 .and(BookingSpecifications.hasBookingId(criteria.getBookingId()))
@@ -168,33 +170,33 @@ public class BookingMainService implements BookingService {
         log.info("Car booking cancelled: bookingId={}", bookingId);
     }
 
-    @Override
-    @Transactional
-    public void cancelFlatBooking(Integer bookingId) {
-        var CANCELLED_STATUS = BookingStatus.CANCELLED.name();
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
-
-        BookingStatusDictionary cancelled = bookingStatusDictionaryRepository.findByName(CANCELLED_STATUS)
-                .orElseThrow(() -> new ResourceNotFoundException(CANCELLED_STATUS + " status missing (seed data)"));
-
-        //safeguard - if already cancelled then do nothing
-        if (booking.getFlatBookingStatus() != null &&
-                CANCELLED_STATUS.equalsIgnoreCase(booking.getFlatBookingStatus().getName())) {
-            return;
-        }
-        //TODO: after deciding, make sure we pass the correct one: our BookingId vs their FlatBookingId!!!
-
-        //first we cancell the FlatBooking via their API,
-        var success = flatlyService.cancelFlatBookingInFlatly(bookingId);
-        log.info("Flat booking cancelled on Flatly's side: bookingId={}", bookingId);
-
-        //on success, we change the status in our system to 'Cancelled'
-        if(success) {
-            booking.setFlatBookingStatus(cancelled);
-            bookingRepository.save(booking);
-            log.info("Flat booking cancelled on Carly's side: bookingId={}", bookingId);
-        }
-    }
+    //WSE: cancellation of flat booking is in FlatlyController!
+//    @Override
+//    @Transactional
+//    public void cancelFlatBooking(Integer bookingId) {
+//        var CANCELLED_STATUS = BookingStatus.CANCELLED.name();
+//        Booking booking = bookingRepository.findById(bookingId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
+//
+//        BookingStatusDictionary cancelled = bookingStatusDictionaryRepository.findByName(CANCELLED_STATUS)
+//                .orElseThrow(() -> new ResourceNotFoundException(CANCELLED_STATUS + " status missing (seed data)"));
+//
+//        //safeguard - if already cancelled then do nothing
+//        if (booking.getFlatBookingStatus() != null &&
+//                CANCELLED_STATUS.equalsIgnoreCase(booking.getFlatBookingStatus().getName())) {
+//            return;
+//        }
+//
+//        //first we cancell the FlatBooking via their API,
+//        var success = flatlyService.cancelFlatBookingInFlatly(bookingId);
+//        log.info("Flat booking cancelled on Flatly's side: bookingId={}", bookingId);
+//
+//        //on success, we change the status in our system to 'Cancelled'
+//        if(success) {
+//            booking.setFlatBookingStatus(cancelled);
+//            bookingRepository.save(booking);
+//            log.info("Flat booking cancelled on Carly's side: bookingId={}", bookingId);
+//        }
+//    }
 
 }

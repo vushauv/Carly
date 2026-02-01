@@ -7,8 +7,8 @@ import org.hibernate.annotations.Where;
 import pw.react.backend.domain.Auditable;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.user.User;
-
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -50,7 +50,7 @@ public class Booking extends Auditable {
     private BookingStatusDictionary carBookingStatus;
 
     @Column(name = "ProviderExternalBookingId")
-    private Integer providerExternalBookingId;
+    private UUID providerExternalBookingId;
 
     // TODO: must be non-nullable
     @Column(name = "CarBookingDateFrom", nullable = false)
