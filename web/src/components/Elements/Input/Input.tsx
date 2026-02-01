@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import cn from "classnames";
 import styles from "./Input.module.css";
 
@@ -9,11 +9,9 @@ type NativeInputProps = Omit<
 
 export interface InputProps extends NativeInputProps {
   type: string;
-
   value?: string;
   onChange?: (value: string) => void;
 
-  
   hint?: string;
   errorMessage?: string;
   isRequired?: boolean;
@@ -33,6 +31,13 @@ function Input({
   const [hintVisibility, setHintVisibility] = useState(false);
   const [error, setError] = useState(false);
 
+  /**
+   * 🔑 Sync internal error state with external errorMessage
+   */
+  useEffect(() => {
+    setError(Boolean(errorMessage));
+  }, [errorMessage]);
+
   return (
     <div>
       <div
@@ -45,32 +50,31 @@ function Input({
           type={type}
           className={styles.input}
           value={value}
-          aria-describedby="input-desc"
           onChange={(e) => {
-            if (error) setError(false);
             onChange?.(e.target.value);
           }}
-          onInvalid={() => setError(true)}
-          onInvalidCapture={(e) => e.preventDefault()}
           required={isRequired}
         />
 
-        <img
-          src="/src/assets/icons/info-icon.svg"
-          alt="Hint"
-          onClick={() => setHintVisibility((state) => !state)}
-          onMouseDown={(e) => e.preventDefault()}
-        />
+        {(hint || errorMessage) && (
+          <img
+            src="/src/assets/icons/info-icon.svg"
+            alt="Hint"
+            onClick={() => setHintVisibility((state) => !state)}
+            onMouseDown={(e) => e.preventDefault()}
+          />
+        )}
       </div>
 
-      {hintVisibility ? (
+      {hintVisibility && (hint || errorMessage) && (
         <p
-          className={cn(styles.formNote, { [styles.error]: error })}
-          id="input-desc"
+          className={cn(styles.formNote, {
+            [styles.error]: error,
+          })}
         >
           {error ? errorMessage : hint}
         </p>
-      ) : null}
+      )}
     </div>
   );
 }

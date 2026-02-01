@@ -9,6 +9,50 @@ import type { RegisterUserRequest } from "../services/types";
 const UserRegisterPage = () => {
   const navigate = useNavigate();
 
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof RegisterUserRequest, string>>
+  >({});
+
+  const validate = (): boolean => {
+    const errors: Partial<Record<keyof RegisterUserRequest, string>> = {};
+
+    if (!formData.firstName.trim()) {
+      errors.firstName = "First name is required";
+    } else if (formData.firstName.length > 64) {
+      errors.firstName = "First name must be at most 64 characters";
+    }
+
+    if (formData.secondName && formData.secondName.length > 64) {
+      errors.secondName = "Second name must be at most 64 characters";
+    }
+
+    if (!formData.lastName.trim()) {
+      errors.lastName = "Last name is required";
+    } else if (formData.lastName.length > 128) {
+      errors.lastName = "Last name must be at most 128 characters";
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (formData.email.length > 256) {
+      errors.email = "Email must be at most 256 characters";
+    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      errors.email = "Invalid email format";
+    }
+
+    if (!formData.password) {
+      errors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+    } else if (formData.password.length > 128) {
+      errors.password = "Password must be at most 128 characters";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+
   const [formData, setFormData] = useState<RegisterUserRequest>({
     firstName: "",
     secondName: "",
@@ -22,29 +66,21 @@ const UserRegisterPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Basic validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
-      setError("Please fill in all required fields");
+  
+    if (!validate()) {
       return;
     }
-
-    if (formData.password.length < 6 || formData.password.length > 128) {
-      setError("Password must be between 6 and 128 characters");
-      return;
-    }
-
+  
     try {
       setSaving(true);
       setError(null);
-
+  
       const payload: RegisterUserRequest = {
         ...formData,
-        secondName: formData.secondName?.trim() ? formData.secondName.trim() : null,
+        secondName: formData.secondName?.trim() || null,
       };
-
+  
       const result = await userService.registerUser(payload);
-      // Navigate to the newly created user's detail page
       navigate(`/users/${result.userId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to register user");
@@ -52,16 +88,19 @@ const UserRegisterPage = () => {
       setSaving(false);
     }
   };
+  
 
   const handleCancel = () => {
     navigate("/users");
   };
 
   const handleChange = (field: keyof RegisterUserRequest, value: string | number | undefined) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData(prev => ({ ...prev, [field]: value }));
+
+    setFieldErrors(prev => {
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    });
   };
 
   return (
@@ -80,40 +119,43 @@ const UserRegisterPage = () => {
       <form onSubmit={handleSubmit} className={styles.userRegisterForm}>
         <div className={styles.formField}>
           <label>First Name <span className={styles.required}>*</span> (max 64 characters)</label>
+
+
           <Input
             type="text"
             value={formData.firstName}
             onChange={(value) => handleChange("firstName", value)}
-            placeholder="Enter first name"
             maxLength={64}
             required
+            errorMessage={fieldErrors.firstName}
           />
         </div>
 
         <div className={styles.formField}>
           <label>Second Name (max 64 characters)</label>
+
+
           <Input
             type="text"
             value={formData.secondName ?? ""}
-            onChange={(value) => handleChange("secondName", value)}
-            placeholder="Enter second name"
+            onChange={(value) => handleChange("secondName", value ?? "")}
             maxLength={64}
-            hint="Optional, max 64 characters"
-            errorMessage="Second name is invalid"
+            errorMessage={fieldErrors.secondName}
           />
-
-
+        
         </div>
 
         <div className={styles.formField}>
           <label>Last Name <span className={styles.required}>*</span> (max 128 characters)</label>
+
+
           <Input
             type="text"
             value={formData.lastName}
             onChange={(value) => handleChange("lastName", value)}
-            placeholder="Enter last name"
-            maxLength={128}
+            maxLength={64}
             required
+            errorMessage={fieldErrors.lastName}
           />
         </div>
 
@@ -123,9 +165,9 @@ const UserRegisterPage = () => {
             type="email"
             value={formData.email}
             onChange={(value) => handleChange("email", value)}
-            placeholder="Enter email address"
             maxLength={256}
             required
+            errorMessage={fieldErrors.email}
           />
         </div>
 
@@ -135,12 +177,11 @@ const UserRegisterPage = () => {
             type="password"
             value={formData.password}
             onChange={(value) => handleChange("password", value)}
-            placeholder="Enter password"
             minLength={6}
             maxLength={128}
             required
+            errorMessage={fieldErrors.password}
           />
-          <small className={styles.hint}>Password must be between 6 and 128 characters</small>
         </div>
 
         <div className={styles.formField}>
@@ -149,7 +190,7 @@ const UserRegisterPage = () => {
             type="number"
             value={formData.contactNumber?.toString() || ""}
             onChange={(value) => handleChange("contactNumber", value ? parseInt(value) : undefined)}
-            placeholder="Enter contact number"
+            errorMessage={fieldErrors.contactNumber}
           />
         </div>
 
