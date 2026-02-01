@@ -28,7 +28,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer>, JpaS
         update bookings b
         set b.car_booking_status_id = :completedId
         where b.is_enabled = 1
-          and b.car_booking_date_to < :nowUtc
+          and b.car_booking_date_to <= :nowUtc
           and (b.car_booking_status_id is null or b.car_booking_status_id not in (:excludedStatusIds))
         """, nativeQuery = true)
     int bulkCompleteOverdue(
