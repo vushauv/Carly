@@ -19,8 +19,8 @@ export const apiRequest = async <T>(
   url: string, 
   options: RequestInit = {}
 ): Promise<T> => {
-  console.log(`[API] Making request to: ${url}`);
-  console.log(`[API] Request options:`, options);
+  // console.log(`[API] Making request to: ${url}`);
+  // console.log(`[API] Request options:`, options);
 
   const config: RequestInit = {
     headers: {
@@ -30,14 +30,14 @@ export const apiRequest = async <T>(
     ...options,
   };
 
-  console.log(`[API] Final config:`, config);
+  // console.log(`[API] Final config:`, config);
 
   try {
-    console.log(`[API] Calling fetch...`);
+    // console.log(`[API] Calling fetch...`);
     const response = await fetch(url, config);
-    console.log(`[API] Response received:`, response);
-    console.log(`[API] Response status:`, response.status, response.statusText);
-    console.log(`[API] Response headers:`, response.headers);
+    // console.log(`[API] Response received:`, response);
+    // console.log(`[API] Response status:`, response.status, response.statusText);
+    // console.log(`[API] Response headers:`, response.headers);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -47,19 +47,19 @@ export const apiRequest = async <T>(
 
     // Handle empty responses
     const contentType = response.headers.get('content-type');
-    console.log(`[API] Content-Type:`, contentType);
+    // console.log(`[API] Content-Type:`, contentType);
     
     if (contentType && contentType.includes('application/json')) {
-      console.log(`[API] Parsing JSON response...`);
+      // console.log(`[API] Parsing JSON response...`);
       const jsonData = await response.json();
-      console.log(`[API] Parsed JSON data:`, jsonData);
+      // console.log(`[API] Parsed JSON data:`, jsonData);
       return jsonData;
     }
     
-    console.log(`[API] No JSON content, returning empty object`);
+    // console.log(`[API] No JSON content, returning empty object`);
     return {} as T;
   } catch (error) {
-    console.error(`[API] Request failed for ${url}:`, error);
+    // console.error(`[API] Request failed for ${url}:`, error);
     throw error;
   }
 };

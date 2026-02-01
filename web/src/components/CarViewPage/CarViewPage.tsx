@@ -13,10 +13,33 @@ const CarViewPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Helper function to get car feature value by name
+  // Helper function to get car feature value by name - corrected mapping
   const getFeatureValue = (featureName: string): string => {
-    return car?.carFeatures.find(f => f.name === featureName)?.value || "N/A";
+    // Map display feature types to API feature names (same as datatable fix)
+    const featureNameMap: Record<string, string> = {
+      'brand': 'Brand',
+      'model': 'Model', 
+      'fuelType': 'Fuel type',
+      'status': 'Status',
+      'color': 'Color'
+    };
+
+    const normalize = (s: string) =>
+      s.toLowerCase().replace(/\s+/g, "");
+    
+
+    
+    
+    const apiFeatureName = featureNameMap[featureName];
+    if (!apiFeatureName) {
+      // Fallback: try exact match
+      return car?.carFeatures.find(f => f.name === featureName)?.value || "N/A";
+    }
+    
+    return car?.carFeatures.find(f => f.name === apiFeatureName)?.value || "N/A";
   };
+
+
 
   useEffect(() => {
     const loadCar = async () => {
@@ -110,6 +133,11 @@ const CarViewPage = () => {
           
           <div className={styles.detailsGrid}>
             <div className={styles.detailItem}>
+              <span className={styles.label}>Car ID:</span>
+              <span className={styles.value}>{car.carId}</span>
+            </div>
+
+            <div className={styles.detailItem}>
               <span className={styles.label}>Brand:</span>
               <span className={styles.value}>{getFeatureValue("brand")}</span>
             </div>
@@ -141,25 +169,10 @@ const CarViewPage = () => {
               <span className={styles.value}>${car.price.toFixed(2)}</span>
             </div>
             
-            <div className={styles.detailItem}>
-              <span className={styles.label}>Car ID:</span>
-              <span className={styles.value}>{car.carId}</span>
-            </div>
+
           </div>
 
-          {car.carFeatures.length > 0 && (
-            <div className={styles.featuresSection}>
-              <h3>All Features</h3>
-              <div className={styles.featuresList}>
-                {car.carFeatures.map((feature) => (
-                  <div key={feature.dictionaryId} className={styles.featureItem}>
-                    <span className={styles.featureName}>{feature.name}:</span>
-                    <span className={styles.featureValue}>{feature.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          
         </div>
       </div>
     </div>
