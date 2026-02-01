@@ -17,6 +17,7 @@ import { getProfile, saveProfile, clearProfile, type Profile } from "../lib/prof
 import { updateUserById, deleteUserById } from "../lib/userApi";
 import { getBookingsFromBackend } from "../lib/bookingsApi";
 import { getFlatlyBookings } from "../lib/flatlyBookingsStorage";
+import { ApiError } from "../lib/apiClient";
 
 type PersonalDraft = {
   email: string;
@@ -63,6 +64,22 @@ export default function ProfileSettings() {
       });
     })();
   }, []);
+
+function prettyApiError(err: unknown): string {
+  if (err instanceof ApiError) {
+    const body =
+      typeof err.body === "string"
+        ? err.body
+        : err.body
+        ? JSON.stringify(err.body)
+        : "";
+    return `${err.message} (HTTP ${err.status})${body ? `\n\n${body}` : ""}`;
+  }
+  if (err && typeof err === "object" && "message" in err) {
+    return String((err as any).message);
+  }
+  return "Unknown error";
+}
 
   /* ------------------ Personal ------------------ */
 
@@ -122,8 +139,54 @@ export default function ProfileSettings() {
       setEditingPersonal(false);
 
       Alert.alert("Saved", "Your personal data has been updated.");
-    } catch (e: any) {
-      Alert.alert("Update failed", e?.message ?? "Server update failed");
+    } catch (err) {
+        if (err instanceof ApiError) {
+            const body = err.body as any;
+            const code =
+              body && typeof body === "object"
+                ? String(body.code ?? body.message ?? "")
+                : "";
+
+            // Email conflict - trying to change an email to an existing one
+            if (err.status === 409 || code === "EMAIL_ALREADY_IN_USE" || code === "USER_ALREADY_EXISTS") {
+              Alert.alert(
+                "Email already in use",
+                "This email address is already linked to another account. Please use a different one."
+              );
+              return;
+            }
+
+            // Validation errors
+            if (err.status === 422) {
+              Alert.alert(
+                "Invalid data",
+                "Some of the entered information is invalid. Please check the fields and try again."
+              );
+              return;
+            }
+
+            // Auth / permission issues
+            if (err.status === 401 || err.status === 403) {
+              Alert.alert(
+                "Not allowed",
+                "You are not allowed to perform this action. Please log in again."
+              );
+              return;
+            }
+
+            // Known HTTP error, unknown case
+            Alert.alert(
+              "Update failed",
+              "We couldn’t update your profile right now. Please try again later."
+            );
+            return;
+          }
+
+          // Non-API / unexpected error
+          Alert.alert(
+            "Unexpected error",
+            "Something went wrong. Please try again."
+          );
     }
   }
 

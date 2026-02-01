@@ -20,11 +20,10 @@ import pw.react.backend.integrations.flatly.dto.FlatlyBookingDto;
 @Component
 @RequiredArgsConstructor
 public class FlatlyClient {
-    //TODO: adjust URLs
     private final RestTemplate restTemplate;
 
     //path to application.yml param
-    @Value("$http://localhost:8080")
+    @Value("$http://localhost:8080") //TODO: add environment variable!!!
     private String baseUrl;
 
     // Toggle for tests
@@ -79,7 +78,7 @@ public class FlatlyClient {
         if (mockMode) {
             FlatlyFlatDto flat = new FlatlyFlatDto();
             flat.setId(69);
-            flat.setName("Flatly Downtown Studio");
+            flat.setName("Mock Flat");
             flat.setDescription("Mock flat available in given period");
             flat.setStatus("ACTIVE");
 

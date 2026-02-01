@@ -130,15 +130,30 @@ export default function RegisterScreen() {
 
       router.replace("/tabs/SearchTab");
     } catch (err) {
-      const msg = prettyApiError(err);
+        if (err instanceof ApiError) {
+          const body = err.body as any;
+          const code: string | undefined =
+            body && typeof body === "object" ? String(body.code ?? body.message ?? "") : undefined;
 
-      // This message makes it obvious what failed.
-      Alert.alert(
-        "Register failed",
-        msg.includes("404")
-          ? `${msg}\n\nServer returned a userId but GET /users/{id} failed. That usually means the backend did NOT persist the user.`
-          : msg
-      );
+          if (err.status === 409) {
+            if (code === "USER_ALREADY_EXISTS" || code === "EMAIL_ALREADY_IN_USE") {
+              Alert.alert("Account exists", "An account with this email already exists. Try logging in.");
+              return;
+            }
+
+            Alert.alert("Conflict", "This operation conflicts with existing data.");
+            return;
+          }
+
+          if (err.status === 422) {
+            Alert.alert("Invalid input", "Please check the form fields and try again.");
+            return;
+          }
+        }
+
+        // fallback
+        const msg = prettyApiError(err);
+        Alert.alert("Register failed", msg);
     } finally {
       setLoading(false);
     }
