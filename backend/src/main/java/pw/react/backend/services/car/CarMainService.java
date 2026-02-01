@@ -15,6 +15,7 @@ import pw.react.backend.repositories.car.*;
 import pw.react.backend.repositories.car.models.CarImageUrlRow;
 import pw.react.backend.services.car.model.CarSearchCriteria;
 import pw.react.backend.utils.DateUtils;
+import pw.react.backend.utils.converters.response.DisplayNameConverter;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -353,7 +354,8 @@ public class CarMainService implements CarService {
         var resolvedList = new ArrayList<CarFeature>();
         for(var feature: requestedCarFeatures) {
             var dictId = feature.getDictionary().getCarFeatureDictionaryId();
-            var resolved = carFeatureRepository.findFeatureBy(dictId, feature.getValue());
+            var mappedName = DisplayNameConverter.fromDisplayName(feature.getValue());
+            var resolved = carFeatureRepository.findFeatureBy(dictId, mappedName);
             resolved.ifPresent(resolvedList::add);
         }
         return resolvedList;
