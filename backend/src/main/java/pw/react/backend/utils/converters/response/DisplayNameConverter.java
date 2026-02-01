@@ -6,9 +6,14 @@ import java.util.Locale;
 public class DisplayNameConverter {
     public static String toDisplayName(String name)
     {
-
         var withoutUnderscores = name.strip().replaceAll("_", " ");
         return capitalise(withoutUnderscores);
+    }
+
+    public static String fromDisplayName(String name)
+    {
+        var withUnderscores = name.strip().replaceAll(" ", "_");
+        return withUnderscores.toUpperCase();
     }
 
     private static String capitalise(String word)

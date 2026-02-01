@@ -71,7 +71,6 @@ public class BookingMainService implements BookingService {
                 .orElse(false);
     }
 
-    // TODO: add possibility to make a booking for one day only
     @Override
     @Transactional
     public List<Booking> batchSave(List<Booking> bookings)
@@ -85,23 +84,19 @@ public class BookingMainService implements BookingService {
             var carId = booking.getCar().getCarId();
             var userId = booking.getUser().getUserId();
             var dateRange = new DateRange(booking.getCarBookingDateFrom(), booking.getCarBookingDateTo());
-            var now = LocalDateTime.now();
-
-            if(dateRange.getFrom().toLocalDate().isBefore(now.toLocalDate()))
-                throw new BadRequestException("The dateFrom cannot be before current time");
-            // Checks if a valid dateRange is provided
-            DateUtils.normaliseDates(dateRange);
+            var normalisedRange = DateUtils.validateAndNormalise(dateRange);
 
             booking.setCarBookingStatus(created);
+            // persist normalised values
+            booking.setCarBookingDateFrom(normalisedRange.getFrom());
+            booking.setCarBookingDateTo(normalisedRange.getTo());
             if(!userService.userExistsById(userId))
-                throw new ResourceNotFoundException("User with id "
-                        + booking.getUser().getUserId() +
-                        " not found. The request is cancelled.");
+                throw new ResourceNotFoundException("User with id " + booking.getUser().getUserId() + " not found. The request is cancelled.");
 
-            if(!carService.checkCarAvailability(carId, dateRange))
-                throw new CarBookingConflictException(carId, dateRange);
+            if(!carService.checkCarAvailability(carId, normalisedRange))
+                throw new CarBookingConflictException(carId, normalisedRange);
 
-            // using defaults
+            // using defaults. TODO: make return and pickup locations mandatory
             if (booking.getPickupLocation() == null) {
                 var defaultPickup = locationRepository.findById(defaultPickUpLocation)
                         .orElseThrow(() -> new IllegalStateException("Default location missing"));

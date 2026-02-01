@@ -120,7 +120,6 @@ public class    BookingController {
             @RequestBody UpdateBookingRequestDto updatedBooking
     ) throws BadRequestException, CarBookingConflictException {
         // TODO: this logic should be moved to Service, but because of design of update here, the logic is temporarily here
-        //only used in the admin panel
         logHeaders(headers);
         Booking existing = bookingService.getById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -140,20 +139,20 @@ public class    BookingController {
             dateRange.setTo(updatedBooking.getCarBookingDateTo() == null ?
                     existing.getCarBookingDateTo() : updatedBooking.getCarBookingDateTo());
 
-            if (dateRange.getFrom().isBefore(now))
-                throw new BadRequestException("The dateFrom cannot be before current time");
+            DateRange normalised = DateUtils.validateAndNormalise(dateRange);
 
-            DateUtils.normaliseDates(dateRange);
+            if (!carService.checkCarAvailability(carId, normalised)) {
+                throw new CarBookingConflictException(carId, normalised);
+            }
 
-            boolean isAvailable = carService.checkCarAvailability(carId, dateRange);
-            if(!isAvailable)
-                throw new CarBookingConflictException(carId, dateRange);
+            updatedBooking.setCarBookingDateFrom(normalised.getFrom());
+            updatedBooking.setCarBookingDateTo(normalised.getTo());
         }
         // We merge update only if car is available
         // Merge only provided fields (non-null)
         bookingMapper.applyUpdate(updatedBooking, existing);
-        log.info(String.format("Booking with id %s successfully modified.", existing.getBookingId()));
         bookingService.updateBooking(bookingId, existing);
+        log.info(String.format("Booking with id %s successfully modified.", existing.getBookingId()));
     }
 
     @DeleteMapping(path = "/{bookingId}")

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import pw.react.backend.domain.enums.BookingStatus;
 import pw.react.backend.repositories.booking.BookingRepository;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
 
@@ -24,10 +25,10 @@ public class BookingAutoCompletionJob {
     @Scheduled(cron = "0 0 * * * *", zone = "UTC")
     @Transactional
     public void completeOverdueBookings() {
-        var completed = statusRepository.findByName("COMPLETED")
-                .orElseThrow(() -> new IllegalStateException("COMPLETED status not found. Seed data missing."));
-        var cancelled = statusRepository.findByName("CANCELLED")
-                .orElseThrow(() -> new IllegalStateException("CANCELLED status not found. Seed data missing."));
+        var completed = statusRepository.findByName(BookingStatus.COMPLETED.name())
+                .orElseThrow(() -> new IllegalStateException(BookingStatus.COMPLETED.name() + " status not found. Seed data missing."));
+        var cancelled = statusRepository.findByName(BookingStatus.CANCELLED.name())
+                .orElseThrow(() -> new IllegalStateException(BookingStatus.CANCELLED.name() + " status not found. Seed data missing."));
 
         short completedId = completed.getBookingStatusDictionaryId();
         short cancelledId = cancelled.getBookingStatusDictionaryId();

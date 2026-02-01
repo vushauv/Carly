@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class DateRange {
+    // This could lead to errors in the future - Watch out
     @JsonDeserialize(using = JsonDateDeserializer.class)
     @JsonSerialize(using = JsonDateSerializer.class)
     private LocalDateTime from = LocalDate.now().atStartOfDay();
