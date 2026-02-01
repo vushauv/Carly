@@ -290,7 +290,7 @@ public class DataSeeder implements ApplicationRunner {
                     bytes
             );
 
-            carImageService.upload(mf, carId); // call your service method
+            carImageService.upload(mf, carId);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to seed upload: " + path, e);
         }
