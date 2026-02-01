@@ -93,7 +93,7 @@ public class BookingMainService implements BookingService {
             if(!userService.userExistsById(userId))
                 throw new ResourceNotFoundException("User with id " + booking.getUser().getUserId() + " not found. The request is cancelled.");
 
-            if(!carService.checkCarAvailability(carId, normalisedRange))
+            if(!carService.checkCarAvailability(carId, null, normalisedRange))
                 throw new CarBookingConflictException(carId, normalisedRange);
 
             // using defaults. TODO: make return and pickup locations mandatory
@@ -169,34 +169,4 @@ public class BookingMainService implements BookingService {
 
         log.info("Car booking cancelled: bookingId={}", bookingId);
     }
-
-    //WSE: cancellation of flat booking is in FlatlyController!
-//    @Override
-//    @Transactional
-//    public void cancelFlatBooking(Integer bookingId) {
-//        var CANCELLED_STATUS = BookingStatus.CANCELLED.name();
-//        Booking booking = bookingRepository.findById(bookingId)
-//                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
-//
-//        BookingStatusDictionary cancelled = bookingStatusDictionaryRepository.findByName(CANCELLED_STATUS)
-//                .orElseThrow(() -> new ResourceNotFoundException(CANCELLED_STATUS + " status missing (seed data)"));
-//
-//        //safeguard - if already cancelled then do nothing
-//        if (booking.getFlatBookingStatus() != null &&
-//                CANCELLED_STATUS.equalsIgnoreCase(booking.getFlatBookingStatus().getName())) {
-//            return;
-//        }
-//
-//        //first we cancell the FlatBooking via their API,
-//        var success = flatlyService.cancelFlatBookingInFlatly(bookingId);
-//        log.info("Flat booking cancelled on Flatly's side: bookingId={}", bookingId);
-//
-//        //on success, we change the status in our system to 'Cancelled'
-//        if(success) {
-//            booking.setFlatBookingStatus(cancelled);
-//            bookingRepository.save(booking);
-//            log.info("Flat booking cancelled on Carly's side: bookingId={}", bookingId);
-//        }
-//    }
-
 }

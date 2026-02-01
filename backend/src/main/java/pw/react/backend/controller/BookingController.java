@@ -177,17 +177,6 @@ public class    BookingController {
         bookingService.cancelCarBooking(bookingId);
     }
 
-    //cancelling flat booking delegated to FlatlyController
-//    @PostMapping(path = "/{bookingId}/cancel-flat")
-//    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    public void cancelFlatBooking(
-//            @RequestHeader HttpHeaders headers,
-//            @PathVariable Integer bookingId
-//    ) {
-//        logHeaders(headers);
-//        bookingService.cancelFlatBooking(bookingId);
-//    }
-
     private void logHeaders(@RequestHeader HttpHeaders headers) {
         log.info("Controller request headers {}",
                 headers.entrySet()
