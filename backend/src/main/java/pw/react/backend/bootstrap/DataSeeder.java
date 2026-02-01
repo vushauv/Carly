@@ -58,13 +58,27 @@ public class DataSeeder implements ApplicationRunner {
     @Transactional
     public void run(ApplicationArguments args) {
         log.info("DataSeeder running. Active profiles: {}", String.join(",", args.getSourceArgs()));
+        if (!shouldSeed()) {
+            log.info("DataSeeder skipped: database is not empty.");
+            return;
+        }
         this.init();
         this.seedData();
         log.info("DataSeeder finished.");
     }
 
-    // TODO: convert to builder
-    // The method used to populate the db with required data
+    @Transactional(readOnly = true)
+    protected boolean shouldSeed() {
+        return userTypeDictionaryRepository.count() == 0
+                && locationRepository.count() == 0
+                && carFeatureDictionaryRepository.count() == 0
+                && carFeatureRepository.count() == 0
+                && bookingStatusDictionaryRepository.count() == 0
+                && userRepository.count() == 0
+                && carRepository.count() == 0
+                && bookingRepository.count() == 0;
+    }
+
     @Transactional
     public void init()
     {
