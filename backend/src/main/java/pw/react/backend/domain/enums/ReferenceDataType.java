@@ -10,7 +10,8 @@ public enum ReferenceDataType {
     CAR_MODELS("models"),
     CAR_STATUSES("status"),
     PICKUP_LOCATIONS("pickupLocations"),
-    RETURN_LOCATIONS("returnLocations");
+    RETURN_LOCATIONS("returnLocations"),
+    BOOKING_STATUS("bookingStatus");
 
     private String value;
     ReferenceDataType(String value)
