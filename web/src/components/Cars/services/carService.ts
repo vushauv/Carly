@@ -85,11 +85,13 @@ export const carService = {
    * Maps to: PUT /api/cars/{carId}
    */
   async updateCar(id: number, data: UpdateCarRequest): Promise<void> {
-    console.log(`Updating car ${id}:`, data);
+    
     
     const url = buildApiUrl(API_CONFIG.ENDPOINTS.CARS, id);
+    console.log(`Updating car ${id}:`, data);
+    console.log(url)
     await apiRequest<void>(url, {
-      method: 'PATCH',
+      method: 'PUT',
       body: JSON.stringify(data),
     });
     
