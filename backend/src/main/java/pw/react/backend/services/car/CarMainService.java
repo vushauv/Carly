@@ -31,7 +31,6 @@ public class CarMainService implements CarService {
     private final CarRepository carRepository;
     private final CarFeatureRepository carFeatureRepository;
     private final CarFeatureDictionaryRepository carFeatureDictionaryRepository;
-    private final CarToFeatureLinkRepository carToFeatureLinkRepository;
     private final CarImageRepository carImageRepository;
 
     @Override
@@ -77,12 +76,11 @@ public class CarMainService implements CarService {
 
     // TODO: refactor
     @Override
-    public List<Car> getAll(CarSearchCriteria searchCriteria) throws BadRequestException
+    public List<Car> getAll(CarSearchCriteria searchCriteria)
+            throws BadRequestException
     {
         // Validate price range
-        if(searchCriteria.getMinPrice() != null && searchCriteria.getMaxPrice() != null
-                && searchCriteria.getMinPrice().compareTo(searchCriteria.getMaxPrice()) > 0)
-            throw new BadRequestException("minPrice cannot be greater than maxPrice");
+        this.validatePrice(searchCriteria.getMinPrice(), searchCriteria.getMaxPrice());
 
         var dateRange = searchCriteria.getDateRange();
         boolean hasDate = dateRange != null && dateRange.getTo() != null;
@@ -118,9 +116,7 @@ public class CarMainService implements CarService {
         int pageSize = (size <= 0) ? defaultPageSize : size;
 
         // Validate price range
-        if(searchCriteria.getMinPrice() != null && searchCriteria.getMaxPrice() != null
-                && searchCriteria.getMinPrice().compareTo(searchCriteria.getMaxPrice()) > 0)
-            throw new BadRequestException("minPrice cannot be greater than maxPrice");
+        this.validatePrice(searchCriteria.getMinPrice(), searchCriteria.getMaxPrice());
 
         var dateRange = searchCriteria.getDateRange();
         boolean hasDate = dateRange != null && dateRange.getTo() != null;
@@ -131,6 +127,7 @@ public class CarMainService implements CarService {
             availableCarIds = this.searchCarsByAvailability(searchCriteria);
             if(availableCarIds.isEmpty())
                 return List.of();
+
             if(searchCriteria.getCarFeatures() == null || searchCriteria.getCarFeatures().isEmpty())
                 return filterByPrice(
                         carRepository.findByCarIdInOrderByCarIdAsc(availableCarIds, PageRequest.of(page, pageSize)).getContent(),
@@ -201,6 +198,13 @@ public class CarMainService implements CarService {
 
     }
 
+    private void validatePrice(BigDecimal minPrice, BigDecimal maxPrice)
+            throws BadRequestException
+    {
+        if(minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0)
+            throw new BadRequestException("minPrice cannot be greater than maxPrice");
+    }
+
     private long calculateDayDifference(DateRange dateRange)
     {
         // Computes a ceiling - if a days is touched - counts as till the end of the day
@@ -240,7 +244,7 @@ public class CarMainService implements CarService {
     private List<Integer> searchCarsByAvailability(CarSearchCriteria searchCriteria)
         throws BadRequestException
     {
-        var dateRange = DateUtils.normaliseDates(searchCriteria.getDateRange());
+        var dateRange = DateUtils.validateAndNormalise(searchCriteria.getDateRange());
         var from = dateRange.getFrom();
         var to = dateRange.getTo();
 
