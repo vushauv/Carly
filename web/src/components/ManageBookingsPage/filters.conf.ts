@@ -5,10 +5,7 @@ type BookingFilters = {
   userId: string;
   carId: string;
   status: string;
-  userEmail: string;
   pickupLocation: string;
-  priceMin: string;
-  priceMax: string;
 };
 
 const defaultBookingFilters: BookingFilters = {
@@ -16,10 +13,7 @@ const defaultBookingFilters: BookingFilters = {
   userId: "",
   carId: "",
   status: "",
-  userEmail: "",
   pickupLocation: "",
-  priceMin: "",
-  priceMax: "",
 };
 
 type BookingFilterKey =
@@ -27,10 +21,7 @@ type BookingFilterKey =
   | "userId"
   | "carId"
   | "status"
-  | "userEmail"
   | "pickupLocation"
-  | "priceMin"
-  | "priceMax";
 
 const bookingFilterFields: FilterFieldDef<BookingFilterKey>[] = [
   {
@@ -73,14 +64,7 @@ const bookingFilterFields: FilterFieldDef<BookingFilterKey>[] = [
       { value: "CANCELLED", label: "Cancelled" },
     ],
   },
-  {
-    key: "userEmail",
-    label: "User Email",
-    type: "text",
-    placeholder: "e.g. user@example.com",
-    hint: "Search by customer email",
-    errorMessage: "Please enter a valid email.",
-  },
+
   {
     key: "pickupLocation",
     label: "Pickup Location",
@@ -89,22 +73,7 @@ const bookingFilterFields: FilterFieldDef<BookingFilterKey>[] = [
     hint: "Search by pickup location",
     errorMessage: "Please enter a valid location.",
   },
-  {
-    key: "priceMin",
-    label: "Min Price",
-    type: "number",
-    placeholder: "e.g. 100",
-    hint: "Minimum total price",
-    errorMessage: "Please enter a valid minimum price.",
-  },
-  {
-    key: "priceMax",
-    label: "Max Price",
-    type: "number",
-    placeholder: "e.g. 500",
-    hint: "Maximum total price",
-    errorMessage: "Please enter a valid maximum price.",
-  },
+
 ];
 
 export { type BookingFilters, defaultBookingFilters, type BookingFilterKey, bookingFilterFields };

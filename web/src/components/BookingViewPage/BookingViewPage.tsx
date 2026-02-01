@@ -4,6 +4,8 @@ import styles from "./BookingViewPage.module.css";
 import type { BookingDetails } from "../ManageBookingsPage/types";
 import { bookingService } from "../ManageBookingsPage/bookingService";
 import Button from "../Button/Button";
+import { Link } from "react-router-dom";
+
 
 const BookingViewPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +26,7 @@ const BookingViewPage = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         const bookingId = parseInt(id);
         if (isNaN(bookingId)) {
           throw new Error("Invalid booking ID");
@@ -55,7 +57,7 @@ const BookingViewPage = () => {
 
     try {
       setDeleting(true);
-      await bookingService.deleteBooking(booking.bookingId);
+      await bookingService.deleteBooking(booking.id);
       // Navigate back to bookings list after successful deletion
       navigate("/manage-bookings");
     } catch (err) {
@@ -66,23 +68,16 @@ const BookingViewPage = () => {
     }
   };
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+
+
+
+  const formatDate = (value: string): string => {
+    // "2026-02-02T00:00:00.000+0000"
+    const [year, month, day] = value.split("T")[0].split("-");
+
+    return `${day}.${month}.${year}`; // or any format you want
   };
 
-  const formatDateTime = (dateString: string): string => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -120,14 +115,14 @@ const BookingViewPage = () => {
     );
   }
 
-  const duration = calculateDuration(booking.startDate, booking.endDate);
+  const duration = calculateDuration(booking.carBookingDateFrom, booking.carBookingDateTo);
 
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Booking Details #{booking.bookingId}</h1>
+        <h1 className={styles.title}>Booking Details #{booking.id}</h1>
         <div className={styles.actions}>
-          <Button label="Edit Booking" onClick={() => navigate(`/bookings/${booking.bookingId}/edit`)} />
+          <Button label="Edit Booking" onClick={() => navigate(`/bookings/${booking.id}/edit`)} />
           <Button label="Delete Booking" onClick={handleDeleteBooking} disabled={deleting} />
           <Button label="Back to Bookings" onClick={() => navigate("/manage-bookings")} />
         </div>
@@ -139,28 +134,19 @@ const BookingViewPage = () => {
           <div className={styles.detailsGrid}>
             <div className={styles.detailItem}>
               <span className={styles.label}>Booking ID:</span>
-              <span className={styles.value}>{booking.bookingId}</span>
+              <span className={styles.value}>{booking.id}</span>
             </div>
-            
+
             <div className={styles.detailItem}>
               <span className={styles.label}>Status:</span>
-              <span 
+              <span
                 className={`${styles.value} ${styles.status}`}
-                style={{ backgroundColor: getStatusColor(booking.status), color: 'white' }}
+                style={{ backgroundColor: getStatusColor(booking.carStatus.name), color: 'white' }}
               >
-                {booking.status}
+                {booking.carStatus.name}
               </span>
             </div>
-            
-            <div className={styles.detailItem}>
-              <span className={styles.label}>Total Price:</span>
-              <span className={`${styles.value} ${styles.price}`}>${booking.totalPrice.toFixed(2)}</span>
-            </div>
-            
-            <div className={styles.detailItem}>
-              <span className={styles.label}>Duration:</span>
-              <span className={styles.value}>{duration} day{duration !== 1 ? 's' : ''}</span>
-            </div>
+
           </div>
         </div>
 
@@ -169,95 +155,61 @@ const BookingViewPage = () => {
           <div className={styles.detailsGrid}>
             <div className={styles.detailItem}>
               <span className={styles.label}>Start Date:</span>
-              <span className={styles.value}>{formatDate(booking.startDate)}</span>
+              <span className={styles.value}>{formatDate(booking.carBookingDateFrom)}</span>
             </div>
-            
+
             <div className={styles.detailItem}>
               <span className={styles.label}>End Date:</span>
-              <span className={styles.value}>{formatDate(booking.endDate)}</span>
+              <span className={styles.value}>{formatDate(booking.carBookingDateTo)}</span>
             </div>
-            
+
             <div className={styles.detailItem}>
               <span className={styles.label}>Pickup Location:</span>
-              <span className={styles.value}>{booking.pickupLocation}</span>
+              <span className={styles.value}>{booking.pickupLocation.address}</span>
             </div>
-            
+
             <div className={styles.detailItem}>
               <span className={styles.label}>Dropoff Location:</span>
-              <span className={styles.value}>{booking.dropoffLocation}</span>
+              <span className={styles.value}>{booking.returnLocation.address}</span>
             </div>
           </div>
         </div>
 
         <div className={styles.section}>
-          <h2>Customer Information</h2>
+          <h2>Related Information</h2>
           <div className={styles.detailsGrid}>
             <div className={styles.detailItem}>
-              <span className={styles.label}>Customer ID:</span>
-              <span className={styles.value}>{booking.user.userId}</span>
+              <span className={styles.label}>User ID:</span>
+              <Link
+                to={`/users/${booking.userId}`}
+                className={styles.link}
+              >
+                {booking.userId}
+              </Link>
             </div>
-            
-            <div className={styles.detailItem}>
-              <span className={styles.label}>Name:</span>
-              <span className={styles.value}>{booking.user.firstName} {booking.user.lastName}</span>
-            </div>
-            
-            <div className={styles.detailItem}>
-              <span className={styles.label}>Email:</span>
-              <span className={styles.value}>{booking.user.email}</span>
-            </div>
-            
-            <div className={styles.detailItem}>
-              <span className={styles.label}>Phone:</span>
-              <span className={styles.value}>{booking.user.phone || "Not provided"}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.section}>
-          <h2>Vehicle Information</h2>
-          <div className={styles.detailsGrid}>
             <div className={styles.detailItem}>
               <span className={styles.label}>Car ID:</span>
-              <span className={styles.value}>{booking.car.carId}</span>
+              <Link
+                to={`/users/${booking.carId}`}
+                className={styles.link}
+              >
+                {booking.carId}
+              </Link>
             </div>
-            
+
             <div className={styles.detailItem}>
-              <span className={styles.label}>Vehicle:</span>
-              <span className={styles.value}>{booking.car.brand} {booking.car.model}</span>
+              <span className={styles.label}>External Flat ID:</span>
+
+                {booking.providerExternalBookingId ?? "—" }
+              
             </div>
-            
-            <div className={styles.detailItem}>
-              <span className={styles.label}>Color:</span>
-              <span className={styles.value}>{booking.car.color}</span>
-            </div>
-            
-            <div className={styles.detailItem}>
-              <span className={styles.label}>License Plate:</span>
-              <span className={styles.value}>{booking.car.licensePlate}</span>
-            </div>
-            
-            <div className={styles.detailItem}>
-              <span className={styles.label}>Price per Day:</span>
-              <span className={styles.value}>${booking.car.pricePerDay.toFixed(2)}</span>
-            </div>
+
+
           </div>
         </div>
 
-        <div className={styles.section}>
-          <h2>Timestamps</h2>
-          <div className={styles.detailsGrid}>
-            <div className={styles.detailItem}>
-              <span className={styles.label}>Created:</span>
-              <span className={styles.value}>{formatDateTime(booking.createdAt)}</span>
-            </div>
-            
-            <div className={styles.detailItem}>
-              <span className={styles.label}>Last Updated:</span>
-              <span className={styles.value}>{formatDateTime(booking.updatedAt)}</span>
-            </div>
-          </div>
-        </div>
+
+
       </div>
     </div>
   );

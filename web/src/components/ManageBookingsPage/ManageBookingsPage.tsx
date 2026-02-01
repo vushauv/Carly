@@ -29,10 +29,7 @@ const ManageBookingsPage = () => {
         userId: f.userId ? Number(f.userId) : undefined,
         carId: f.carId ? Number(f.carId) : undefined,
         status: f.status?.trim() as "PENDING" | "CONFIRMED" | "ACTIVE" | "COMPLETED" | "CANCELLED" | undefined,
-        userEmail: f.userEmail?.trim() || undefined,
         pickupLocation: f.pickupLocation?.trim() || undefined,
-        priceMin: f.priceMin ? Number(f.priceMin) : undefined,
-        priceMax: f.priceMax ? Number(f.priceMax) : undefined,
       });
 
       setBookings(bookingsData.slice(0, PAGE_SIZE));
@@ -57,10 +54,8 @@ const ManageBookingsPage = () => {
           userId: appliedFilters.userId ? Number(appliedFilters.userId) : undefined,
           carId: appliedFilters.carId ? Number(appliedFilters.carId) : undefined,
           status: appliedFilters.status?.trim() as "PENDING" | "CONFIRMED" | "ACTIVE" | "COMPLETED" | "CANCELLED" | undefined,
-          userEmail: appliedFilters.userEmail?.trim() || undefined,
           pickupLocation: appliedFilters.pickupLocation?.trim() || undefined,
-          priceMin: appliedFilters.priceMin ? Number(appliedFilters.priceMin) : undefined,
-          priceMax: appliedFilters.priceMax ? Number(appliedFilters.priceMax) : undefined,
+
         });
 
         if (pageData.length > 0) {
@@ -86,13 +81,13 @@ const ManageBookingsPage = () => {
   const handleBookingAction = (actionId: string, booking: BookingDetails) => {
     switch (actionId) {
       case "view":
-        navigate(`/bookings/${booking.bookingId}`);
+        navigate(`/bookings/${booking.id}`);
         break;
       case "edit":
-        navigate(`/bookings/${booking.bookingId}/edit`);
+        navigate(`/bookings/${booking.id}/edit`);
         break;
       case "delete":
-        handleDeleteBooking(booking.bookingId);
+        handleDeleteBooking(booking.id);
         break;
     }
   };

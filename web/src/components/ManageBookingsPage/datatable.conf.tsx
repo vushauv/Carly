@@ -21,7 +21,7 @@ export const bookingsColumns = (styles: {
   },
   {
     id: "customer",
-    header: "Customer Id",
+    header: "user Id",
     cell: (booking) => (
       <div className={styles.customer}>
         {booking.userId}
