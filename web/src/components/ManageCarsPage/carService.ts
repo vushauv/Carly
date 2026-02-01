@@ -89,7 +89,7 @@ export const carService = {
     
     const url = buildApiUrl(API_CONFIG.ENDPOINTS.CARS, id);
     await apiRequest<void>(url, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
     
@@ -104,6 +104,9 @@ export const carService = {
     console.log(`Deleting car ${id}`);
     
     const url = buildApiUrl(API_CONFIG.ENDPOINTS.CARS, id);
+
+    console.log(url)
+
     await apiRequest<void>(url, {
       method: 'DELETE',
     });
@@ -149,6 +152,8 @@ export const carService = {
     
     return await response.json();
   },
+
+  
 
   /**
    * Deletes a specific image from a car

@@ -12,6 +12,7 @@ const CarViewPage = () => {
   const [images, setImages] = useState<CarImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Helper function to get car feature value by name - corrected mapping
   const getFeatureValue = (featureName: string): string => {
@@ -23,12 +24,6 @@ const CarViewPage = () => {
       'status': 'Status',
       'color': 'Color'
     };
-
-    const normalize = (s: string) =>
-      s.toLowerCase().replace(/\s+/g, "");
-    
-
-    
     
     const apiFeatureName = featureNameMap[featureName];
     if (!apiFeatureName) {
@@ -39,7 +34,28 @@ const CarViewPage = () => {
     return car?.carFeatures.find(f => f.name === apiFeatureName)?.value || "N/A";
   };
 
+  const handleDeleteCar = async () => {
+    if (!car) {
+      setError("Car data not available");
+      return;
+    }
 
+    if (!window.confirm("Are you sure you want to delete this car? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      await carService.deleteCar(car.carId);
+      // Navigate back to cars list after successful deletion
+      navigate("/cars");
+    } catch (err) {
+      console.error("Failed to delete car:", err);
+      setError("Failed to delete car. Please try again.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     const loadCar = async () => {
@@ -102,8 +118,9 @@ const CarViewPage = () => {
           {getFeatureValue("brand")} {getFeatureValue("model")}
         </h1>
         <div className={styles.actions}>
-          <Button label="Manage Images" onClick={() => navigate(`/cars/${car.carId}/images`)} />
-          <Button label="Edit Car" onClick={() => navigate(`/cars/${car.carId}/edit`)} />
+          <Button label="Manage Images" color="secondary" onClick={() => navigate(`/cars/${car.carId}/images`)} />
+          <Button label="Edit Car" color="secondary" onClick={() => navigate(`/cars/${car.carId}/edit`)} />
+          <Button label="Delete Car" color="danger" onClick={handleDeleteCar} disabled={deleting} />
           <Button label="Back to Cars" onClick={() => navigate("/cars")} />
         </div>
       </div>

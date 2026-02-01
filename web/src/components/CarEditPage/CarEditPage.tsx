@@ -4,14 +4,38 @@ import styles from "./CarEditPage.module.css";
 import type { Car, CarFeature, UpdateCarRequest } from "../ManageCarsPage/types";
 import { carService } from "../ManageCarsPage/carService";
 import Button from "../Button/Button";
-import Input from "../Input/Input";
+import {
+  referenceService,
+  type ReferenceDictionary
+} from "../../shared/referenceService";
+
+type FormState = {
+  brand: string;
+  model: string;
+  color: string;
+  fuelType: string;
+  status: string;
+  price: string;
+};
+
+type RefMap = {
+  brand?: ReferenceDictionary;
+  model?: ReferenceDictionary;
+  color?: ReferenceDictionary;
+  fuelType?: ReferenceDictionary;
+  status?: ReferenceDictionary;
+};
+
+function normalizeName(s: string): string {
+  return s.toLowerCase().replace(/\s+/g, "");
+}
 
 const CarEditPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
   const [car, setCar] = useState<Car | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormState>({
     brand: "",
     model: "",
     color: "",
@@ -19,17 +43,31 @@ const CarEditPage = () => {
     status: "",
     price: ""
   });
+  const [refs, setRefs] = useState<RefMap>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Helper function to get car feature value by name
-  const getFeatureValue = (car: Car, featureName: string): string => {
-    return car.carFeatures.find(f => f.name === featureName)?.value || "";
+  const setField = (key: keyof FormState, value: string) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+  };
+
+  // Build CarFeature helper (same as CarCreatePage)
+  const buildFeature = (
+    dict: ReferenceDictionary | undefined,
+    value: string
+  ): CarFeature | null => {
+    if (!dict || !value.trim()) return null;
+
+    return {
+      dictionaryId: dict.dictionaryId,
+      name: dict.name,
+      value: value.trim()
+    };
   };
 
   useEffect(() => {
-    const loadCar = async () => {
+    const loadData = async () => {
       if (!id) {
         setError("Car ID is required");
         setLoading(false);
@@ -45,35 +83,64 @@ const CarEditPage = () => {
           throw new Error("Invalid car ID");
         }
 
-        const carData = await carService.getCarById(carId);
+        // Load both car data and reference data in parallel
+        const [carData, refData] = await Promise.all([
+          carService.getCarById(carId),
+          referenceService.getCarReferences()
+        ]);
+
         setCar(carData);
+
+        // Process reference data
+        const list = refData.referenceData;
+        const map: RefMap = {};
+        for (const d of list) {
+          const n = normalizeName(d.name);
+          if (n === "brand") map.brand = d;
+          else if (n === "model") map.model = d;
+          else if (n === "color") map.color = d;
+          else if (n === "fueltype") map.fuelType = d;
+          else if (n === "status") map.status = d;
+        }
+        setRefs(map);
+        
+        // Helper function to get car feature value by name - using carData directly
+        const getFeatureValue = (featureName: string): string => {
+          const featureNameMap: Record<string, string> = {
+            'brand': 'Brand',
+            'model': 'Model', 
+            'fuelType': 'Fuel type',
+            'status': 'Status',
+            'color': 'Color'
+          };
+          
+          const apiFeatureName = featureNameMap[featureName];
+          if (!apiFeatureName) {
+            return carData.carFeatures.find(f => f.name === featureName)?.value || "";
+          }
+          
+          return carData.carFeatures.find(f => f.name === apiFeatureName)?.value || "";
+        };
         
         // Populate form with current car data
         setFormData({
-          brand: getFeatureValue(carData, "brand"),
-          model: getFeatureValue(carData, "model"),
-          color: getFeatureValue(carData, "color"),
-          fuelType: getFeatureValue(carData, "fuelType"),
-          status: getFeatureValue(carData, "status"),
+          brand: getFeatureValue("brand"),
+          model: getFeatureValue("model"),
+          color: getFeatureValue("color"),
+          fuelType: getFeatureValue("fuelType"),
+          status: getFeatureValue("status"),
           price: carData.price.toString()
         });
       } catch (err) {
-        console.error("Failed to load car:", err);
-        setError(err instanceof Error ? err.message : "Failed to load car");
+        console.error("Failed to load data:", err);
+        setError(err instanceof Error ? err.message : "Failed to load data");
       } finally {
         setLoading(false);
       }
     };
 
-    loadCar();
+    loadData();
   }, [id]);
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,17 +163,17 @@ const CarEditPage = () => {
       setSaving(true);
       setError(null);
 
-      // Create updated features array
-      const updatedFeatures: CarFeature[] = [
-        { dictionaryId: 1, name: "brand", value: formData.brand.trim() },
-        { dictionaryId: 2, name: "model", value: formData.model.trim() },
-        { dictionaryId: 3, name: "color", value: formData.color.trim() },
-        { dictionaryId: 4, name: "fuelType", value: formData.fuelType.trim() },
-        { dictionaryId: 5, name: "status", value: formData.status.trim() }
-      ].filter(feature => feature.value); // Only include non-empty features
+      // Build car features using reference dictionaries (same as CarCreatePage)
+      const carFeatures: CarFeature[] = [
+        buildFeature(refs.brand, formData.brand),
+        buildFeature(refs.model, formData.model),
+        buildFeature(refs.color, formData.color),
+        buildFeature(refs.fuelType, formData.fuelType),
+        buildFeature(refs.status, formData.status)
+      ].filter(Boolean) as CarFeature[];
 
       const updateData: UpdateCarRequest = {
-        carFeatures: updatedFeatures,
+        carFeatures,
         price: price
       };
 
@@ -158,83 +225,116 @@ const CarEditPage = () => {
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.formGrid}>
+          {/* BRAND */}
           <div className={styles.formGroup}>
-            <label htmlFor="brand" className={styles.label}>Brand *</label>
-            <Input
-              id="brand"
-              type="text"
-              value={formData.brand}
-              onChange={(value) => handleInputChange("brand", value)}
-              placeholder="Enter car brand"
-              required
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="model" className={styles.label}>Model *</label>
-            <Input
-              id="model"
-              type="text"
-              value={formData.model}
-              onChange={(value) => handleInputChange("model", value)}
-              placeholder="Enter car model"
-              required
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="color" className={styles.label}>Color</label>
-            <Input
-              id="color"
-              type="text"
-              value={formData.color}
-              onChange={(value) => handleInputChange("color", value)}
-              placeholder="Enter car color"
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="fuelType" className={styles.label}>Fuel Type</label>
+            <label className={styles.label}>Brand *</label>
             <select
-              id="fuelType"
+              value={formData.brand}
+              onChange={e => setField("brand", e.target.value)}
+            >
+              <option value="">Select brand</option>
+              {refs.brand?.values.map(v => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="Or type a new brand"
+              value={formData.brand}
+              onChange={e => setField("brand", e.target.value)}
+            />
+          </div>
+
+          {/* MODEL */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Model *</label>
+            <select
+              value={formData.model}
+              onChange={e => setField("model", e.target.value)}
+            >
+              <option value="">Select model</option>
+              {refs.model?.values.map(v => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="Or type a new model"
+              value={formData.model}
+              onChange={e => setField("model", e.target.value)}
+            />
+          </div>
+
+          {/* COLOR */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Color</label>
+            <select
+              value={formData.color}
+              onChange={e => setField("color", e.target.value)}
+            >
+              <option value="">Select color</option>
+              {refs.color?.values.map(v => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="Or type a new color"
+              value={formData.color}
+              onChange={e => setField("color", e.target.value)}
+            />
+          </div>
+
+          {/* FUEL TYPE */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Fuel type</label>
+            <select
               value={formData.fuelType}
-              onChange={(e) => handleInputChange("fuelType", e.target.value)}
-              className={styles.select}
+              onChange={e => setField("fuelType", e.target.value)}
             >
               <option value="">Select fuel type</option>
-              <option value="Petrol">Petrol</option>
-              <option value="Diesel">Diesel</option>
-              <option value="Electric">Electric</option>
-              <option value="Hybrid">Hybrid</option>
+              {refs.fuelType?.values.map(v => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
             </select>
+            <input
+              placeholder="Or type a new fuel type"
+              value={formData.fuelType}
+              onChange={e => setField("fuelType", e.target.value)}
+            />
           </div>
 
+          {/* STATUS */}
           <div className={styles.formGroup}>
-            <label htmlFor="status" className={styles.label}>Status</label>
+            <label className={styles.label}>Status</label>
             <select
-              id="status"
               value={formData.status}
-              onChange={(e) => handleInputChange("status", e.target.value)}
-              className={styles.select}
+              onChange={e => setField("status", e.target.value)}
             >
               <option value="">Select status</option>
-              <option value="Available">Available</option>
-              <option value="Rented">Rented</option>
-              <option value="Maintenance">Maintenance</option>
+              {refs.status?.values.map(v => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
             </select>
           </div>
 
+          {/* PRICE */}
           <div className={styles.formGroup}>
-            <label htmlFor="price" className={styles.label}>Price per day ($) *</label>
-            <Input
-              id="price"
+            <label className={styles.label}>Price per day *</label>
+            <input
               type="number"
-              step="0.01"
               min="0"
+              step="0.01"
               value={formData.price}
-              onChange={(value) => handleInputChange("price", value)}
-              placeholder="Enter daily rental price"
-              required
+              onChange={e => setField("price", e.target.value)}
+              placeholder="Enter price"
             />
           </div>
         </div>

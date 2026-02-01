@@ -4,7 +4,7 @@ import styles from "./UsersPage.module.css";
 import AddNewEntityComponent from "../AddNewEntityComponent/AddNewComponent";
 import FiltersForm from "../FiltersForm/FiltersForm";
 import type { User } from "./types.ts";
-import { type Filters, defaultFilters, type UserFilterKey, userFilterFields } from "./filters.conf.ts";
+import { defaultFilters, type UserFilterKey, userFilterFields } from "./filters.conf.ts";
 import DataTable from "../DataTable/DataTable";
 import { usersColumns, usersRowKey, usersActions } from "./datatable.conf.ts";
 import Pagination from "../Pagination/Pagination.tsx";
@@ -18,7 +18,6 @@ const ManageUsersPage = () => {
   const [currentPage, setCurrentPage] = useState<number>(0); // API uses 0-based pagination
   const [hasNextPage, setHasNextPage] = useState<boolean>(true);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [appliedFilters, setAppliedFilters] = useState<Record<UserFilterKey, string>>(defaultFilters);
 
 
@@ -41,10 +40,6 @@ const ManageUsersPage = () => {
     }
   };
 
-
-
-
-
   const handleDeleteUser = async (userId: number) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
 
@@ -55,11 +50,15 @@ const ManageUsersPage = () => {
       let pageToLoad = currentPage;
 
       while (pageToLoad > 0) {
-        const pageData = await userService.getAllUsers(pageToLoad, PAGE_SIZE);
+        const pageData = await userService.getAllUsers(pageToLoad, PAGE_SIZE + 1, {
+          userId: appliedFilters.userId ? Number(appliedFilters.userId) : undefined,
+          name: appliedFilters.nameOrSurname?.trim() || undefined,
+          email: appliedFilters.email?.trim() || undefined,
+        });
 
         if (pageData.length > 0) {
-          setUsers(pageData);
-          setHasNextPage(pageData.length === PAGE_SIZE);
+          setUsers(pageData.slice(0, PAGE_SIZE));
+          setHasNextPage(pageData.length > PAGE_SIZE);
           setCurrentPage(pageToLoad);
           return;
         }
@@ -68,16 +67,14 @@ const ManageUsersPage = () => {
       }
 
       // Fallback: load page 0
-      const firstPage = await userService.getAllUsers(0, PAGE_SIZE);
-      setUsers(firstPage);
-      setHasNextPage(firstPage.length === PAGE_SIZE);
+      const firstPage = await userService.getAllUsers(0, PAGE_SIZE + 1);
+      setUsers(firstPage.slice(0, PAGE_SIZE));
+      setHasNextPage(firstPage.length > PAGE_SIZE);
       setCurrentPage(0);
     } catch (err) {
       console.error("Failed to delete user:", err);
     }
   };
-
-
 
   const handleUserAction = (actionId: string, user: User) => {
     switch (actionId) {

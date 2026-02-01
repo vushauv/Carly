@@ -88,7 +88,7 @@ const ManageCarsPage = () => {
       let pageToLoad = currentPage;
 
       while (pageToLoad > 0) {
-        const result = await carService.getAllCars(pageToLoad, PAGE_SIZE, 
+        const result = await carService.getAllCars(pageToLoad, PAGE_SIZE + 1, 
           Object.keys(activeFilters).length > 0 ? {
             brand: activeFilters.brand,
             model: activeFilters.model,
@@ -104,8 +104,8 @@ const ManageCarsPage = () => {
         const pageData = result.cars || result;
 
         if (pageData.length > 0) {
-          setCars(pageData);
-          setHasNextPage(pageData.length === PAGE_SIZE);
+          setCars(pageData.slice(0, PAGE_SIZE));
+          setHasNextPage(pageData.length > PAGE_SIZE);
           setCurrentPage(pageToLoad);
           return;
         }
@@ -114,10 +114,10 @@ const ManageCarsPage = () => {
       }
 
       // Fallback: load page 0
-      const firstPageResult = await carService.getAllCars(0, PAGE_SIZE);
+      const firstPageResult = await carService.getAllCars(0, PAGE_SIZE + 1);
       const firstPageData = firstPageResult.cars || firstPageResult;
-      setCars(firstPageData);
-      setHasNextPage(firstPageData.length === PAGE_SIZE);
+      setCars(firstPageData.slice(0, PAGE_SIZE));
+      setHasNextPage(firstPageData.length > PAGE_SIZE);
       setCurrentPage(0);
     } catch (err) {
       console.error("Failed to delete car:", err);
