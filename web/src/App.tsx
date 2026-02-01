@@ -7,18 +7,18 @@ import Header from "./components/Header/Header";
 import { useState } from "react";
 import Footer from "./components/Footer/Footer";
 import ManageCarsPage from "./components/ManageCarsPage/ManageCarsPage";
-import ManageBookingsPage from "./components/ManageBookingsPage/ManageBookingsPage";
+import ManageBookingsPage from "./components/Bookings//ManageBookingsPage/ManageBookingsPage";
 import UsersPage from "./components/UsersPage/UsersPage";
 import UserViewPage from "./components/UserViewPage/UserViewPage";
 import UserEditPage from "./components/UserEditPage/UserEditPage";
 import UserRegisterPage from "./components/UserRegisterPage/UserRegisterPage";
-import CarViewPage from "./components/CarViewPage/CarViewPage";
-import CarEditPage from "./components/CarEditPage/CarEditPage";
-import CarCreatePage from "./components/CarCreatePage/CarCreatePage";
-import CarImagesPage from "./components/CarImagesPage/CarImagesPage";
-import BookingViewPage from "./components/BookingViewPage/BookingViewPage";
-import BookingEditPage from "./components/BookingEditPage/BookingEditPage";
-import BookingCreatePage from "./components/BookingCreatePage/BookingCreatePage";
+import CarViewPage from "./components/Cars/CarViewPage/CarViewPage";
+import CarEditPage from "./components/Cars/CarEditPage/CarEditPage";
+import CarCreatePage from "./components/Cars/CarCreatePage/CarCreatePage";
+import CarImagesPage from "./components/Cars/CarImagesPage/CarImagesPage";
+import BookingViewPage from "./components/Bookings/BookingViewPage/BookingViewPage";
+import BookingEditPage from "./components/Bookings//BookingEditPage/BookingEditPage";
+import BookingCreatePage from "./components/Bookings//BookingCreatePage/BookingCreatePage";
 
 import { Routes, Route, Navigate } from "react-router-dom";
 

@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import styles from "./BookingCreatePage.module.css";
 import type { CreateBookingRequest } from "../ManageBookingsPage/types";
 import { bookingService } from "../ManageBookingsPage/bookingService";
-import Button from "../Button/Button";
-import Input from "../Input/Input";
+import Button from "../../Button/Button";
+import Input from "../../Input/Input";
 
 const BookingCreatePage = () => {
   const navigate = useNavigate();

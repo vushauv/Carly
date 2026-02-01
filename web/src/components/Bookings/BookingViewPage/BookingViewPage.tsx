@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "./BookingViewPage.module.css";
 import type { BookingDetails } from "../ManageBookingsPage/types";
 import { bookingService } from "../ManageBookingsPage/bookingService";
-import Button from "../Button/Button";
+import Button from "../../Button/Button";
 import { Link } from "react-router-dom";
 
 

@@ -1,6 +1,6 @@
 // Booking API service - connects to localhost:8080
-import type { Booking, BookingDetails, CreateBookingRequest, UpdateBookingRequest, BookingSearchFilters } from "./types";
-import { API_CONFIG, buildApiUrl, apiRequest } from "../../shared/api.config";
+import type { BookingDetails, CreateBookingRequest, UpdateBookingRequest, BookingSearchFilters } from "./types";
+import { API_CONFIG, buildApiUrl, apiRequest } from "../../../shared/api.config";
 
 export const bookingService = {
   /**

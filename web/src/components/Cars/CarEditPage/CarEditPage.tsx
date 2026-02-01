@@ -1,19 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import styles from "./CarCreatePage.module.css";
-
-import Button from "../Button/Button";
-import { carService } from "../ManageCarsPage/carService";
-import type { CarFeature, CreateCarRequest } from "../ManageCarsPage/types";
-
+import { useParams, useNavigate } from "react-router-dom";
+import styles from "./CarEditPage.module.css";
+import type { Car, CarFeature, UpdateCarRequest } from "../../ManageCarsPage/types";
+import { carService } from "../../ManageCarsPage/carService";
+import Button from "../../Button/Button";
 import {
   referenceService,
   type ReferenceDictionary
-} from "../../shared/referenceService";
-
-/* =========================
-   Types
-   ========================= */
+} from "../../../shared/referenceService";
 
 type FormState = {
   brand: string;
@@ -36,13 +30,11 @@ function normalizeName(s: string): string {
   return s.toLowerCase().replace(/\s+/g, "");
 }
 
-/* =========================
-   Component
-   ========================= */
-
-const CarCreatePage = () => {
+const CarEditPage = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
+  
+  const [car, setCar] = useState<Car | null>(null);
   const [formData, setFormData] = useState<FormState>({
     brand: "",
     model: "",
@@ -51,7 +43,6 @@ const CarCreatePage = () => {
     status: "",
     price: ""
   });
-
   const [refs, setRefs] = useState<RefMap>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -61,48 +52,7 @@ const CarCreatePage = () => {
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
-  /* =========================
-     Load reference data
-     ========================= */
-
-  useEffect(() => {
-    referenceService
-      .getCarReferences()
-      .then(res => {
-        const list = res.referenceData;
-
-        const map: RefMap = {};
-        for (const d of list) {
-          const n = normalizeName(d.name);
-          if (n === "brand") map.brand = d;
-          else if (n === "model") map.model = d;
-          else if (n === "color") map.color = d;
-          else if (n === "fueltype") map.fuelType = d;
-          else if (n === "status") map.status = d;
-        }
-
-        setRefs(map);
-
-        // Default status (optional UX)
-        if (!formData.status && map.status?.values.length) {
-          setFormData(prev => ({
-            ...prev,
-            status: map.status!.values[0].name
-          }));
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        setError("Failed to load reference data");
-      })
-      .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  /* =========================
-     Build CarFeature
-     ========================= */
-
+  // Build CarFeature helper (same as CarCreatePage)
   const buildFeature = (
     dict: ReferenceDictionary | undefined,
     value: string
@@ -116,72 +66,165 @@ const CarCreatePage = () => {
     };
   };
 
-  /* =========================
-     Submit
-     ========================= */
+  useEffect(() => {
+    const loadData = async () => {
+      if (!id) {
+        setError("Car ID is required");
+        setLoading(false);
+        return;
+      }
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const carId = parseInt(id);
+        if (isNaN(carId)) {
+          throw new Error("Invalid car ID");
+        }
 
-    if (!formData.brand || !formData.model || !formData.price) {
-      setError("Brand, model and price are required");
-      return;
-    }
+        // Load both car data and reference data in parallel
+        const [carData, refData] = await Promise.all([
+          carService.getCarById(carId),
+          referenceService.getCarReferences()
+        ]);
 
-    const price = Number(formData.price);
-    if (Number.isNaN(price) || price <= 0) {
-      setError("Invalid price");
-      return;
-    }
+        setCar(carData);
 
-    const carFeatures: CarFeature[] = [
-      buildFeature(refs.brand, formData.brand),
-      buildFeature(refs.model, formData.model),
-      buildFeature(refs.color, formData.color),
-      buildFeature(refs.fuelType, formData.fuelType),
-      buildFeature(refs.status, formData.status)
-    ].filter(Boolean) as CarFeature[];
-
-    const payload: CreateCarRequest = {
-      carFeatures,
-      price
+        // Process reference data
+        const list = refData.referenceData;
+        const map: RefMap = {};
+        for (const d of list) {
+          const n = normalizeName(d.name);
+          if (n === "brand") map.brand = d;
+          else if (n === "model") map.model = d;
+          else if (n === "color") map.color = d;
+          else if (n === "fueltype") map.fuelType = d;
+          else if (n === "status") map.status = d;
+        }
+        setRefs(map);
+        
+        // Helper function to get car feature value by name - using carData directly
+        const getFeatureValue = (featureName: string): string => {
+          const featureNameMap: Record<string, string> = {
+            'brand': 'Brand',
+            'model': 'Model', 
+            'fuelType': 'Fuel type',
+            'status': 'Status',
+            'color': 'Color'
+          };
+          
+          const apiFeatureName = featureNameMap[featureName];
+          if (!apiFeatureName) {
+            return carData.carFeatures.find(f => f.name === featureName)?.value || "";
+          }
+          
+          return carData.carFeatures.find(f => f.name === apiFeatureName)?.value || "";
+        };
+        
+        // Populate form with current car data
+        setFormData({
+          brand: getFeatureValue("brand"),
+          model: getFeatureValue("model"),
+          color: getFeatureValue("color"),
+          fuelType: getFeatureValue("fuelType"),
+          status: getFeatureValue("status"),
+          price: carData.price.toString()
+        });
+      } catch (err) {
+        console.error("Failed to load data:", err);
+        setError(err instanceof Error ? err.message : "Failed to load data");
+      } finally {
+        setLoading(false);
+      }
     };
+
+    loadData();
+  }, [id]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!car || !id) return;
+
+    // Validate required fields
+    if (!formData.brand.trim() || !formData.model.trim() || !formData.price.trim()) {
+      setError("Brand, model, and price are required");
+      return;
+    }
+
+    const price = parseFloat(formData.price);
+    if (isNaN(price) || price <= 0) {
+      setError("Price must be a valid positive number");
+      return;
+    }
 
     try {
       setSaving(true);
       setError(null);
-      await carService.createCar(payload);
-      navigate("/cars");
+
+      // Build car features using reference dictionaries (same as CarCreatePage)
+      const carFeatures: CarFeature[] = [
+        buildFeature(refs.brand, formData.brand),
+        buildFeature(refs.model, formData.model),
+        buildFeature(refs.color, formData.color),
+        buildFeature(refs.fuelType, formData.fuelType),
+        buildFeature(refs.status, formData.status)
+      ].filter(Boolean) as CarFeature[];
+
+      const updateData: UpdateCarRequest = {
+        carFeatures,
+        price: price
+      };
+
+      await carService.updateCar(parseInt(id), updateData);
+      
+      // Navigate back to car view page
+      navigate(`/cars/${id}`);
     } catch (err) {
-      console.error(err);
-      setError("Failed to create car");
+      console.error("Failed to update car:", err);
+      setError(err instanceof Error ? err.message : "Failed to update car");
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return <div className={styles.page}>Loading…</div>;
+    return (
+      <div className={styles.page}>
+        <div className={styles.loading}>Loading car details...</div>
+      </div>
+    );
   }
 
-  console.log("Refs:", refs.brand);
-
-  /* =========================
-     Render
-     ========================= */
+  if (error && !car) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.error}>
+          {error}
+        </div>
+        <Button label="Back to Cars" onClick={() => navigate("/cars")} />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Add New Car</h1>
-        <Button label="Cancel" onClick={() => navigate("/cars")} />
+        <h1 className={styles.title}>Edit Car</h1>
+        <div className={styles.actions}>
+          <Button label="Cancel" onClick={() => navigate(`/cars/${id}`)} />
+        </div>
       </div>
 
-      {error && <div className={styles.error}>{error}</div>}
+      {error && (
+        <div className={styles.error}>
+          {error}
+        </div>
+      )}
 
-      <form onSubmit={submit} className={styles.form}>
+      <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.formGrid}>
-
           {/* BRAND */}
           <div className={styles.formGroup}>
             <label className={styles.label}>Brand *</label>
@@ -245,7 +288,7 @@ const CarCreatePage = () => {
             />
           </div>
 
-          {/* FUEL */}
+          {/* FUEL TYPE */}
           <div className={styles.formGroup}>
             <label className={styles.label}>Fuel type</label>
             <select
@@ -297,12 +340,21 @@ const CarCreatePage = () => {
         </div>
 
         <div className={styles.formActions}>
-          <Button type="button" label="Cancel" onClick={() => navigate("/cars")} />
-          <Button type="submit" label={saving ? "Creating…" : "Create"} />
+          <Button
+            label="Cancel"
+            type="button"
+            onClick={() => navigate(`/cars/${id}`)}
+            disabled={saving}
+          />
+          <Button
+            label={saving ? "Saving..." : "Save Changes"}
+            type="submit"
+            disabled={saving}
+          />
         </div>
       </form>
     </div>
   );
 };
 
-export default CarCreatePage;
+export default CarEditPage;

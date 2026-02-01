@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styles from "./CarImagesPage.module.css";
-import type { Car, CarImage } from "../ManageCarsPage/types";
-import { carService } from "../ManageCarsPage/carService";
-import Button from "../Button/Button";
+import type { Car, CarImage } from "../../ManageCarsPage/types";
+import { carService } from "../../ManageCarsPage/carService";
+import Button from "../../Button/Button";
 
 const CarImagesPage = () => {
   const { id } = useParams<{ id: string }>();
