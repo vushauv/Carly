@@ -1,6 +1,6 @@
 // Car API service - connects to localhost:8080
 import type { Car, CreateCarRequest, UpdateCarRequest, CarImage, CarSearchFilters } from "./types";
-import { API_CONFIG, buildApiUrl, apiRequest } from "../../shared/api.config";
+import { API_CONFIG, buildApiUrl, apiRequest } from "../../../shared/api.config";
 
 export const carService = {
   /**

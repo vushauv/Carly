@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import styles from "./CarCreatePage.module.css";
 
 import Button from "../../Button/Button";
-import { carService } from "../../ManageCarsPage/carService";
-import type { CarFeature, CreateCarRequest } from "../../ManageCarsPage/types";
+import { carService } from "../services/carService";
+import type { CarFeature, CreateCarRequest } from "../services/types";
 
 import {
   referenceService,

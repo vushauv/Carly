@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styles from "./CarViewPage.module.css";
-import type { Car, CarImage } from "../../ManageCarsPage/types";
-import { carService } from "../../ManageCarsPage/carService";
+import type { Car, CarImage } from "../services/types";
+import { carService } from "../services/carService";
 import Button from "../../Button/Button";
 
 const CarViewPage = () => {

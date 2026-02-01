@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styles from "./CarEditPage.module.css";
-import type { Car, CarFeature, UpdateCarRequest } from "../../ManageCarsPage/types";
-import { carService } from "../../ManageCarsPage/carService";
+import type { Car, CarFeature, UpdateCarRequest } from "../services/types";
+import { carService } from "../services/carService";
 import Button from "../../Button/Button";
 import {
   referenceService,
