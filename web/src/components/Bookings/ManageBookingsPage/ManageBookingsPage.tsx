@@ -27,9 +27,9 @@ const ManageBookingsPage = () => {
       const bookingsData = await bookingService.getAllBookings(page, PAGE_SIZE + 1, {
         bookingId: f.bookingId ? Number(f.bookingId) : undefined,
         userId: f.userId ? Number(f.userId) : undefined,
-        carId: f.carId ? Number(f.carId) : undefined,
-        status: f.status?.trim() as "PENDING" | "CONFIRMED" | "ACTIVE" | "COMPLETED" | "CANCELLED" | undefined,
-        pickupLocation: f.pickupLocation?.trim() || undefined,
+        status: f.status?.trim() || undefined,
+        startDateFrom: f.dateFrom?.trim() ? `${f.dateFrom}T00:00:00` : undefined,
+        startDateTo: f.dateTo?.trim() ? `${f.dateTo}T23:59:59` : undefined,
       });
 
       setBookings(bookingsData.slice(0, PAGE_SIZE));
@@ -52,10 +52,9 @@ const ManageBookingsPage = () => {
         const pageData = await bookingService.getAllBookings(pageToLoad, PAGE_SIZE + 1, {
           bookingId: appliedFilters.bookingId ? Number(appliedFilters.bookingId) : undefined,
           userId: appliedFilters.userId ? Number(appliedFilters.userId) : undefined,
-          carId: appliedFilters.carId ? Number(appliedFilters.carId) : undefined,
-          status: appliedFilters.status?.trim() as "PENDING" | "CONFIRMED" | "ACTIVE" | "COMPLETED" | "CANCELLED" | undefined,
-          pickupLocation: appliedFilters.pickupLocation?.trim() || undefined,
-
+          status: appliedFilters.status?.trim() || undefined,
+          startDateFrom: appliedFilters.dateFrom?.trim() ? `${appliedFilters.dateFrom}T00:00:00` : undefined,
+          startDateTo: appliedFilters.dateTo?.trim() ? `${appliedFilters.dateTo}T23:59:59` : undefined,
         });
 
         if (pageData.length > 0) {

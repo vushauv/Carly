@@ -3,7 +3,7 @@ import FilterBarLayout from "../FilterBarLayout/FilterBarLayout";
 import Input from "../Input/Input";
 import styles from "./FiltersForm.module.css";
 
-type FilterFieldType = "text" | "number" | "date";
+type FilterFieldType = "text" | "number" | "date" | "select";
 
 type FilterFieldDef<K extends string = string> = {
   key: K;
@@ -13,6 +13,7 @@ type FilterFieldDef<K extends string = string> = {
   hint: string;
   errorMessage: string;
   isRequired?: boolean;
+  options?: { value: string; label: string }[]; // For 'select' type
 };
 
 type FiltersFormProps<K extends string> = {
@@ -54,17 +55,44 @@ function FiltersForm<K extends string>({
             <div key={f.key} className={styles.field}>
               <span className={styles.label}>{f.label}</span>
 
-              <Input
-                type={f.type}
-                placeholder={f.placeholder ?? ""}
-                hint={f.hint}
-                errorMessage={f.errorMessage}
-                isRequired={f.isRequired ?? false}
-                value={values[f.key] ?? ""}
-                onChange={(val) =>
-                  setValues((prev) => ({ ...prev, [f.key]: val }))
-                }
-              />
+              {f.type === "select" ? (
+                <div className={styles.inputWrapper}>
+                  <select
+                    value={values[f.key] ?? ""}
+                    onChange={(e) =>
+                      setValues((prev) => ({ ...prev, [f.key]: e.target.value }))
+                    }
+                    className={styles.select}
+                  >
+                    <option value="">{f.placeholder || "Select an option"}</option>
+                    {f.options?.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  {f.hint && (
+                    <img
+                      src="/src/assets/icons/info-icon.svg"
+                      alt="Hint"
+                      className={styles.hintIcon}
+                      title={f.hint}
+                    />
+                  )}
+                </div>
+              ) : (
+                <Input
+                  type={f.type}
+                  placeholder={f.placeholder ?? ""}
+                  hint={f.hint}
+                  errorMessage={f.errorMessage}
+                  isRequired={f.isRequired ?? false}
+                  value={values[f.key] ?? ""}
+                  onChange={(val) =>
+                    setValues((prev) => ({ ...prev, [f.key]: val }))
+                  }
+                />
+              )}
 
             </div>
           ))}

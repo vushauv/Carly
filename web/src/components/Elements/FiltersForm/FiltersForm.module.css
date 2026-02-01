@@ -13,4 +13,42 @@
   .label {
     font-weight: 600;
   }
-  
+
+  .inputWrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    padding: 0 0.875rem 0 0;/* 14px */
+    border: 1px solid var(--white-100);/* keep px */
+    border-radius: 0.5rem;/* 8px */
+    background-color: var(--white-50);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .inputWrapper:focus-within {
+    outline: 2px solid var(--gray-200); /* keep px */
+  }
+
+  .select {
+    border: none;
+    width: 100%;
+    padding: 0.625rem 0.875rem; /* 10px 14px */
+    background-color: var(--white-secondary);
+    color: black;
+    appearance: none; /* Remove default browser styling */
+    cursor: pointer;
+  }
+
+  .select:focus,
+  .select:focus-visible {
+    border: none;
+    outline: none;
+  }
+
+  .hintIcon {
+    width: 16px;
+    height: 16px;
+    align-self: center;
+    cursor: help;
+  }

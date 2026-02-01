@@ -1,27 +1,27 @@
-import type { FilterFieldDef } from "../FiltersForm/FiltersForm";
+import type { FilterFieldDef } from "../../Elements/FiltersForm/FiltersForm";
 
 type BookingFilters = {
   bookingId: string;
   userId: string;
-  carId: string;
+  dateFrom: string;
+  dateTo: string;
   status: string;
-  pickupLocation: string;
 };
 
 const defaultBookingFilters: BookingFilters = {
   bookingId: "",
   userId: "",
-  carId: "",
+  dateFrom: "",
+  dateTo: "",
   status: "",
-  pickupLocation: "",
 };
 
 type BookingFilterKey =
   | "bookingId"
   | "userId"
-  | "carId"
-  | "status"
-  | "pickupLocation"
+  | "dateFrom"
+  | "dateTo"
+  | "status";
 
 const bookingFilterFields: FilterFieldDef<BookingFilterKey>[] = [
   {
@@ -34,19 +34,27 @@ const bookingFilterFields: FilterFieldDef<BookingFilterKey>[] = [
   },
   {
     key: "userId",
-    label: "User ID",
+    label: "User ID", 
     type: "text",
     placeholder: "e.g. 456",
     hint: "Search by user ID",
     errorMessage: "Please enter a valid user ID.",
   },
   {
-    key: "carId",
-    label: "Car ID",
-    type: "text",
-    placeholder: "e.g. 789",
-    hint: "Search by car ID",
-    errorMessage: "Please enter a valid car ID.",
+    key: "dateFrom",
+    label: "Date From",
+    type: "date",
+    placeholder: "",
+    hint: "Filter bookings from this date",
+    errorMessage: "Please enter a valid date.",
+  },
+  {
+    key: "dateTo",
+    label: "Date To",
+    type: "date", 
+    placeholder: "",
+    hint: "Filter bookings until this date",
+    errorMessage: "Please enter a valid date.",
   },
   {
     key: "status",
@@ -56,24 +64,11 @@ const bookingFilterFields: FilterFieldDef<BookingFilterKey>[] = [
     hint: "Filter by booking status",
     errorMessage: "Please select a valid status.",
     options: [
-      { value: "", label: "All Statuses" },
-      { value: "PENDING", label: "Pending" },
-      { value: "CONFIRMED", label: "Confirmed" },
-      { value: "ACTIVE", label: "Active" },
-      { value: "COMPLETED", label: "Completed" },
-      { value: "CANCELLED", label: "Cancelled" },
+      { value: "CREATED", label: "CREATED" },
+      { value: "COMPLETED", label: "COMPLETED" },
+      { value: "CANCELLED", label: "CANCELLED" },
     ],
   },
-
-  {
-    key: "pickupLocation",
-    label: "Pickup Location",
-    type: "text",
-    placeholder: "e.g. Downtown",
-    hint: "Search by pickup location",
-    errorMessage: "Please enter a valid location.",
-  },
-
 ];
 
 export { type BookingFilters, defaultBookingFilters, type BookingFilterKey, bookingFilterFields };
