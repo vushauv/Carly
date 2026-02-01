@@ -11,6 +11,10 @@ import {
   type ReferenceDictionary
 } from "../../shared/referenceService";
 
+/* =========================
+   Types
+   ========================= */
+
 type FormState = {
   brand: string;
   model: string;
@@ -27,6 +31,14 @@ type RefMap = {
   fuelType?: ReferenceDictionary;
   status?: ReferenceDictionary;
 };
+
+function normalizeName(s: string): string {
+  return s.toLowerCase().replace(/\s+/g, "");
+}
+
+/* =========================
+   Component
+   ========================= */
 
 const CarCreatePage = () => {
   const navigate = useNavigate();
@@ -45,49 +57,52 @@ const CarCreatePage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /* =========================
-     Load reference data
-     ========================= */
-  useEffect(() => {
-    referenceService
-      .getCarReferences()
-      .then(res => {
-        const map: RefMap = {};
-        res.referenceData.forEach(d => {
-          switch (d.name) {
-            case "Brand":
-              map.brand = d;
-              break;
-            case "Model":
-              map.model = d;
-              break;
-            case "Color":
-              map.color = d;
-              break;
-            case "Fuel type":
-              map.fuelType = d;
-              break;
-            case "Status":
-              map.status = d;
-              break;
-          }
-        });
-
-        console.log("Mapped reference data:", map);
-
-        setRefs(map);
-      })
-      .catch(() => setError("Failed to load reference data"))
-      .finally(() => setLoading(false));
-  }, []);
-
   const setField = (key: keyof FormState, value: string) => {
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
   /* =========================
+     Load reference data
+     ========================= */
+
+  useEffect(() => {
+    referenceService
+      .getCarReferences()
+      .then(res => {
+        const list = res.referenceData;
+
+        const map: RefMap = {};
+        for (const d of list) {
+          const n = normalizeName(d.name);
+          if (n === "brand") map.brand = d;
+          else if (n === "model") map.model = d;
+          else if (n === "color") map.color = d;
+          else if (n === "fueltype") map.fuelType = d;
+          else if (n === "status") map.status = d;
+        }
+
+        setRefs(map);
+
+        // Default status (optional UX)
+        if (!formData.status && map.status?.values.length) {
+          setFormData(prev => ({
+            ...prev,
+            status: map.status!.values[0].name
+          }));
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        setError("Failed to load reference data");
+      })
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* =========================
      Build CarFeature
      ========================= */
+
   const buildFeature = (
     dict: ReferenceDictionary | undefined,
     value: string
@@ -104,6 +119,7 @@ const CarCreatePage = () => {
   /* =========================
      Submit
      ========================= */
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -136,7 +152,8 @@ const CarCreatePage = () => {
       setError(null);
       await carService.createCar(payload);
       navigate("/cars");
-    } catch {
+    } catch (err) {
+      console.error(err);
       setError("Failed to create car");
     } finally {
       setSaving(false);
@@ -147,118 +164,142 @@ const CarCreatePage = () => {
     return <div className={styles.page}>Loading…</div>;
   }
 
-  console.log("Rendering CarCreatePage with refs:", refs.brand);
+  console.log("Refs:", refs.brand);
 
   /* =========================
      Render
      ========================= */
+
   return (
     <div className={styles.page}>
-      <h1>Add New Car</h1>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Add New Car</h1>
+        <Button label="Cancel" onClick={() => navigate("/cars")} />
+      </div>
 
       {error && <div className={styles.error}>{error}</div>}
 
       <form onSubmit={submit} className={styles.form}>
+        <div className={styles.formGrid}>
 
-        {/* BRAND */}
-        <label>Brand *</label>
-        <select
-          value={formData.brand}
-          onChange={e => setField("brand", e.target.value)}
-        >
-          <option value="">Select brand</option>
-          {refs.brand?.values
-            .map(v => (
-              <option key={v.id} value={v.value}>
-                {v.value}
-              </option>
-            ))}
-        </select>
+          {/* BRAND */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Brand *</label>
+            <select
+              value={formData.brand}
+              onChange={e => setField("brand", e.target.value)}
+            >
+              <option value="">Select brand</option>
+              {refs.brand?.values.map(v => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="Or type a new brand"
+              value={formData.brand}
+              onChange={e => setField("brand", e.target.value)}
+            />
+          </div>
 
-        <input
-          placeholder="Or enter new brand"
-          value={formData.brand}
-          onChange={e => setField("brand", e.target.value)}
-        />
+          {/* MODEL */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Model *</label>
+            <select
+              value={formData.model}
+              onChange={e => setField("model", e.target.value)}
+            >
+              <option value="">Select model</option>
+              {refs.model?.values.map(v => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="Or type a new model"
+              value={formData.model}
+              onChange={e => setField("model", e.target.value)}
+            />
+          </div>
 
-        {/* MODEL */}
-        <label>Model *</label>
-        <input
-          value={formData.model}
-          onChange={e => setField("model", e.target.value)}
-        />
+          {/* COLOR */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Color</label>
+            <select
+              value={formData.color}
+              onChange={e => setField("color", e.target.value)}
+            >
+              <option value="">Select color</option>
+              {refs.color?.values.map(v => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="Or type a new color"
+              value={formData.color}
+              onChange={e => setField("color", e.target.value)}
+            />
+          </div>
 
-        {/* COLOR */}
-        <label>Color</label>
-        <select
-          value={formData.color}
-          onChange={e => setField("color", e.target.value)}
-        >
-          <option value="">Select color</option>
-          {refs.color?.values
-            .filter(v => v.value?.trim())
-            .map(v => (
-              <option key={v.id} value={v.value}>
-                {v.value}
-              </option>
-            ))}
-        </select>
+          {/* FUEL */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Fuel type</label>
+            <select
+              value={formData.fuelType}
+              onChange={e => setField("fuelType", e.target.value)}
+            >
+              <option value="">Select fuel type</option>
+              {refs.fuelType?.values.map(v => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="Or type a new fuel type"
+              value={formData.fuelType}
+              onChange={e => setField("fuelType", e.target.value)}
+            />
+          </div>
 
-        <input
-          placeholder="Or enter new color"
-          value={formData.color}
-          onChange={e => setField("color", e.target.value)}
-        />
+          {/* STATUS */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Status</label>
+            <select
+              value={formData.status}
+              onChange={e => setField("status", e.target.value)}
+            >
+              <option value="">Select status</option>
+              {refs.status?.values.map(v => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* FUEL */}
-        <label>Fuel type</label>
-        <select
-          value={formData.fuelType}
-          onChange={e => setField("fuelType", e.target.value)}
-        >
-          <option value="">Select fuel</option>
-          {refs.fuelType?.values
-            .filter(v => v.value?.trim())
-            .map(v => (
-              <option key={v.id} value={v.value}>
-                {v.value}
-              </option>
-            ))}
-        </select>
+          {/* PRICE */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Price per day *</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.price}
+              onChange={e => setField("price", e.target.value)}
+              placeholder="Enter price"
+            />
+          </div>
+        </div>
 
-        <input
-          placeholder="Or enter new fuel type"
-          value={formData.fuelType}
-          onChange={e => setField("fuelType", e.target.value)}
-        />
-
-        {/* STATUS */}
-        <label>Status</label>
-        <select
-          value={formData.status}
-          onChange={e => setField("status", e.target.value)}
-        >
-          <option value="">Select status</option>
-          {refs.status?.values
-            .filter(v => v.value?.trim())
-            .map(v => (
-              <option key={v.id} value={v.value}>
-                {v.value}
-              </option>
-            ))}
-        </select>
-
-        {/* PRICE */}
-        <label>Price *</label>
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          value={formData.price}
-          onChange={e => setField("price", e.target.value)}
-        />
-
-        <Button type="submit" label={saving ? "Creating…" : "Create"} />
+        <div className={styles.formActions}>
+          <Button type="button" label="Cancel" onClick={() => navigate("/cars")} />
+          <Button type="submit" label={saving ? "Creating…" : "Create"} />
+        </div>
       </form>
     </div>
   );

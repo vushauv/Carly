@@ -1,20 +1,20 @@
 // referenceService.ts
 import { API_CONFIG, apiRequest } from "./api.config";
 
-export type ReferenceValue = {
-  id: number;
-  value: string;
-};
 
-export type ReferenceDictionary = {
-  dictionaryId: number;
-  name: string;          // "Color", "Brand", ...
-  values: ReferenceValue[];
-};
 
 export type ReferenceResponse = {
   referenceData: ReferenceDictionary[];
 };
+
+
+  
+  export type ReferenceDictionary = {
+    dictionaryId: number;
+    name: string;          // "Brand", "Color", etc.
+    values: string[];
+  };
+
 
 export const referenceService = {
   getCarReferences: async () => {
