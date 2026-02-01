@@ -204,8 +204,8 @@ public class DataSeeder implements ApplicationRunner {
         CarFeature modelOctavia = upsertCarFeature(model.get(), "OCTAVIA");
         CarFeature modelFocus = upsertCarFeature(model.get(), "FOCUS");
         CarFeature modelClio = upsertCarFeature(model.get(), "CLIO");
-        CarFeature modelI30 = upsertCarFeature(model.get(), "I30");
-        CarFeature modelMazda3 = upsertCarFeature(model.get(), "MAZDA_3");
+        CarFeature modelTugson = upsertCarFeature(model.get(), "TUGSON");
+        CarFeature modelMazdaCx3 = upsertCarFeature(model.get(), "MAZDA_CX-3");
         CarFeature modelQashqai = upsertCarFeature(model.get(), "QASHQAI");
         CarFeature modelCivic = upsertCarFeature(model.get(), "CIVIC");
         CarFeature modelTesla3 = upsertCarFeature(model.get(), "MODEL_3");
@@ -220,9 +220,9 @@ public class DataSeeder implements ApplicationRunner {
                 List.of(fuelGas.get(), brandVolkswagen, modelGolf, colorBlue, statusActive.get()),
                 List.of(fuelDiesel.get(), brandSkoda, modelOctavia, colorGrey, statusInactive.get()),
                 List.of(fuelGas.get(), brandFord, modelFocus, colorBrown, statusActive.get()),
-                List.of(fuelDiesel.get(), brandRenault, modelClio, colorBeige, statusUnderRepair.get()),
-                List.of(fuelGas.get(), brandHyundai, modelI30, colorBronze, statusActive.get()),
-                List.of(fuelGas.get(), brandMazda, modelMazda3, colorNavy, statusInactive.get()),
+                List.of(fuelDiesel.get(), brandRenault, modelClio, colorWhite, statusUnderRepair.get()),
+                List.of(fuelGas.get(), brandHyundai, modelTugson, colorBronze, statusActive.get()),
+                List.of(fuelGas.get(), brandMazda, modelMazdaCx3, colorNavy, statusInactive.get()),
                 List.of(fuelDiesel.get(), brandNissan, modelQashqai, colorWhite, statusActive.get()),
                 List.of(fuelGas.get(), brandHonda, modelCivic, colorRed, statusUnderRepair.get()),
                 List.of(fuelElectric.get(), brandTesla, modelTesla3, colorBlack, statusActive.get())
@@ -270,6 +270,43 @@ public class DataSeeder implements ApplicationRunner {
         uploadFromPath(3, "seed/car-images/car-3/1.avif");
         uploadFromPath(3, "seed/car-images/car-3/2.avif");
         uploadFromPath(3, "seed/car-images/car-3/3.avif");
+        uploadFromPath(4, "seed/car-images/car-4/1.png");
+        uploadFromPath(4, "seed/car-images/car-4/2.png");
+        uploadFromPath(4, "seed/car-images/car-4/3.png");
+        uploadFromPath(5, "seed/car-images/car-5/1.png");
+        uploadFromPath(5, "seed/car-images/car-5/2.png");
+        uploadFromPath(5, "seed/car-images/car-5/3.png");
+        uploadFromPath(5, "seed/car-images/car-5/4.png");
+        uploadFromPath(6, "seed/car-images/car-6/1.png");
+        uploadFromPath(6, "seed/car-images/car-6/2.png");
+        uploadFromPath(6, "seed/car-images/car-6/3.png");
+        uploadFromPath(6, "seed/car-images/car-6/4.png");
+        uploadFromPath(7, "seed/car-images/car-7/1.png");
+        uploadFromPath(7, "seed/car-images/car-7/2.png");
+        uploadFromPath(8, "seed/car-images/car-8/1.png");
+        uploadFromPath(8, "seed/car-images/car-8/2.png");
+        uploadFromPath(8, "seed/car-images/car-8/3.png");
+        uploadFromPath(8, "seed/car-images/car-8/4.png");
+        uploadFromPath(9, "seed/car-images/car-9/1.png");
+        uploadFromPath(9, "seed/car-images/car-9/2.png");
+        uploadFromPath(9, "seed/car-images/car-9/3.png");
+        uploadFromPath(9, "seed/car-images/car-9/4.png");
+        uploadFromPath(10, "seed/car-images/car-10/1.png");
+        uploadFromPath(10, "seed/car-images/car-10/2.png");
+        uploadFromPath(10, "seed/car-images/car-10/3.png");
+        uploadFromPath(10, "seed/car-images/car-10/4.png");
+        uploadFromPath(11, "seed/car-images/car-11/1.png");
+        uploadFromPath(11, "seed/car-images/car-11/2.png");
+        uploadFromPath(11, "seed/car-images/car-11/3.png");
+        uploadFromPath(11, "seed/car-images/car-11/4.png");
+        uploadFromPath(12, "seed/car-images/car-12/1.png");
+        uploadFromPath(12, "seed/car-images/car-12/2.png");
+        uploadFromPath(12, "seed/car-images/car-12/3.png");
+        uploadFromPath(12, "seed/car-images/car-12/4.png");
+        uploadFromPath(13, "seed/car-images/car-13/1.png");
+        uploadFromPath(13, "seed/car-images/car-13/2.png");
+        uploadFromPath(13, "seed/car-images/car-13/3.png");
+        uploadFromPath(13, "seed/car-images/car-13/4.png");
     }
 
     private void uploadFromPath(Integer carId, String path) {

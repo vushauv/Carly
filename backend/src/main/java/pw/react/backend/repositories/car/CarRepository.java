@@ -104,10 +104,10 @@ public interface CarRepository extends JpaRepository<Car, Integer> {
             and (b.carBookingDateFrom < :to
             and b.carBookingDateTo > :from)
             and b.carBookingStatus.bookingStatusDictionaryId <> :cancelledStatusId
-            
-      )
-""")
+            and b.bookingId <> :bookingId)
+    """)
     Optional<Car> checkCarAvailability(@Param("carId") Integer carId,
+                                       @Param("bookingId") Integer bookingId,
                                        @Param("from") LocalDateTime from,
                                        @Param("to") LocalDateTime to,
                                        @Param("cancelledStatusId") Integer cancelledStatusId);

@@ -17,6 +17,6 @@ public interface CarService {
     List<Car> getAll(CarSearchCriteria searchCriteria) throws BadRequestException;
     Car getById(Integer carId) throws ResourceNotFoundException;
     List<Car> getPage(int page, int size, CarSearchCriteria searchCriteria) throws BadRequestException;
-    boolean checkCarAvailability(Integer carId, DateRange dateRange) throws ResourceNotFoundException;
+    boolean checkCarAvailability(Integer carId, Integer bookingId ,DateRange dateRange) throws ResourceNotFoundException;
     public BigDecimal calculateTotalPrice(Car car, DateRange dateRange) throws ResourceNotFoundException;
 }

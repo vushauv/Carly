@@ -100,8 +100,7 @@ public class    BookingController {
         // Parse dates (ISO-8601 LocalDateTime, e.g. 2026-02-01T10:00:00)
         java.time.LocalDateTime from = DateUtils.parseLocalDateTime(dateFrom);
         java.time.LocalDateTime to = DateUtils.parseLocalDateTime(dateTo);
-        var criteria = bookingCriteriaMapper.toBookingSearchCriteria(bookingId, status,
-                to, from, userId);
+        var criteria = bookingCriteriaMapper.toBookingSearchCriteria(bookingId, status, to, from, userId);
 
         List<GetBookingResponseDto> result = bookingMapper.bookingToGetBookingResponseList(
                 bookingService.search(criteria, resolvedPage, resolvedSize).getContent()
@@ -139,7 +138,7 @@ public class    BookingController {
 
             DateRange normalised = DateUtils.validateAndNormalise(dateRange);
 
-            if (!carService.checkCarAvailability(carId, normalised)) {
+            if (!carService.checkCarAvailability(carId, bookingId ,normalised)) {
                 throw new CarBookingConflictException(carId, normalised);
             }
 

@@ -148,12 +148,13 @@ public class CarMainService implements CarService {
                 searchCriteria);
     }
 
-    public boolean checkCarAvailability(Integer carId, DateRange dateRange)
+    public boolean checkCarAvailability(Integer carId,Integer bookingId,DateRange dateRange)
             throws ResourceNotFoundException
     {
         if(!carRepository.existsById(carId))
             throw new ResourceNotFoundException("Car with id " + carId + " was not found.");
         var res = carRepository.checkCarAvailability(carId,
+                bookingId,
                 dateRange.getFrom(), dateRange.getTo(),
                 BookingStatus.CANCELLED.getCode());
 
