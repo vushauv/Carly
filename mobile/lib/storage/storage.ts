@@ -1,4 +1,4 @@
-// lib/storage.ts
+// mobile/lib/storage/storage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { CarCard } from "./models";
 import { getProfile } from "./profileStorage";

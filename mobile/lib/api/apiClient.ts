@@ -1,4 +1,4 @@
-// lib/apiClient.ts
+//  mobile/lib/api/apiClient.ts
 import { Platform } from "react-native";
 
 // THIS HSA TO BE YOUR LOCAL IP WHEN RUNNING EXPO ON PC!!!!!!!!!!!!!!!!!!!!!!

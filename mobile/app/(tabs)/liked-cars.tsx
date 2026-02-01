@@ -1,4 +1,4 @@
-// app/tabs/LikedCarsTab.tsx
+//mobile/app/(tabs)/liked-cars.tsx
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -16,19 +16,24 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import { useRouter } from "expo-router";
+import { Calendar } from "react-native-calendars";
+
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
-import { Calendar } from "react-native-calendars";
-import { createCarBookingOnBackend } from "../../lib/bookingsApi";
-import { useRouter } from "expo-router";
-import { ApiError } from "../../lib/apiClient";
-import type { FlatCard } from "../../lib/models";
-import type { LikedCar } from "../../lib/storage";
-import { clearLikedCars, getLikedCars, removeLikedCar } from "../../lib/storage";
-import { bookFlat, getPartnerFlatsForPeriod } from "../../lib/carlyApi";
+
 import CarCardView from "../components/CarCardView";
-import { createFlatlyBooking, getAvailableFlats } from "../../lib/flatlyApi";
-import { addFlatlyBooking } from "../../lib/flatlyBookingsStorage";
+
+import { ApiError } from "../../lib/api/apiClient";
+import { createCarBookingOnBackend } from "../../lib/api/bookingsApi";
+import { bookFlat, getPartnerFlatsForPeriod } from "../../lib/api/carlyApi";
+import { createFlatlyBooking, getAvailableFlats } from "../../lib/api/flatlyApi";
+
+import type { FlatCard } from "../../lib/models"
+import type { LikedCar } from "../../lib/storage/storage";
+import { addFlatlyBooking } from "../../lib/storage/flatlyBookingsStorage";
+import { clearLikedCars, getLikedCars, removeLikedCar } from "../../lib/storage/storage";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -160,13 +165,13 @@ export default function LikedCarsTab() {
   }
     function goToCurrentBookings() {
       // Close the flow UI so user doesn't return to success screen
-      closeFlow();
+        closeFlow();
 
-      // Navigate to HomeTab and select "current"
-      router.push({
-        pathname: "/tabs/HomeTab",
-        params: { section: "current" },
-      });
+        // Switch to Bookings tab and select "current"
+        router.replace({
+          pathname: "/(tabs)/home",
+          params: { section: "current" },
+        });
     }
 
 

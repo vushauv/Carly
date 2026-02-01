@@ -1,4 +1,4 @@
-// lib/models.ts
+// mobile/lib/models.ts
 
 export type FuelType = "gas" | "diesel" | "electric" | "hybrid";
 

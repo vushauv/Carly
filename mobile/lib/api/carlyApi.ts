@@ -1,7 +1,7 @@
-// lib/carlyApi.ts
+// mobile/lib/api/carlyApi.ts
 import type { CarCard, CarColor, CarSearchFilters, FuelType } from "./models";
 import { getReferenceData } from "./referenceDataApi";
-import { getCachedReferenceData, setCachedReferenceData } from "./referenceDataStorage";
+import { getCachedReferenceData, setCachedReferenceData } from "../storage/referenceDataStorage";
 import { apiRequest, ApiError } from "./apiClient";
 
 export type SearchLookups = {

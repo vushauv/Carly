@@ -1,10 +1,10 @@
-//app/car/[id].tsx
+//mobile/app/car/[id].tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import CarCardView from "../../app/components/CarCardView";
-import { getCarDetailsForId } from "../../lib/viewedCarsStorage";
+import { getCarDetailsForId } from "../../lib//storage/viewedCarsStorage";
 import type { CarCard } from "../../lib/models";
 
 export default function CarDetails() {

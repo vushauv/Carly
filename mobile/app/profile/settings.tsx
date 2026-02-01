@@ -1,4 +1,4 @@
-//app/ProfileSettings.tsx
+//mobile/app/profile/settings.tsx
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -13,11 +13,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { getProfile, saveProfile, clearProfile, type Profile } from "../lib/profileStorage";
-import { updateUserById, deleteUserById } from "../lib/userApi";
-import { getBookingsFromBackend } from "../lib/bookingsApi";
-import { getFlatlyBookings } from "../lib/flatlyBookingsStorage";
-import { ApiError } from "../lib/apiClient";
+import { getProfile, saveProfile, clearProfile, type Profile } from "../../lib/storage/profileStorage";
+import { updateUserById, deleteUserById } from "../../lib/api/userApi";
+import { getBookingsFromBackend } from "../../lib/api/bookingsApi";
+import { getFlatlyBookings } from "../../lib/storage/flatlyBookingsStorage";
+import { ApiError } from "../../lib/api/apiClient";
 
 type PersonalDraft = {
   email: string;
