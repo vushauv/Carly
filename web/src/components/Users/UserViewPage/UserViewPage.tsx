@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import styles from "./UserViewPage.module.css";
-import Button from "../../Button/Button";
+import Button from "../../Elements/Button/Button";
 import { userService } from "../services/userService";
 import type { User } from "../services/types";
 

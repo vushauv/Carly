@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Button from "../Button/Button";
+import Button from "../Elements/Button/Button";
 import CarBookings from "./CarBookings";
 import FlatBookings from "./FlatBookings";
 import styles from "./PartnerBookingsPage.module.css";

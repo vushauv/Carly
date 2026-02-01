@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./UserRegisterPage.module.css";
-import Button from "../../Button/Button";
-import Input from "../../Input/Input";
+import Button from "../../Elements/Button/Button";
+import Input from "../../Elements/Input/Input";
 import { userService } from "../services/userService";
 import type { RegisterUserRequest } from "../services/types";
 

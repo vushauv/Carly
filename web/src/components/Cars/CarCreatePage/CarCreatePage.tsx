@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./CarCreatePage.module.css";
 
-import Button from "../../Button/Button";
+import Button from "../../Elements/Button/Button";
 import { carService } from "../services/carService";
 import type { CarFeature, CreateCarRequest } from "../services/types";
 

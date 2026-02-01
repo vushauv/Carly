@@ -1,13 +1,13 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./ManageCarsPage.module.css";
-import AddNewEntityComponent from "../../AddNewEntityComponent/AddNewComponent";
-import FiltersForm from "../../FiltersForm/FiltersForm";
+import AddNewEntityComponent from "../../Elements/AddNewEntityComponent/AddNewComponent";
+import FiltersForm from "../../Elements/FiltersForm/FiltersForm";
 import type { Car } from "../services/types";
 import { type CarFilters, type CarFilterKey, carFilterFields } from "../services/filters.conf";
-import DataTable from "../../DataTable/DataTable";
+import DataTable from "../../Elements//DataTable/DataTable";
 import { carsColumns, carsRowKey, carsActions } from "../services/datatable.conf";
-import Pagination from "../../Pagination/Pagination";
+import Pagination from "../../Elements//Pagination/Pagination";
 import { carService } from "../services/carService";
 
 const PAGE_SIZE = 4; // Changed from 10 to 3 to match service default

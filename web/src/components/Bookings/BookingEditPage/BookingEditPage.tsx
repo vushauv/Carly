@@ -3,8 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "./BookingEditPage.module.css";
 import type { BookingDetails, UpdateBookingRequest } from "../ManageBookingsPage/types";
 import { bookingService } from "../ManageBookingsPage/bookingService";
-import Button from "../../Button/Button";
-import Input from "../../Input/Input";
+import Button from "../../Elements/Button/Button";
+import Input from "../../Elements/Input/Input";
 
 const BookingEditPage = () => {
   const { id } = useParams<{ id: string }>();

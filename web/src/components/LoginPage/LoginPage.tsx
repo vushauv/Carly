@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import styles from "./LoginPage.module.css";
-import Button from "../Button/Button";
-import Input from "../Input/Input";
+import Button from "../Elements/Button/Button";
+import Input from "../Elements/Input/Input";
 
 const LoginPage = () => {
   const [error, setError] = useState<boolean>(false);

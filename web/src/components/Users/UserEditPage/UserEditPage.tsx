@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import styles from "./UserEditPage.module.css";
-import Button from "../../Button/Button";
-import Input from "../../Input/Input";
+import Button from "../../Elements/Button/Button";
+import Input from "../../Elements/Input/Input";
 import { userService } from "../services/userService";
 import type { User, UpdateUserRequest } from "../services/types";
 

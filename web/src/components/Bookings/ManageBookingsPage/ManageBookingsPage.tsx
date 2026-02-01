@@ -1,13 +1,13 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./ManageBookingsPage.module.css";
-import AddNewEntityComponent from "../../AddNewEntityComponent/AddNewComponent";
-import FiltersForm from "../../FiltersForm/FiltersForm";
+import AddNewEntityComponent from "../../Elements//AddNewEntityComponent/AddNewComponent";
+import FiltersForm from "../../Elements/FiltersForm/FiltersForm.tsx";
 import type { BookingDetails } from "./types";
 import { defaultBookingFilters, type BookingFilterKey, bookingFilterFields } from "./filters.conf.ts";
-import DataTable from "../../DataTable/DataTable";
+import DataTable from "../../Elements//DataTable/DataTable";
 import { bookingsColumns, bookingsRowKey, bookingsActions } from "./datatable.conf";
-import Pagination from "../../Pagination/Pagination";
+import Pagination from "../../Elements//Pagination/Pagination";
 import { bookingService } from "./bookingService";
 
 const PAGE_SIZE = 3; // Match users page pattern

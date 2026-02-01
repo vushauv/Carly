@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "./CarImagesPage.module.css";
 import type { Car, CarImage } from "../services/types";
 import { carService } from "../services/carService";
-import Button from "../../Button/Button";
+import Button from "../../Elements/Button/Button";
 
 const CarImagesPage = () => {
   const { id } = useParams<{ id: string }>();
