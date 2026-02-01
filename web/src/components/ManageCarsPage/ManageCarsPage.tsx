@@ -4,25 +4,21 @@ import styles from "./ManageCarsPage.module.css";
 import AddNewEntityComponent from "../AddNewEntityComponent/AddNewComponent";
 import FiltersForm from "../FiltersForm/FiltersForm";
 import type { Car } from "./types";
-import { type CarFilters, defaultCarFilters, type CarFilterKey, carFilterFields } from "./filters.conf";
+import { type CarFilters, type CarFilterKey, carFilterFields } from "./filters.conf";
 import DataTable from "../DataTable/DataTable";
 import { carsColumns, carsRowKey, carsActions } from "./datatable.conf";
 import Pagination from "../Pagination/Pagination";
 import { carService } from "./carService";
 
-const PAGE_SIZE = 3; // Changed from 10 to 3 to match service default
+const PAGE_SIZE = 4; // Changed from 10 to 3 to match service default
 
 const ManageCarsPage = () => {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<CarFilters>(defaultCarFilters);
   const [cars, setCars] = useState<Car[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(0); // API uses 0-based pagination
-  const [totalCars, setTotalCars] = useState<number>(0);
+  const [hasNextPage, setHasNextPage] = useState<boolean>(true);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<Partial<CarFilters>>({});
-
-  const totalPages = Math.max(1, Math.ceil(totalCars / PAGE_SIZE));
 
   const loadCarsPage = async (page: number, filtersToApply: Partial<CarFilters> = {}) => {
     try {
@@ -45,15 +41,19 @@ const ManageCarsPage = () => {
       
       let result;
       if (hasFilters) {
-        // Use search endpoint with filters
-        result = await carService.getAllCars(page, PAGE_SIZE, serviceFilters);
+        // Use search endpoint with filters - fetch one extra to check if there's a next page
+        result = await carService.getAllCars(page, PAGE_SIZE + 1, serviceFilters);
       } else {
-        // Use regular getAllCars without filters
-        result = await carService.getAllCars(page, PAGE_SIZE);
+        // Use regular getAllCars without filters - fetch one extra to check if there's a next page
+        result = await carService.getAllCars(page, PAGE_SIZE + 1);
       }
       
-      setCars(result.cars);
-      setTotalCars(result.totalCount);
+      // Extract cars array from result (assuming result has a cars property)
+      const carsData = result.cars || result;
+      
+      // Set cars (excluding the extra one) and determine if there's a next page
+      setCars(carsData.slice(0, PAGE_SIZE));
+      setHasNextPage(carsData.length > PAGE_SIZE);
     } catch (err) {
       console.error("Failed to load cars:", err);
       // Error handling removed - no user-facing error message
@@ -72,7 +72,6 @@ const ManageCarsPage = () => {
   const handleResetFilters = () => {
     console.log("Resetting filters");
     setActiveFilters({});
-    setFilters(defaultCarFilters);
     setCurrentPage(0);
     loadCarsPage(0, {}); // Load without filters
   };
@@ -84,8 +83,42 @@ const ManageCarsPage = () => {
 
     try {
       await carService.deleteCar(carId);
-      // Refresh the current page after deletion
-      loadCarsPage(currentPage, activeFilters);
+
+      // Try to reload the same page; if it becomes empty, go back until we find data (or reach page 0)
+      let pageToLoad = currentPage;
+
+      while (pageToLoad > 0) {
+        const result = await carService.getAllCars(pageToLoad, PAGE_SIZE, 
+          Object.keys(activeFilters).length > 0 ? {
+            brand: activeFilters.brand,
+            model: activeFilters.model,
+            color: activeFilters.color,
+            fuelType: activeFilters.fuelType,
+            status: activeFilters.status,
+            availability: activeFilters.availability as "AVAILABLE" | "RENTED" | undefined,
+            priceMin: activeFilters.priceMin ? parseFloat(activeFilters.priceMin) : undefined,
+            priceMax: activeFilters.priceMax ? parseFloat(activeFilters.priceMax) : undefined,
+          } : undefined
+        );
+
+        const pageData = result.cars || result;
+
+        if (pageData.length > 0) {
+          setCars(pageData);
+          setHasNextPage(pageData.length === PAGE_SIZE);
+          setCurrentPage(pageToLoad);
+          return;
+        }
+
+        pageToLoad -= 1;
+      }
+
+      // Fallback: load page 0
+      const firstPageResult = await carService.getAllCars(0, PAGE_SIZE);
+      const firstPageData = firstPageResult.cars || firstPageResult;
+      setCars(firstPageData);
+      setHasNextPage(firstPageData.length === PAGE_SIZE);
+      setCurrentPage(0);
     } catch (err) {
       console.error("Failed to delete car:", err);
       // Error handling removed - no user-facing error message
@@ -178,14 +211,17 @@ const ManageCarsPage = () => {
 
       <Pagination
         currentPage={currentPage + 1} // Display 1-based to user
-        totalPages={totalPages}
+        hasNextPage={hasNextPage}
+        disabled={loading}
         onPrev={() => {
-          const newPage = Math.max(0, currentPage - 1);
+          if (currentPage === 0) return;
+          const newPage = currentPage - 1;
           setCurrentPage(newPage);
           loadCarsPage(newPage, activeFilters);
         }}
         onNext={() => {
-          const newPage = Math.min(totalPages - 1, currentPage + 1);
+          if (!hasNextPage) return;
+          const newPage = currentPage + 1;
           setCurrentPage(newPage);
           loadCarsPage(newPage, activeFilters);
         }}
