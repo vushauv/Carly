@@ -1,7 +1,9 @@
 import type { ColumnDef, RowAction } from "../../components/DataTable/DataTable";
 import type { BookingDetails } from "./types";
 
-export const bookingsRowKey = (booking: BookingDetails) => booking.bookingId;
+
+
+export const bookingsRowKey = (booking: BookingDetails) => booking.id;
 
 export const bookingsColumns = (styles: {
   primaryCell?: string;
@@ -12,67 +14,106 @@ export const bookingsColumns = (styles: {
   price?: string;
 }): ColumnDef<BookingDetails>[] => [
   { 
-    id: "id", 
+    id: "Booking id", 
     header: "ID", 
-    cell: (booking) => booking.bookingId, 
+    cell: (booking) => booking.id, 
     width: "60px" 
   },
   {
     id: "customer",
-    header: "Customer",
+    header: "Customer Id",
     cell: (booking) => (
       <div className={styles.customer}>
-        {booking.user.firstName} {booking.user.lastName}
+        {booking.userId}
         <br />
-        <small>{booking.user.email}</small>
       </div>
     ),
     cellClassName: styles.customer,
-    width: "200px",
+    width: "100px",
   },
   {
     id: "car",
-    header: "Car",
+    header: "Car Id",
     cell: (booking) => (
       <div className={styles.car}>
-        {booking.car.brand} {booking.car.model}
+        {booking.carId}
         <br />
-        <small>{booking.car.color} • {booking.car.licensePlate}</small>
+        
       </div>
     ),
     cellClassName: styles.car,
-    width: "180px",
+    width: "100px",
   },
   {
     id: "dates",
     header: "Dates",
     cell: (booking) => {
-      const formatDate = (dateString: string): string => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        });
-      };
+  
       
+      const formatDate = (value: string): string => {
+        // "2026-02-02T00:00:00.000+0000"
+        const [year, month, day] = value.split("T")[0].split("-");
+      
+        return `${day}.${month}.${year}`; // or any format you want
+      };
+  
       return (
         <div className={styles.dates}>
-          {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
+          {formatDate(booking.carBookingDateFrom)} –{" "}
+          {formatDate(booking.carBookingDateTo)}
           <br />
-          <small>{booking.pickupLocation}</small>
+          <small>{booking.pickupLocation?.address ?? "—"}</small>
         </div>
       );
     },
     cellClassName: styles.dates,
-    width: "160px",
+    width: "200px",
+  },
+
+  {
+    id: "pickup_location",
+    header: "Pick Location",
+    cell: (booking) => {
+  
+      
+
+  
+      return (
+        <div className={styles.dates}>
+
+          {booking.pickupLocation?.address ?? "—"}
+        </div>
+      );
+    },
+    cellClassName: styles.dates,
+    width: "150px",
   },
   {
-    id: "status",
-    header: "Status",
+    id: "return_location",
+    header: "Return Location",
+    cell: (booking) => {
+  
+      
+
+  
+      return (
+        <div className={styles.dates}>
+
+          {booking.returnLocation?.address ?? "—"}
+        </div>
+      );
+    },
+    cellClassName: styles.dates,
+    width: "200px",
+  },
+  
+  {
+    id: "car_status",
+    header: "Car Status",
     cell: (booking) => {
       const getStatusColor = (status: string): string => {
         switch (status) {
-          case "PENDING": return "#ffc107";
+          case "CREATED": return "#ffc107";
           case "CONFIRMED": return "#17a2b8";
           case "ACTIVE": return "#28a745";
           case "COMPLETED": return "#6c757d";
@@ -84,9 +125,9 @@ export const bookingsColumns = (styles: {
       return (
         <span 
           className={styles.status}
-          style={{ backgroundColor: getStatusColor(booking.status), color: 'white' }}
+          style={{ backgroundColor: getStatusColor(booking.carStatus.name), color: 'white' }}
         >
-          {booking.status}
+          {booking.carStatus.name}
         </span>
       );
     },
@@ -94,12 +135,33 @@ export const bookingsColumns = (styles: {
     width: "120px",
   },
   {
-    id: "price",
-    header: "Total Price",
-    cell: (booking) => `$${booking.totalPrice.toFixed(2)}`,
-    cellClassName: styles.price,
+    id: "flat_status",
+    header: "Flat Status",
+    cell: (booking) => {
+      const getStatusColor = (status: string): string => {
+        switch (status) {
+          case "CREATED": return "#ffc107";
+          case "CONFIRMED": return "#17a2b8";
+          case "ACTIVE": return "#28a745";
+          case "COMPLETED": return "#6c757d";
+          case "CANCELLED": return "#dc3545";
+          default: return "#6c757d";
+        }
+      };
+
+      return (
+        <span 
+          className={styles.status}
+          style={{ backgroundColor: getStatusColor(booking.flatStatus ?? "NONE" ), color: 'white' }}
+        >
+          {booking.flatStatus ?? "NONE"}
+        </span>
+      );
+    },
+    cellClassName: styles.status,
     width: "120px",
-  },
+  }
+
 ];
 
 export const bookingsActions: RowAction<BookingDetails>[] = [

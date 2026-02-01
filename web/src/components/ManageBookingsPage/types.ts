@@ -1,35 +1,39 @@
 // Booking types based on rental car business logic
-export interface Booking {
-  bookingId: number;
+
+
+export interface BookingDetails  {
+  id: number;
+
   userId: number;
   carId: number;
-  startDate: string;
-  endDate: string;
-  totalPrice: number;
-  status: "PENDING" | "CONFIRMED" | "ACTIVE" | "COMPLETED" | "CANCELLED";
-  pickupLocation: string;
-  dropoffLocation: string;
-  createdAt: string;
-  updatedAt: string;
+
+  carBookingDateFrom: string;
+  carBookingDateTo: string;
+
+  carStatus: {
+    id: number;
+    name: string;
+  };
+
+  flatStatus: string | null;
+
+  pickupLocation: {
+    id: number;
+    address: string;
+    latitude: number;
+    longitude: number;
+  };
+
+  returnLocation: {
+    id: number;
+    address: string;
+    latitude: number;
+    longitude: number;
+  };
+
+  providerExternalBookingId: string | null;
 }
 
-export interface BookingDetails extends Booking {
-  user: {
-    userId: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone?: string;
-  };
-  car: {
-    carId: number;
-    brand: string;
-    model: string;
-    color: string;
-    licensePlate: string;
-    pricePerDay: number;
-  };
-}
 
 export interface CreateBookingRequest {
   userId: number;
