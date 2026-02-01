@@ -1,6 +1,6 @@
-// lib/bookingsApi.ts
+// mobile/lib/api/bookingsApi.ts
 import { apiRequest } from "./apiClient";
-import { getProfile } from "./profileStorage";
+import { getProfile } from "../storage/profileStorage";
 
 // -------------------------
 // App-facing types

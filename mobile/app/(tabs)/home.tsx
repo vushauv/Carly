@@ -1,20 +1,22 @@
-// app/tabs/HomeTab.tsx
+//mobile/app/(tabs)/home.tsx
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
+
 import CarCardView from "../components/CarCardView";
-import { useLocalSearchParams } from "expo-router";
-import { cancelFlatlyBooking } from "../../lib/flatlyApi";
-import { getFlatlyBookings, markFlatlyCancelled } from "../../lib/flatlyBookingsStorage";
+
+import { cancelFlatlyBooking } from "../../lib/api/flatlyApi";
+import { getFlatlyBookings, markFlatlyCancelled } from "../../lib/storage/flatlyBookingsStorage";
 
 import {
   cancelCarBookingOnBackend,
   getBookingsFromBackend,
   type Booking,
   type BookingStatus,
-} from "../../lib/bookingsApi";
+} from "../../lib/api/bookingsApi";
+
 
 
 export default function HomeTab() {
@@ -146,7 +148,7 @@ export default function HomeTab() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Home</Text>
 
-        <Pressable style={styles.profileButton} onPress={() => router.push("../ProfileSettings")}>
+        <Pressable style={styles.profileButton} onPress={() => router.push("/profile/settings")}>
           <Text style={styles.profileButtonText}>Profile settings</Text>
         </Pressable>
       </View>
@@ -176,7 +178,7 @@ export default function HomeTab() {
           <BookingCard
             key={b.id}
             booking={b}
-            onSeeMore={() => router.push(`../booking/${b.id}`)}
+            onSeeMore={() => router.push(`/booking/${b.id}`)}
             onCancel={() => void onCancel(b.id)}
           />
         ))}

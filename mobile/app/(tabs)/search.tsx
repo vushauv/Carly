@@ -1,4 +1,4 @@
-// app/tabs/SearchTab.tsx
+//mobile/app/(tabs)/search.tsx
 //npm i react-native-calendars
 //npx expo install @react-native-async-storage/async-storage
 //npx expo install @react-navigation/native
@@ -19,14 +19,16 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 
 import type { CarCard, CarColor, CarSearchFilters, FuelType } from "../../lib/models";
-import { dislikeCar, getSearchLookups, likeCar, searchCars } from "../../lib/carlyApi";
-import { addDislikedCarId, addLikedCar, getDislikedCarIds, getLikedCarIds } from "../../lib/storage";
-import { saveCarDetailsForId } from "../../lib/viewedCarsStorage";
+import { dislikeCar, getSearchLookups, likeCar, searchCars } from "../../lib/api/carlyApi";
+import { addDislikedCarId, addLikedCar, getDislikedCarIds, getLikedCarIds } from "../../lib/storage/storage";
+import { saveCarDetailsForId } from "../../lib/storage/viewedCarsStorage";
 import CarCardView from "../components/CarCardView";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");

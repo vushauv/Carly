@@ -1,4 +1,4 @@
-// lib/referenceDataStorage.ts
+// mobile/lib/storage/referenceDataStorage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { ReferenceDataDto } from "./referenceDataApi";
 

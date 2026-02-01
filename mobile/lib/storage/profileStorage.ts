@@ -1,4 +1,4 @@
-// lib/profileStorage.ts
+// mobile/lib/storage/profileStorage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const KEY_PROFILE = "carly.profile.v5";

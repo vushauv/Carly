@@ -1,8 +1,8 @@
-//lib/flatlyApi.ts
+//mobile/lib/api/flatlyApi.ts
 
 import { apiRequest } from "./apiClient";
-import { getProfile } from "./profileStorage";
-import type { FlatCard } from "./models";
+import { getProfile } from "../storage/profileStorage";
+import type { FlatCard } from "../models";
 
 // -------------------------
 // Backend DTOs (OpenAPI)

@@ -1,4 +1,4 @@
-// lib/userApi.ts
+//mobile/lib/api/userApi.ts
 import { apiRequest } from "./apiClient";
 
 // From OpenAPI schemas

@@ -1,4 +1,4 @@
-// app/RegisterScreen.tsx
+//mobile/app/register.tsx
 import React, { useMemo, useState } from "react";
 import {
   Alert,
@@ -13,13 +13,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { saveProfile } from "../lib/profileStorage";
-import { registerUser, getUserById } from "../lib/userApi";
-import { ApiError } from "../lib/apiClient";
-import { clearCachedReferenceData } from "../lib/referenceDataStorage";
-import { resetSearchLookupsMemo } from "../lib/carlyApi";
-import { purgeLegacyCarPrefsGlobalKeys } from "../lib/storage";
-import { purgeLegacyFlatlyBookingsGlobalKey } from "../lib/flatlyBookingsStorage";
+import { saveProfile } from "../lib/storage/profileStorage";
+import { registerUser, getUserById } from "../lib/api/userApi";
+import { ApiError } from "../lib/api/apiClient";
+import { clearCachedReferenceData } from "../lib/storage/referenceDataStorage";
+import { resetSearchLookupsMemo } from "../lib/api/carlyApi";
+import { purgeLegacyCarPrefsGlobalKeys } from "../lib/storage/storage";
+import { purgeLegacyFlatlyBookingsGlobalKey } from "../lib/storage/flatlyBookingsStorage";
 
 function onlyDigits(s: string): string {
   return (s || "").replace(/\D/g, "");
@@ -128,7 +128,7 @@ export default function RegisterScreen() {
       await clearCachedReferenceData();
       resetSearchLookupsMemo();
 
-      router.replace("/tabs/SearchTab");
+      router.replace("/(tabs)/search");
     } catch (err) {
         if (err instanceof ApiError) {
           const body = err.body as any;

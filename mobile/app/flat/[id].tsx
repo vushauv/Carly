@@ -1,10 +1,10 @@
-//app/flat/[id].tsx
+//mobile/app/flat/[id].tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import CarCardView from "../components/CarCardView";
-import { getFlatDetails } from "../../lib/flatlyApi";
+import { getFlatDetails } from "../../lib/api/flatlyApi";
 
 type FlatUi = {
   id: number;

@@ -1,4 +1,4 @@
-// mobile/lib/flatlyBookingsStorage.ts
+// mobile/lib/storage/flatlyBookingsStorage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { FlatCard } from "./models";
 import { getProfile } from "./profileStorage";

@@ -1,4 +1,4 @@
-// app/booking/[id].tsx
+//mobile/app/booking/[id].tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -10,10 +10,10 @@ import {
   cancelCarBookingOnBackend,
   getBookingByIdFromBackend,
   type Booking,
-} from "../../lib/bookingsApi";
+} from "../../lib/api/bookingsApi";
 
-import { cancelFlatlyBooking, getFlatBookingDetails, getFlatDetails } from "../../lib/flatlyApi";
-import { getFlatlyBookings, markFlatlyCancelled, type FlatlyBookingRecord } from "../../lib/flatlyBookingsStorage";
+import { cancelFlatlyBooking, getFlatBookingDetails, getFlatDetails } from "../../lib/api/flatlyApi";
+import { getFlatlyBookings, markFlatlyCancelled, type FlatlyBookingRecord } from "../../lib/storage/flatlyBookingsStorage";
 import type { FlatCard } from "../../lib/models";
 
 // -----------------------------

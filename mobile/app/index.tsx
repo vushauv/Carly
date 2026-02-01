@@ -1,4 +1,4 @@
-// app/index.tsx
+//mobile/app/index.tsx
 import {
   View,
   Text,
@@ -11,16 +11,19 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+
 import { useState } from "react";
-import { clearCachedReferenceData } from "../lib/referenceDataStorage";
-import { resetSearchLookupsMemo } from "../lib/carlyApi";
-import { loginUser, getUserById } from "../lib/userApi";
-import { saveProfile } from "../lib/profileStorage";
-import { purgeLegacyCarPrefsGlobalKeys } from "../lib/storage";
-import { purgeLegacyFlatlyBookingsGlobalKey } from "../lib/flatlyBookingsStorage";
-import { ApiError } from "../lib/apiClient";
+import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { ApiError } from "../lib/api/apiClient";
+import { resetSearchLookupsMemo } from "../lib/api/carlyApi";
+import { loginUser, getUserById } from "../lib/api/userApi";
+
+import { saveProfile } from "../lib/storage/profileStorage";
+import { purgeLegacyCarPrefsGlobalKeys } from "../lib/storage/storage";
+import { clearCachedReferenceData } from "../lib/storage/referenceDataStorage";
+import { purgeLegacyFlatlyBookingsGlobalKey } from "../lib/storage/flatlyBookingsStorage";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -62,7 +65,7 @@ export default function LoginScreen() {
 
       await clearCachedReferenceData();
       resetSearchLookupsMemo();
-      router.replace("/tabs/SearchTab");
+      router.replace("/(tabs)/search");
      } catch (err: any) {
       if (err instanceof ApiError) {
         // If backend returns ExceptionDetails, it's likely in err.body
@@ -140,7 +143,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <Text style={styles.footerText}>Not registered yet?</Text>
-            <TouchableOpacity onPress={() => router.push("/RegisterScreen")} disabled={loading}>
+            <TouchableOpacity onPress={() => router.push("/register")} disabled={loading}>
               <Text style={styles.signUp}>Sign Up</Text>
             </TouchableOpacity>
           </View>
