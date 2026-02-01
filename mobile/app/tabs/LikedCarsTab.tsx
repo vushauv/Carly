@@ -13,6 +13,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,7 +21,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Calendar } from "react-native-calendars";
 import { createCarBookingOnBackend } from "../../lib/bookingsApi";
 import { useRouter } from "expo-router";
-
+import { ApiError } from "../../lib/apiClient";
 import type { FlatCard } from "../../lib/models";
 import type { LikedCar } from "../../lib/storage";
 import { clearLikedCars, getLikedCars, removeLikedCar } from "../../lib/storage";
@@ -31,7 +32,13 @@ import { addFlatlyBooking } from "../../lib/flatlyBookingsStorage";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-type FlowStep = "none" | "bookCar" | "carSuccess" | "browseFlats" | "flatSuccess";
+type FlowStep =
+  | "none"
+  | "bookCar"
+  | "carSuccess"
+  | "browseFlats"
+  | "flatGuests"
+  | "flatSuccess";
 
 export default function LikedCarsTab() {
   const [liked, setLiked] = useState<LikedCar[]>([]);
@@ -42,6 +49,8 @@ export default function LikedCarsTab() {
   // Flow state
   const [step, setStep] = useState<FlowStep>("none");
   const [car, setCar] = useState<LikedCar | null>(null);
+  const [guestsCount, setGuestsCount] = useState<string>("1");
+  const [flatBookingSubmitting, setFlatBookingSubmitting] = useState(false);
 
   // car booking dates
   const [dateFrom, setDateFrom] = useState<string>("");
@@ -146,6 +155,8 @@ export default function LikedCarsTab() {
     setFlatIndex(0);
     setFlatImgIndex({});
     setBookingId("");
+    setGuestsCount("1");
+    setFlatBookingSubmitting(false);
   }
     function goToCurrentBookings() {
       // Close the flow UI so user doesn't return to success screen
@@ -191,13 +202,54 @@ export default function LikedCarsTab() {
 
      setBookingId(newBookingId);
      setStep("carSuccess");
-   } catch (e: any) {
-     Alert.alert("Booking failed", e?.message ?? "Unknown error");
+   } catch (err) {
+       const ui = friendlyBookingError(err);
+       Alert.alert(ui.title, ui.message);
    }
  }
 
+function friendlyBookingError(err: unknown): { title: string; message: string } {
+  if (err instanceof ApiError) {
+    const body = err.body as any;
+    const code =
+      body && typeof body === "object"
+        ? String(body.code ?? body.message ?? "")
+        : "";
 
+    // Conflicts (typical for "already booked / overlaps")
+    if (err.status === 409 || code.includes("CONFLICT") || code.includes("OVERLAP")) {
+      return {
+        title: "Booking unavailable",
+        message:
+          "Those dates aren’t available anymore (someone else likely booked it). Please pick different dates and try again.",
+      };
+    }
 
+    // Validation problems
+    if (err.status === 422) {
+      return {
+        title: "Invalid booking data",
+        message: "Please check the dates / guest count and try again.",
+      };
+    }
+
+    // Auth/permission
+    if (err.status === 401 || err.status === 403) {
+      return {
+        title: "Not allowed",
+        message: "Please log in again and retry.",
+      };
+    }
+
+    // Generic
+    return {
+      title: "Booking failed",
+      message: "We couldn’t complete the booking right now. Please try again later.",
+    };
+  }
+
+  return { title: "Booking failed", message: "Something went wrong. Please try again." };
+}
 
   async function openBrowseFlats() {
     if (!dateFrom || !dateTo) {
@@ -219,16 +271,52 @@ export default function LikedCarsTab() {
     }
   }
 
-  async function onBookFlat() {
+  function onBookFlat() {
     const f = flats[flatIndex];
     if (!f) return;
 
+    // Default guest count to 1, but clamp to maxGuests if we know it.
+    const maxGuests =
+      typeof (f as any)?.raw?.max_guests === "number"
+        ? Number((f as any).raw.max_guests)
+        : undefined;
+
+    const startDefault = "1";
+    const clamped =
+      maxGuests && Number(startDefault) > maxGuests ? String(maxGuests) : startDefault;
+
+    setGuestsCount(clamped);
+    setStep("flatGuests");
+  }
+
+  async function submitFlatBooking() {
+    const f = flats[flatIndex];
+    if (!f) return;
+
+    const maxGuests =
+      typeof (f as any)?.raw?.max_guests === "number"
+        ? Number((f as any).raw.max_guests)
+        : undefined;
+
+    const n = Number(String(guestsCount ?? "").trim());
+
+    if (!Number.isFinite(n) || n < 1) {
+      Alert.alert("Invalid guest count", "Please enter a number >= 1.");
+      return;
+    }
+
+    if (maxGuests && n > maxGuests) {
+      Alert.alert("Too many guests", `This flat allows up to ${maxGuests} guests.`);
+      return;
+    }
+
+    setFlatBookingSubmitting(true);
     try {
       const flatBookingId = await createFlatlyBooking({
         flatId: Number(f.id),
         dateFromDayISO: dateFrom,
         dateToDayISO: dateTo,
-        guestsCount: 1,
+        guestsCount: n, // ✅ passed to backend
       });
 
       await addFlatlyBooking({
@@ -247,10 +335,16 @@ export default function LikedCarsTab() {
       });
 
       setStep("flatSuccess");
-    } catch (e: any) {
-      Alert.alert("Booking failed", e?.message ?? "Unknown error");
+    } catch (err) {
+      const ui = friendlyBookingError(err);
+      Alert.alert(ui.title, ui.message);
+      // Return to browsing flats so they can try again
+      setStep("browseFlats");
+    } finally {
+      setFlatBookingSubmitting(false);
     }
   }
+
 
 
 
@@ -314,7 +408,7 @@ export default function LikedCarsTab() {
       <Modal visible={modalOpen} transparent={false} animationType="slide" onRequestClose={closeFlow}>
         <SafeAreaView style={[styles.flowSafe, { paddingTop: insets.top, paddingBottom: insets.bottom }]} edges={[]}>
 
-          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
             {/* Header */}
             <View style={[styles.flowHeader, { paddingTop: 6 }]}>
               <Text style={styles.flowTitle}>
@@ -511,6 +605,73 @@ export default function LikedCarsTab() {
                     </View>
                   </>
                 )}
+              </View>
+            ) : null}
+
+            {step === "flatGuests" ? (
+              <View style={{ flex: 1, padding: 16, gap: 12 }}>
+                <Text style={{ fontSize: 22, fontWeight: "900", color: "#111827" }}>
+                  Guest count
+                </Text>
+
+                <Text style={{ fontWeight: "800", color: "#6B7280" }}>
+                  How many guests will stay in this flat?
+                </Text>
+
+                <TextInput
+                  value={guestsCount}
+                  onChangeText={setGuestsCount}
+                  keyboardType="number-pad"
+                  placeholder="1"
+                  style={{
+                    backgroundColor: "#FFFBEB",
+                    borderWidth: 1,
+                    borderColor: "#FDE68A",
+                    borderRadius: 12,
+                    paddingVertical: 12,
+                    paddingHorizontal: 12,
+                    fontWeight: "900",
+                    color: "#111827",
+                  }}
+                />
+
+                <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
+                  <Pressable
+                    onPress={() => setStep("browseFlats")}
+                    disabled={flatBookingSubmitting}
+                    style={{
+                      flex: 1,
+                      borderRadius: 14,
+                      paddingVertical: 14,
+                      alignItems: "center",
+                      borderWidth: 1,
+                      borderColor: "#FDE68A",
+                      backgroundColor: "#FEF3C7",
+                      opacity: flatBookingSubmitting ? 0.6 : 1,
+                    }}
+                  >
+                    <Text style={{ fontWeight: "900", color: "#111827" }}>Back</Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => void submitFlatBooking()}
+                    disabled={flatBookingSubmitting}
+                    style={{
+                      flex: 1,
+                      borderRadius: 14,
+                      paddingVertical: 14,
+                      alignItems: "center",
+                      borderWidth: 1,
+                      borderColor: "#F59E0B",
+                      backgroundColor: "#FACC15",
+                      opacity: flatBookingSubmitting ? 0.6 : 1,
+                    }}
+                  >
+                    <Text style={{ fontWeight: "900", color: "#111827" }}>
+                      {flatBookingSubmitting ? "Booking…" : "Confirm booking"}
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
             ) : null}
 

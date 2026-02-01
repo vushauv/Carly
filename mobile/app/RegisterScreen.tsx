@@ -135,14 +135,9 @@ export default function RegisterScreen() {
           const code: string | undefined =
             body && typeof body === "object" ? String(body.code ?? body.message ?? "") : undefined;
 
-          if (err.status === 409) {
-            if (code === "USER_ALREADY_EXISTS" || code === "EMAIL_ALREADY_IN_USE") {
+          if (err.status === 409 || code === "USER_ALREADY_EXISTS" || code === "EMAIL_ALREADY_IN_USE") {
               Alert.alert("Account exists", "An account with this email already exists. Try logging in.");
               return;
-            }
-
-            Alert.alert("Conflict", "This operation conflicts with existing data.");
-            return;
           }
 
           if (err.status === 422) {

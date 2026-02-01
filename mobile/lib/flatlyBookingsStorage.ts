@@ -18,8 +18,18 @@ function keyForUser(userKey: string) {
 
 async function getUserKey(): Promise<string> {
   const p = await getProfile();
-  if (p.userId) return `id_${p.userId}`;
-  return "anon";
+
+    const email = String(p.email ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9@._-]/g, "");
+
+    // If backend userId is unreliable (mock), include email to avoid cross-user leaks.
+    if (p.userId && email) return `id_${p.userId}_${email}`;
+    if (p.userId) return `id_${p.userId}`;
+    if (email) return `email_${email}`;
+
+    return "anon";
 }
 
 export async function purgeLegacyFlatlyBookingsGlobalKey(): Promise<void> {
@@ -73,9 +83,13 @@ export async function addFlatlyBooking(
   const now = new Date().toISOString();
 
   const current = await getFlatlyBookings();
+
+  // ✅ Dedup by booking id (fixes duplicate React keys + mock backend reusing ids)
+  const without = current.filter((b) => b.flatBookingId !== rec.flatBookingId);
+
   const next: FlatlyBookingRecord[] = [
     { ...rec, createdAtISO: now, status: "CREATED" },
-    ...current,
+    ...without,
   ];
 
   await writeJson(keyForUser(userKeyStr), next);

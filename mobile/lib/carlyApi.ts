@@ -376,43 +376,6 @@ function dtoToCard(dto: GetCarResponseDto): CarCard | null {
   };
 }
 
-
-function applyPriceRange(cards: CarCard[], filters: CarSearchFilters): CarCard[] {
-  const min = filters.priceRange?.min ?? 0;
-  const max = filters.priceRange?.max ?? Number.POSITIVE_INFINITY;
-  return cards.filter((c) => c.pricePerDay >= min && c.pricePerDay <= max);
-}
-
-// ---------------------
-// ✅ REAL backend search (used by SearchTab)
-// ---------------------
-function norm(s: any): string {
-  return String(s ?? "").trim().toLowerCase();
-}
-
-function matchesFilter(a: any, b: any): boolean {
-  // case-insensitive equality
-  const na = norm(a);
-  const nb = norm(b);
-  if (!na || !nb) return false;
-  return na === nb;
-}
-
-function applyLocalFilters(cards: CarCard[], filters: CarSearchFilters): CarCard[] {
-  let out = cards;
-
-  if (filters.brand) out = out.filter((c) => matchesFilter(c.brand, filters.brand));
-  if (filters.model) out = out.filter((c) => matchesFilter(c.model, filters.model));
-  if (filters.color) out = out.filter((c) => matchesFilter(c.color, filters.color));
-  if (filters.fuelType) out = out.filter((c) => matchesFilter(c.fuelType, filters.fuelType));
-
-  // priceRange is already local anyway
-  const min = filters.priceRange?.min ?? 0;
-  const max = filters.priceRange?.max ?? Number.POSITIVE_INFINITY;
-  out = out.filter((c) => c.pricePerDay >= min && c.pricePerDay <= max);
-
-  return out;
-}
 function toBackendEnum(v: string | undefined | null): string | undefined {
   const s = String(v ?? "").trim();
   return s ? s.toUpperCase() : undefined;
@@ -441,7 +404,9 @@ function applyLocalFiltersCaseInsensitive(cards: CarCard[], filters: CarSearchFi
   return out;
 }
 
-export async function searchCars(filters: CarSearchFilters & { __page?: number }): Promise<CarCard[]> {
+export async function searchCars(
+  filters: CarSearchFilters & { __page?: number }
+): Promise<CarCard[]> {
   const uiPage = filters.__page ?? 0;
   const uiPageSize = 12;
 
@@ -453,29 +418,36 @@ export async function searchCars(filters: CarSearchFilters & { __page?: number }
   const bColor = toBackendEnum(filters.color);
   const bFuel = toBackendEnum(filters.fuelType);
 
+  // Price range -> backend params
+  const minPrice = filters.priceRange?.min;
+  const maxPrice = filters.priceRange?.max;
+
   // -------------------------
-  // FAST PATH (no filters): use backend paging
+  // FAST PATH (no feature filters): use backend paging
   // -------------------------
   if (!hasFeatureFilters) {
     const qs = new URLSearchParams();
     qs.set("page", String(uiPage));
     qs.set("size", String(uiPageSize));
 
-    if (__DEV__) console.log("[CARS] GET /cars (paged)", qs.toString());
+    if (typeof minPrice === "number") qs.set("minPrice", String(minPrice));
+    if (typeof maxPrice === "number") qs.set("maxPrice", String(maxPrice));
+
+    if (__DEV__) console.log("[CARS] GET /cars (PAGED)", qs.toString());
 
     const dtos = await apiRequest<GetCarResponseDto[]>(`/cars?${qs.toString()}`, { method: "GET" });
+
     const mapped = (Array.isArray(dtos) ? dtos : [])
       .map(dtoToCard)
       .filter((x): x is CarCard => !!x);
 
-    return applyPriceRange(mapped, filters);
+    // ✅ No UI-side filtering knows better than backend
+    return mapped;
   }
 
   // -------------------------
   // FILTERS ON: DO NOT send page/size
-  // This forces backend onto the `page == null` branch (getAll),
-  // which is the one that actually applies your criteria reliably.
-  // Then we paginate locally for the UI deck.
+  // Backend returns the filtered set; we paginate locally for the UI deck.
   // -------------------------
   const qs = new URLSearchParams();
 
@@ -484,8 +456,8 @@ export async function searchCars(filters: CarSearchFilters & { __page?: number }
   if (bColor) qs.set("features.color", bColor);
   if (bFuel) qs.set("features.fuelType", bFuel);
 
-  // Optional: explicitly send availability if you ever change default on backend
-  // qs.set("availability", "AVAILABLE");
+  if (typeof minPrice === "number") qs.set("minPrice", String(minPrice));
+  if (typeof maxPrice === "number") qs.set("maxPrice", String(maxPrice));
 
   if (__DEV__) console.log("[CARS] GET /cars (UNPAGED, filtered)", qs.toString());
 
@@ -495,23 +467,17 @@ export async function searchCars(filters: CarSearchFilters & { __page?: number }
     .map(dtoToCard)
     .filter((x): x is CarCard => !!x);
 
-  // Defensive local filtering too (in case backend still does something weird)
-  const filteredAll = applyLocalFiltersCaseInsensitive(mappedAll, filters);
-
+  // Local pagination only (NOT filtering)
   const start = uiPage * uiPageSize;
   const end = start + uiPageSize;
-  // If first page has results but next pages don't, DO NOT signal "no more cars"
-  if (uiPage > 0 && filteredAll.length <= start) {
-    if (__DEV__) {
-      console.log("[CARS] end of filtered results, returning null to prevent empty-state");
-    }
-    // IMPORTANT: prevents SearchTab from showing "No more cars"
+
+  // Keep your existing "don't show no more cars" behavior
+  if (uiPage > 0 && mappedAll.length <= start) {
+    if (__DEV__) console.log("[CARS] end of filtered results, returning [] to prevent empty-state");
     return [];
   }
 
-  const slice = filteredAll.slice(start, end);
-  return slice;
-
+  return mappedAll.slice(start, end);
 }
 
 // These exist because SearchTab calls them (even though they do nothing now)

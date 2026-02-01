@@ -23,10 +23,15 @@ function keyDisliked(userKey: string) {
 async function getUserKey(): Promise<string> {
   const p = await getProfile();
 
-  // Must be stable. Prefer backend userId.
-  if (p.userId) return `id_${p.userId}`;
+  const email = String(p.email ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9@._-]/g, "");
 
-  // If somehow missing, keep a separate anonymous bucket (won't leak into user accounts).
+  if (p.userId && email) return `id_${p.userId}_${email}`;
+  if (p.userId) return `id_${p.userId}`;
+  if (email) return `email_${email}`;
+
   return "anon";
 }
 

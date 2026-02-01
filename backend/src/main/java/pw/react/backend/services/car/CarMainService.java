@@ -79,6 +79,11 @@ public class CarMainService implements CarService {
     @Override
     public List<Car> getAll(CarSearchCriteria searchCriteria) throws BadRequestException
     {
+        // Validate price range
+        if(searchCriteria.getMinPrice() != null && searchCriteria.getMaxPrice() != null
+                && searchCriteria.getMinPrice().compareTo(searchCriteria.getMaxPrice()) > 0)
+            throw new BadRequestException("minPrice cannot be greater than maxPrice");
+
         var dateRange = searchCriteria.getDateRange();
         boolean hasDate = dateRange != null && dateRange.getTo() != null;
 
@@ -89,16 +94,20 @@ public class CarMainService implements CarService {
             if(availableCarIds.isEmpty())
                 return List.of();
             if(searchCriteria.getCarFeatures() == null || searchCriteria.getCarFeatures().isEmpty())
-                return carRepository.findByCarIdInOrderByCarIdAsc(availableCarIds);
+                return filterByPrice(
+                        carRepository.findByCarIdInOrderByCarIdAsc(availableCarIds),
+                        searchCriteria);
         }
 
         if(searchCriteria.getCarFeatures() == null || searchCriteria.getCarFeatures().isEmpty())
-            return carRepository.findAllByOrderByCarIdAsc();
+            return filterByPrice(carRepository.findAllByOrderByCarIdAsc(), searchCriteria);
 
         var filteredCarIds = this.searchCarsByFeatures(searchCriteria, availableCarIds);
         if(filteredCarIds.isEmpty()) return List.of();
 
-        return carRepository.findByCarIdInOrderByCarIdAsc(filteredCarIds);
+        return filterByPrice(
+                carRepository.findByCarIdInOrderByCarIdAsc(filteredCarIds),
+                searchCriteria);
     }
 
     @Override
@@ -108,6 +117,11 @@ public class CarMainService implements CarService {
         int defaultPageSize = 10;
         int pageSize = (size <= 0) ? defaultPageSize : size;
 
+        // Validate price range
+        if(searchCriteria.getMinPrice() != null && searchCriteria.getMaxPrice() != null
+                && searchCriteria.getMinPrice().compareTo(searchCriteria.getMaxPrice()) > 0)
+            throw new BadRequestException("minPrice cannot be greater than maxPrice");
+
         var dateRange = searchCriteria.getDateRange();
         boolean hasDate = dateRange != null && dateRange.getTo() != null;
 
@@ -118,16 +132,22 @@ public class CarMainService implements CarService {
             if(availableCarIds.isEmpty())
                 return List.of();
             if(searchCriteria.getCarFeatures() == null || searchCriteria.getCarFeatures().isEmpty())
-                return carRepository.findByCarIdInOrderByCarIdAsc(availableCarIds, PageRequest.of(page, pageSize)).getContent();
+                return filterByPrice(
+                        carRepository.findByCarIdInOrderByCarIdAsc(availableCarIds, PageRequest.of(page, pageSize)).getContent(),
+                        searchCriteria);
         }
 
         if(searchCriteria.getCarFeatures() == null || searchCriteria.getCarFeatures().isEmpty())
-            return carRepository.findAllByOrderByCarIdAsc(PageRequest.of(page, pageSize)).getContent();
+            return filterByPrice(
+                    carRepository.findAllByOrderByCarIdAsc(PageRequest.of(page, pageSize)).getContent(),
+                    searchCriteria);
 
         var filteredCarIds = this.searchCarsByFeatures(searchCriteria, availableCarIds);
         if(filteredCarIds.isEmpty()) return List.of();
 
-        return carRepository.findByCarIdInOrderByCarIdAsc(filteredCarIds, PageRequest.of(page, pageSize)).getContent();
+        return filterByPrice(
+                carRepository.findByCarIdInOrderByCarIdAsc(filteredCarIds, PageRequest.of(page, pageSize)).getContent(),
+                searchCriteria);
     }
 
     public boolean checkCarAvailability(Integer carId, DateRange dateRange)
@@ -140,6 +160,23 @@ public class CarMainService implements CarService {
                 BookingStatus.CANCELLED.getCode());
 
         return res.isPresent();
+    }
+
+    private List<Car> filterByPrice(List<Car> cars, CarSearchCriteria searchCriteria)
+    {
+        var min = searchCriteria.getMinPrice();
+        var max = searchCriteria.getMaxPrice();
+        if(min == null && max == null) return cars;
+
+        return cars.stream()
+                .filter(c -> {
+                    var price = c.getPrice();
+                    if(price == null) return false;
+                    if(min != null && price.compareTo(min) < 0) return false;
+                    if(max != null && price.compareTo(max) > 0) return false;
+                    return true;
+                })
+                .collect(Collectors.toList());
     }
 
     // Method to be used to calculate the total price of the car on the booking
