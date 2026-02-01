@@ -23,7 +23,7 @@ public class DateUtils {
                 : LocalDateTime.parse(time);
     }
 
-    public static DateRange normaliseDates(DateRange dateRange)
+    private static DateRange normaliseDates(DateRange dateRange)
             throws BadRequestException
     {
         if (!dateRange.getTo().isAfter(dateRange.getFrom()))
