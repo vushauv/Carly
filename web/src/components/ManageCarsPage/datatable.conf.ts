@@ -2,13 +2,26 @@ import type { ColumnDef, RowAction } from "../DataTable/DataTable";
 import type { Car } from "./types";
 
 // Helper function to get car feature value by name
-const getFeatureValue = (car: Car, featureName: string): string => {
-  return car.carFeatures.find(f => f.name === featureName)?.value || "";
+// Maps API feature names to the values we need for display
+const getFeatureValue = (car: Car, featureType: string): string => {
+  const featureNameMap: Record<string, string> = {
+    brand: "Brand",
+    model: "Model",
+    fuelType: "Fuel type",
+    status: "Status",
+    color: "Color",
+  };
+
+  const apiFeatureName = featureNameMap[featureType];
+
+  if (!apiFeatureName) return "";
+
+  return car.carFeatures.find(f => f.name === apiFeatureName)?.value ?? "";
 };
 
 export const carsRowKey = (car: Car): string => car.carId.toString();
 
-export const carsColumns = (styles: { primaryCell?: string; status?: string }): ColumnDef<Car>[] => [
+export const carsColumns = (): ColumnDef<Car>[] => [
   {
     id: "carId",
     header: "ID",

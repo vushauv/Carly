@@ -9,7 +9,7 @@ import type { User, UpdateUserRequest } from "../UsersPage/types";
 const UserEditPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   const [user, setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<UpdateUserRequest>({});
   const [loading, setLoading] = useState(true);
@@ -49,21 +49,26 @@ const UserEditPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!id) return;
 
     try {
       setSaving(true);
       setError(null);
-      
+
       // Only send fields that have been changed
-      const updateData: UpdateUserRequest = {};
-      if (formData.firstName !== user?.firstName) updateData.firstName = formData.firstName;
-      if (formData.secondName !== user?.secondName) updateData.secondName = formData.secondName;
-      if (formData.lastName !== user?.lastName) updateData.lastName = formData.lastName;
-      if (formData.email !== user?.email) updateData.email = formData.email;
-      if (formData.password) updateData.password = formData.password;
-      if (formData.contactNumber !== user?.contactNumber) updateData.contactNumber = formData.contactNumber;
+      const updateData: UpdateUserRequest = {
+        firstName: formData.firstName,
+        secondName: formData.secondName || null,
+        lastName: formData.lastName,
+        email: formData.email,
+        contactNumber: formData.contactNumber,
+      };
+
+      if (formData.password) {
+        updateData.password = formData.password;
+      }
+
 
       await userService.updateUser(parseInt(id, 10), updateData);
       navigate(`/users/${id}`);
@@ -78,7 +83,8 @@ const UserEditPage = () => {
     navigate(`/users/${id}`);
   };
 
-  const handleChange = (field: keyof UpdateUserRequest, value: string | number) => {
+  const handleChange = (field: keyof UpdateUserRequest, value: string | number | undefined) => {
+
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -130,7 +136,7 @@ const UserEditPage = () => {
           <label>First Name (max 64 characters)</label>
           <Input
             type="text"
-            value={formData.firstName || ""}
+            value={formData.firstName ?? ""}
             onChange={(value) => handleChange("firstName", value)}
             placeholder={`Current: ${user.firstName}`}
             maxLength={64}
@@ -142,7 +148,7 @@ const UserEditPage = () => {
           <label>Second Name (max 64 characters)</label>
           <Input
             type="text"
-            value={formData.secondName || ""}
+            value={formData.secondName ?? ""}
             onChange={(value) => handleChange("secondName", value)}
             placeholder={`Current: ${user.secondName}`}
             maxLength={64}
@@ -154,7 +160,7 @@ const UserEditPage = () => {
           <label>Last Name (max 128 characters)</label>
           <Input
             type="text"
-            value={formData.lastName || ""}
+            value={formData.lastName ?? ""}
             onChange={(value) => handleChange("lastName", value)}
             placeholder={`Current: ${user.lastName}`}
             maxLength={128}
@@ -166,7 +172,7 @@ const UserEditPage = () => {
           <label>Email Address (max 256 characters)</label>
           <Input
             type="email"
-            value={formData.email || ""}
+            value={formData.email ?? ""}
             onChange={(value) => handleChange("email", value)}
             placeholder={`Current: ${user.email}`}
             maxLength={256}
@@ -178,7 +184,7 @@ const UserEditPage = () => {
           <label>Contact Number (optional)</label>
           <Input
             type="number"
-            value={formData.contactNumber?.toString() || ""}
+            value={formData.contactNumber?.toString() ?? ""}
             onChange={(value) => handleChange("contactNumber", value ? parseInt(value) : undefined)}
             placeholder={`Current: ${user.contactNumber || "Not set"}`}
           />
@@ -189,7 +195,7 @@ const UserEditPage = () => {
           <label>New Password (6-128 characters, optional)</label>
           <Input
             type="password"
-            value={formData.password || ""}
+            value={formData.password ?? ""}
             onChange={(value) => handleChange("password", value)}
             placeholder="Leave empty to keep current password"
             minLength={6}
@@ -199,15 +205,15 @@ const UserEditPage = () => {
         </div>
 
         <div className={styles.formActions}>
-          <Button 
-            type="submit" 
-            label={saving ? "Saving..." : "Save Changes"} 
-            color="primary" 
+          <Button
+            type="submit"
+            label={saving ? "Saving..." : "Save Changes"}
+            color="primary"
             disabled={saving}
           />
-          <Button 
-            type="button" 
-            label="Cancel" 
+          <Button
+            type="button"
+            label="Cancel"
             onClick={handleCancel}
             disabled={saving}
           />

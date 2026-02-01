@@ -13,17 +13,17 @@ type User = {
 // For registration form
 type RegisterUserRequest = {
   firstName: string; // 0-64 chars, required
-  secondName: string; // 0-64 chars, required
+  secondName: string | null; // 0-64 chars, optional
   lastName: string; // 0-128 chars, required
   email: string; // email format, 0-256 chars, required
   password: string; // 6-128 chars, required
-  contactNumber?: number; // int64, optional
+  contactNumber: string; // int64, required
 };
 
 // For update form
 type UpdateUserRequest = {
   firstName?: string; // 0-64 chars
-  secondName?: string; // 0-64 chars
+  secondName?: string | null; // 0-64 chars
   lastName?: string; // 0-128 chars
   email?: string; // email format, 0-256 chars
   password?: string; // 6-128 chars

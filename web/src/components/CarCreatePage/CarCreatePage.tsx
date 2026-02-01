@@ -4,7 +4,6 @@ import styles from "./CarCreatePage.module.css";
 import type { CarFeature, CreateCarRequest } from "../ManageCarsPage/types";
 import { carService } from "../ManageCarsPage/carService";
 import Button from "../Button/Button";
-import Input from "../Input/Input";
 
 const CarCreatePage = () => {
   const navigate = useNavigate();
@@ -46,19 +45,35 @@ const CarCreatePage = () => {
       setSaving(true);
       setError(null);
 
-      // Create features array
-      const features: CarFeature[] = [
-        { dictionaryId: 1, name: "brand", value: formData.brand.trim() },
-        { dictionaryId: 2, name: "model", value: formData.model.trim() },
-        { dictionaryId: 3, name: "color", value: formData.color.trim() },
-        { dictionaryId: 4, name: "fuelType", value: formData.fuelType.trim() },
-        { dictionaryId: 5, name: "status", value: formData.status.trim() }
-      ].filter(feature => feature.value); // Only include non-empty features
+      // Create features array with correct API feature names and proper dictionary IDs
+      const featureMapping: Array<{formField: keyof typeof formData, dictionaryId: number, apiName: string}> = [
+        { formField: 'brand', dictionaryId: 1, apiName: 'CAR_BRANDS' },
+        { formField: 'model', dictionaryId: 2, apiName: 'CAR_MODELS' },
+        { formField: 'color', dictionaryId: 3, apiName: 'CAR_COLORS' },
+        { formField: 'fuelType', dictionaryId: 4, apiName: 'CAR_FUEL_TYPES' },
+        { formField: 'status', dictionaryId: 5, apiName: 'CAR_STATUSES' }
+      ];
+
+      const features: CarFeature[] = featureMapping
+        .filter(mapping => formData[mapping.formField]?.trim()) // Only include non-empty features
+        .map(mapping => ({
+          dictionaryId: mapping.dictionaryId,
+          name: mapping.apiName,
+          value: formData[mapping.formField].trim()
+        }));
+
+      // Ensure at least the required features are present
+      if (features.length === 0) {
+        setError("At least one feature must be provided");
+        return;
+      }
 
       const createData: CreateCarRequest = {
         carFeatures: features,
         price: price
       };
+
+      console.log("Creating car with data:", createData); // Debug log
 
       const result = await carService.createCar(createData);
       
@@ -91,36 +106,39 @@ const CarCreatePage = () => {
         <div className={styles.formGrid}>
           <div className={styles.formGroup}>
             <label htmlFor="brand" className={styles.label}>Brand *</label>
-            <Input
+            <input
               id="brand"
               type="text"
               value={formData.brand}
-              onChange={(value) => handleInputChange("brand", value)}
+              onChange={(e) => handleInputChange("brand", e.target.value)}
               placeholder="Enter car brand"
+              className={styles.input}
               required
             />
           </div>
 
           <div className={styles.formGroup}>
             <label htmlFor="model" className={styles.label}>Model *</label>
-            <Input
+            <input
               id="model"
               type="text"
               value={formData.model}
-              onChange={(value) => handleInputChange("model", value)}
+              onChange={(e) => handleInputChange("model", e.target.value)}
               placeholder="Enter car model"
+              className={styles.input}
               required
             />
           </div>
 
           <div className={styles.formGroup}>
             <label htmlFor="color" className={styles.label}>Color</label>
-            <Input
+            <input
               id="color"
               type="text"
               value={formData.color}
-              onChange={(value) => handleInputChange("color", value)}
+              onChange={(e) => handleInputChange("color", e.target.value)}
               placeholder="Enter car color"
+              className={styles.input}
             />
           </div>
 
@@ -156,14 +174,15 @@ const CarCreatePage = () => {
 
           <div className={styles.formGroup}>
             <label htmlFor="price" className={styles.label}>Price per day ($) *</label>
-            <Input
+            <input
               id="price"
               type="number"
               step="0.01"
               min="0"
               value={formData.price}
-              onChange={(value) => handleInputChange("price", value)}
+              onChange={(e) => handleInputChange("price", e.target.value)}
               placeholder="Enter daily rental price"
+              className={styles.input}
               required
             />
           </div>
