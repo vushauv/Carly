@@ -27,12 +27,14 @@ import CarCardView from "../components/CarCardView";
 
 import { ApiError } from "../../lib/api/apiClient";
 import { createCarBookingOnBackend } from "../../lib/api/bookingsApi";
-import { bookFlat, getPartnerFlatsForPeriod } from "../../lib/api/carlyApi";
-import { createFlatlyBooking, getAvailableFlats } from "../../lib/api/flatlyApi";
 
-import type { FlatCard } from "../../lib/models"
-import type { LikedCar } from "../../lib/storage/storage";
-import { addFlatlyBooking } from "../../lib/storage/flatlyBookingsStorage";
+import {
+  createFlatlyBooking,
+  getAvailableFlats,
+  type FlatlyFlatDto,
+} from "../../lib/api/flatlyApi";
+
+import type { LikedCar } from "././lib/storage/storage";
 import { clearLikedCars, getLikedCars, removeLikedCar } from "../../lib/storage/storage";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -63,7 +65,7 @@ export default function LikedCarsTab() {
 
   // partner flats
   const [flatsLoading, setFlatsLoading] = useState(false);
-  const [flats, setFlats] = useState<FlatCard[]>([]);
+  const [flats, setFlats] = useState<FlatlyFlatDto[]>([]);
   const [flatIndex, setFlatIndex] = useState(0);
   const [flatImgIndex, setFlatImgIndex] = useState<Record<string, number>>({}); // per flat id
 
@@ -81,7 +83,7 @@ export default function LikedCarsTab() {
   useFocusEffect(
     useCallback(() => {
       void load();
-      return () => { };
+      return () => {};
     }, [load])
   );
 
@@ -104,18 +106,18 @@ export default function LikedCarsTab() {
     await load();
   }
 
-    function confirmClearAll() {
-      Alert.alert("Clear all?", "Are you sure you want to clear all liked cars?", [
-        { text: "No", style: "cancel" },
-        {
-          text: "Yes",
-          style: "destructive",
-          onPress: () => {
-            onClearAll();
-          },
+  function confirmClearAll() {
+    Alert.alert("Clear all?", "Are you sure you want to clear all liked cars?", [
+      { text: "No", style: "cancel" },
+      {
+        text: "Yes",
+        style: "destructive",
+        onPress: () => {
+          onClearAll();
         },
-      ]);
-    }
+      },
+    ]);
+  }
 
   // -----------------------
   // Date validation helpers
@@ -163,98 +165,97 @@ export default function LikedCarsTab() {
     setGuestsCount("1");
     setFlatBookingSubmitting(false);
   }
-    function goToCurrentBookings() {
-      // Close the flow UI so user doesn't return to success screen
-        closeFlow();
 
-        // Switch to Bookings tab and select "current"
-        router.replace({
-          pathname: "/(tabs)/home",
-          params: { section: "current" },
-        });
-    }
+  function goToCurrentBookings() {
+    // Close the flow UI so user doesn't return to success screen
+    closeFlow();
 
-
-
- function toLocalDateTimeString(dayISO: string, hhmmss = "12:00:00"): string {
-   // Backend expects LocalDateTime, so no timezone suffix.
-   // Example: "2026-05-01T12:00:00"
-   return `${dayISO}T${hhmmss}`;
- }
-
- async function confirmCarBooking() {
-   if (!car) return;
-
-   if (!dateFrom || dateFrom < minFrom) {
-     Alert.alert("Invalid Date From", "Date From must be today or later.");
-     return;
-   }
-   if (!dateTo || dateTo < minTo) {
-     Alert.alert("Invalid Date To", "Date To must be after Date From.");
-     return;
-   }
-
-   try {
-     const fromLocal = toLocalDateTimeString(dateFrom, "12:00:00");
-     const toLocal = toLocalDateTimeString(dateTo, "12:00:00");
-
-     const newBookingId = await createCarBookingOnBackend({
-       carId: Number(car.id),
-       dateFromISO: fromLocal,
-       dateToISO: toLocal,
-       // pickupLocationId / returnLocationId later
-     });
-
-     setBookingId(newBookingId);
-     setStep("carSuccess");
-   } catch (err) {
-       const ui = friendlyBookingError(err);
-       Alert.alert(ui.title, ui.message);
-   }
- }
-
-function friendlyBookingError(err: unknown): { title: string; message: string } {
-  if (err instanceof ApiError) {
-    const body = err.body as any;
-    const code =
-      body && typeof body === "object"
-        ? String(body.code ?? body.message ?? "")
-        : "";
-
-    // Conflicts (typical for "already booked / overlaps")
-    if (err.status === 409 || code.includes("CONFLICT") || code.includes("OVERLAP")) {
-      return {
-        title: "Booking unavailable",
-        message:
-          "Those dates aren’t available anymore (someone else likely booked it). Please pick different dates and try again.",
-      };
-    }
-
-    // Validation problems
-    if (err.status === 422) {
-      return {
-        title: "Invalid booking data",
-        message: "Please check the dates / guest count and try again.",
-      };
-    }
-
-    // Auth/permission
-    if (err.status === 401 || err.status === 403) {
-      return {
-        title: "Not allowed",
-        message: "Please log in again and retry.",
-      };
-    }
-
-    // Generic
-    return {
-      title: "Booking failed",
-      message: "We couldn’t complete the booking right now. Please try again later.",
-    };
+    // Switch to Bookings tab and select "current"
+    router.replace({
+      pathname: "/(tabs)/home",
+      params: { section: "current" },
+    });
   }
 
-  return { title: "Booking failed", message: "Something went wrong. Please try again." };
-}
+  function toLocalDateTimeString(dayISO: string, hhmmss = "12:00:00"): string {
+    // Backend expects LocalDateTime, so no timezone suffix.
+    // Example: "2026-05-01T12:00:00"
+    return `${dayISO}T${hhmmss}`;
+  }
+
+  async function confirmCarBooking() {
+    if (!car) return;
+
+    if (!dateFrom || dateFrom < minFrom) {
+      Alert.alert("Invalid Date From", "Date From must be today or later.");
+      return;
+    }
+    if (!dateTo || dateTo < minTo) {
+      Alert.alert("Invalid Date To", "Date To must be after Date From.");
+      return;
+    }
+
+    try {
+      const fromLocal = toLocalDateTimeString(dateFrom, "12:00:00");
+      const toLocal = toLocalDateTimeString(dateTo, "12:00:00");
+
+      const newBookingId = await createCarBookingOnBackend({
+        carId: Number(car.id),
+        dateFromISO: fromLocal,
+        dateToISO: toLocal,
+        // pickupLocationId / returnLocationId later
+      });
+
+      setBookingId(newBookingId);
+      setStep("carSuccess");
+    } catch (err) {
+      const ui = friendlyBookingError(err);
+      Alert.alert(ui.title, ui.message);
+    }
+  }
+
+  function friendlyBookingError(err: unknown): { title: string; message: string } {
+    if (err instanceof ApiError) {
+      const body = err.body as any;
+      const code =
+        body && typeof body === "object"
+          ? String(body.code ?? body.message ?? "")
+          : "";
+
+      // Conflicts (typical for "already booked / overlaps")
+      if (err.status === 409 || code.includes("CONFLICT") || code.includes("OVERLAP")) {
+        return {
+          title: "Booking unavailable",
+          message:
+            "Those dates aren’t available anymore (someone else likely booked it). Please pick different dates and try again.",
+        };
+      }
+
+      // Validation problems
+      if (err.status === 422) {
+        return {
+          title: "Invalid booking data",
+          message: "Please check the dates / guest count and try again.",
+        };
+      }
+
+      // Auth/permission
+      if (err.status === 401 || err.status === 403) {
+        return {
+          title: "Not allowed",
+          message: "Please log in again and retry.",
+        };
+      }
+
+      // Generic
+      return {
+        title: "Booking failed",
+        message: "We couldn’t complete the booking right now. Please try again later.",
+      };
+    }
+
+    return { title: "Booking failed", message: "Something went wrong. Please try again." };
+  }
 
   async function openBrowseFlats() {
     if (!dateFrom || !dateTo) {
@@ -264,6 +265,8 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
     setStep("browseFlats");
     setFlatsLoading(true);
     try {
+      // Flatly endpoint is GET /flatly/flats/available?dateFrom(date-time)&dateTo(date-time)
+      // flatlyApi handles converting YYYY-MM-DD -> LocalDateTime query params.
       const res = await getAvailableFlats(dateFrom, dateTo);
       setFlats(res);
       setFlatIndex(0);
@@ -280,11 +283,7 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
     const f = flats[flatIndex];
     if (!f) return;
 
-    // Default guest count to 1, but clamp to maxGuests if we know it.
-    const maxGuests =
-      typeof (f as any)?.raw?.max_guests === "number"
-        ? Number((f as any).raw.max_guests)
-        : undefined;
+    const maxGuests = typeof f.maxGuests === "number" ? f.maxGuests : undefined;
 
     const startDefault = "1";
     const clamped =
@@ -298,10 +297,7 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
     const f = flats[flatIndex];
     if (!f) return;
 
-    const maxGuests =
-      typeof (f as any)?.raw?.max_guests === "number"
-        ? Number((f as any).raw.max_guests)
-        : undefined;
+    const maxGuests = typeof f.maxGuests === "number" ? f.maxGuests : undefined;
 
     const n = Number(String(guestsCount ?? "").trim());
 
@@ -317,28 +313,16 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
 
     setFlatBookingSubmitting(true);
     try {
+      // Flatly endpoint: POST /flatly/bookings { userId, flatId(uuid), checkInDate(date), checkOutDate(date), guestsCount }
+      // flatlyApi handles userId + date-only serialization.
       const flatBookingId = await createFlatlyBooking({
-        flatId: Number(f.id),
-        dateFromDayISO: dateFrom,
-        dateToDayISO: dateTo,
-        guestsCount: n, // ✅ passed to backend
+        flatId: String(f.id), // UUID string
+        checkInDayISO: dateFrom, // YYYY-MM-DD
+        checkOutDayISO: dateTo, // YYYY-MM-DD
+        guestsCount: n,
       });
 
-      await addFlatlyBooking({
-        flatBookingId,
-        flatId: Number(f.id),
-        dateFromDayISO: dateFrom,
-        dateToDayISO: dateTo,
-        flatSnapshot: {
-          title: f.title,
-          addressLine: f.addressLine,
-          city: f.city,
-          imageUrls: f.imageUrls,
-          currency: f.currency,
-          pricePerNight: f.pricePerNight,
-        },
-      });
-
+      setBookingId(flatBookingId);
       setStep("flatSuccess");
     } catch (err) {
       const ui = friendlyBookingError(err);
@@ -349,10 +333,6 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
       setFlatBookingSubmitting(false);
     }
   }
-
-
-
-
 
   const modalOpen = step !== "none";
 
@@ -403,7 +383,6 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
                 }
                 imageHeight={200}
               />
-
             ))}
           </>
         )}
@@ -412,7 +391,6 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
       {/* Full-screen flow modal */}
       <Modal visible={modalOpen} transparent={false} animationType="slide" onRequestClose={closeFlow}>
         <SafeAreaView style={[styles.flowSafe, { paddingTop: insets.top, paddingBottom: insets.bottom }]} edges={[]}>
-
           <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
             {/* Header */}
             <View style={[styles.flowHeader, { paddingTop: 6 }]}>
@@ -445,8 +423,8 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
                     markedDates={
                       dateFrom
                         ? {
-                          [dateFrom]: { selected: true, selectedColor: "#111827" },
-                        }
+                            [dateFrom]: { selected: true, selectedColor: "#111827" },
+                          }
                         : {}
                     }
                   />
@@ -464,8 +442,8 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
                     markedDates={
                       dateTo
                         ? {
-                          [dateTo]: { selected: true, selectedColor: "#111827" },
-                        }
+                            [dateTo]: { selected: true, selectedColor: "#111827" },
+                          }
                         : {}
                     }
                   />
@@ -492,10 +470,7 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
                     You have made a successful booking of {car?.title ?? "car"} from {dateFrom} to {dateTo}
                   </Text>
 
-                  <Pressable
-                    style={[styles.actionBtn, styles.actionPrimary]}
-                    onPress={goToCurrentBookings}
-                  >
+                  <Pressable style={[styles.actionBtn, styles.actionPrimary]} onPress={goToCurrentBookings}>
                     <Text style={styles.actionText}>See my bookings</Text>
                   </Pressable>
 
@@ -560,13 +535,18 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
                                 }}
                                 scrollEventThrottle={16}
                               >
-                                {f.imageUrls.map((u) => (
+                                {(Array.isArray(f.images) && f.images.length
+                                  ? f.images
+                                      .map((x) => String((x as any)?.image_url ?? "").trim())
+                                      .filter(Boolean)
+                                  : ["https://picsum.photos/seed/flatly/900/600"]
+                                ).map((u) => (
                                   <Image key={u} source={{ uri: u }} style={styles.flatImage} />
                                 ))}
                               </ScrollView>
 
                               <View style={styles.dotsRow}>
-                                {f.imageUrls.map((_, i) => (
+                                {(Array.isArray(f.images) && f.images.length ? f.images : [1]).map((_, i) => (
                                   <View
                                     key={i}
                                     style={[
@@ -579,16 +559,15 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
                             </View>
 
                             <View style={styles.flatBody}>
-                              <Text style={styles.flatTitle}>{f.title}</Text>
+                              <Text style={styles.flatTitle}>{(f.name ?? "Flat").trim() || "Flat"}</Text>
+
                               <Text style={styles.flatSub}>
-                                {f.addressLine}, {f.city}
+                                {(f.city ?? "—").trim() || "—"}, {(f.country ?? "—").trim() || "—"}
                               </Text>
 
                               <View style={styles.flatMetaRow}>
-                                <Text style={styles.flatMeta}>⭐ {f.rating?.toFixed(1) ?? "—"}</Text>
-                                <Text style={styles.flatMeta}>
-                                  {f.pricePerNight} {f.currency} / night
-                                </Text>
+                                <Text style={styles.flatMeta}>🛏️ Rooms: {typeof f.rooms === "number" ? f.rooms : "—"}</Text>
+                                <Text style={styles.flatMeta}>👤 Max: {typeof f.maxGuests === "number" ? f.maxGuests : "—"}</Text>
                               </View>
 
                               <Text style={styles.flatHint}>
@@ -686,13 +665,9 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
                   You have made a successful booking of flat for {dateFrom} to {dateTo}
                 </Text>
 
-               <Pressable
-                 style={[styles.actionBtn, styles.actionPrimary]}
-                 onPress={goToCurrentBookings}
-               >
-                 <Text style={styles.actionText}>See my bookings</Text>
-               </Pressable>
-
+                <Pressable style={[styles.actionBtn, styles.actionPrimary]} onPress={goToCurrentBookings}>
+                  <Text style={styles.actionText}>See my bookings</Text>
+                </Pressable>
 
                 <View style={{ height: 20 }} />
               </ScrollView>
@@ -868,5 +843,3 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 });
-
-

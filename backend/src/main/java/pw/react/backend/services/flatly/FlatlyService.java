@@ -11,6 +11,7 @@ import pw.react.backend.domain.user.User;
 import pw.react.backend.dto.request.flatly.CreateFlatlyBookingRequest;
 import pw.react.backend.integrations.flatly.dto.*;
 import pw.react.backend.integrations.flatly.dto.responses.FlatlyBookingDetailsResponse;
+import pw.react.backend.integrations.flatly.dto.responses.FlatlyBookingDetailsExtendedResponse;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.integrations.flatly.FlatlyClient;
 import pw.react.backend.integrations.flatly.dto.requests.FlatlyCreateBookingRequest;
@@ -19,7 +20,6 @@ import pw.react.backend.repositories.booking.BookingRepository;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
 import pw.react.backend.repositories.user.UserRepository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,9 +37,6 @@ public class FlatlyService {
     private final BookingRepository bookingRepository;
     private final BookingStatusDictionaryRepository bookingStatusDictionaryRepository;
 
-    // -----------------------------------------
-    // (1) getAvailableFlats (NO parallel calls)
-    // -----------------------------------------
     @Transactional(readOnly = true)
     public List<FlatlyFlatDto> getAvailableFlatsWithImages(LocalDateTime dateFrom, LocalDateTime dateTo) {
 
@@ -64,7 +61,6 @@ public class FlatlyService {
         List<FlatlyAvailableFlatDto> flats = resp.getBody() == null ? List.of() : resp.getBody();
         if (flats.isEmpty()) return List.of();
 
-        // IMPORTANT: sequential calls, no thread pool
         List<FlatlyFlatDto> out = new ArrayList<>(flats.size());
         for (FlatlyAvailableFlatDto f : flats) {
             out.add(enrichWithImagesSequential(f));
@@ -110,9 +106,6 @@ public class FlatlyService {
         return List.of();
     }
 
-    // -----------------------------------------
-    // (2) createFlatlyBooking (already OK)
-    // -----------------------------------------
     @Transactional
     public Booking createFlatBookingInFlatly(CreateFlatlyBookingRequest request) {
 
@@ -180,9 +173,6 @@ public class FlatlyService {
         return booking.getFlatBookingStatus() != null || booking.getProviderExternalBookingId() != null;
     }
 
-    // -----------------------------------------
-    // (3) getFlatBookingDetails (booking + images)
-    // -----------------------------------------
     @Transactional(readOnly = true)
     public FlatlyBookingDetailsResponse getFlatBookingDetailsWithImages(UUID flatBookingId) {
 
@@ -211,7 +201,6 @@ public class FlatlyService {
         return res;
     }
 
-    // Existing method (keep as-is, used above)
     @Transactional(readOnly = true)
     public FlatlyBookingDto getFlatBookingDetails(UUID flatBookingId) {
 
@@ -239,9 +228,6 @@ public class FlatlyService {
         return body;
     }
 
-    // -----------------------------------------
-    // (4) getUserFlatBookings (NO parallel calls)
-    // -----------------------------------------
     @Transactional(readOnly = true)
     public List<FlatlyBookingDetailsResponse> getUserFlatBookings(Integer userId) {
 
@@ -257,7 +243,6 @@ public class FlatlyService {
 
         List<FlatlyBookingDetailsResponse> out = new ArrayList<>();
 
-        // IMPORTANT: sequential calls, no thread pool
         for (Booking b : all) {
             if (!hasFlatPart(b)) continue;
 
@@ -275,9 +260,37 @@ public class FlatlyService {
         return out;
     }
 
-    // -----------------------------------------
-    // (5) cancelFlatBooking (partner + local)
-    // -----------------------------------------
+    @Transactional(readOnly = true)
+    public List<FlatlyBookingDetailsExtendedResponse> getAllFlatBookings() {
+        List<Booking> all = bookingRepository.findAllByProviderExternalBookingIdIsNotNullOrderByBookingIdDesc();
+        if (all.isEmpty()) return List.of();
+
+        List<FlatlyBookingDetailsExtendedResponse> out = new ArrayList<>();
+        for (Booking b : all) {
+            if (!hasFlatPart(b)) continue;
+
+            UUID flatlyBookingId = b.getProviderExternalBookingId();
+            if (flatlyBookingId == null) continue;
+
+            try {
+                FlatlyBookingDetailsResponse base = getFlatBookingDetailsWithImages(flatlyBookingId);
+
+                FlatlyBookingDetailsExtendedResponse ext = new FlatlyBookingDetailsExtendedResponse();
+                ext.setBooking(base.getBooking());
+                ext.setFlat(base.getFlat());
+                ext.setFlatImages(base.getFlatImages());
+                ext.setUserId(b.getUser() != null ? b.getUser().getUserId() : null);
+                ext.setFlatBookingStatus(b.getFlatBookingStatus() != null ? b.getFlatBookingStatus().getName() : null);
+
+                out.add(ext);
+            } catch (Exception ex) {
+                log.warn("Skipping Flatly booking {} due to error: {}", flatlyBookingId, ex.getMessage());
+            }
+        }
+
+        return out;
+    }
+
     @Transactional
     public boolean cancelFlatBookingInFlatly(UUID bookingId) {
 

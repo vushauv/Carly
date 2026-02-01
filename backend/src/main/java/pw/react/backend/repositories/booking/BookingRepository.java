@@ -26,6 +26,8 @@ public interface BookingRepository extends JpaRepository<Booking, Integer>, JpaS
     Optional<Booking> findByUser_UserIdAndProviderExternalBookingId(Integer userId, UUID providerExternalBookingId);
     List<Booking> findAllByUser_UserIdAndProviderExternalBookingIdIsNotNullOrderByBookingIdDesc(Integer userId);
 
+    List<Booking> findAllByProviderExternalBookingIdIsNotNullOrderByBookingIdDesc();
+
     @Modifying
     @Transactional
     @Query(value = """

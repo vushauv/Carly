@@ -10,6 +10,7 @@ import pw.react.backend.domain.booking.Booking;
 import pw.react.backend.dto.request.flatly.CreateFlatlyBookingRequest;
 import pw.react.backend.dto.request.flatly.CreateFlatlyBookingResponse;
 import pw.react.backend.integrations.flatly.dto.responses.FlatlyBookingDetailsResponse;
+import pw.react.backend.integrations.flatly.dto.responses.FlatlyBookingDetailsExtendedResponse;
 import pw.react.backend.integrations.flatly.dto.FlatlyFlatDto;
 import pw.react.backend.services.flatly.FlatlyService;
 
@@ -51,6 +52,12 @@ public class FlatlyController {
     @GetMapping(PathResolver.Flatly.FlatBookings + "/user/{userId}")
     public ResponseEntity<List<FlatlyBookingDetailsResponse>> getUserFlatBookings(@PathVariable Integer userId) {
         return ResponseEntity.ok(flatlyService.getUserFlatBookings(userId));
+    }
+
+    // download all Flatly partner bookings (providerExternalBookingId is not null)
+    @GetMapping(PathResolver.Flatly.FlatBookings)
+    public ResponseEntity<List<FlatlyBookingDetailsExtendedResponse>> getAllFlatBookings() {
+        return ResponseEntity.ok(flatlyService.getAllFlatBookings());
     }
 
     @DeleteMapping(PathResolver.Flatly.Bookings + "/{flatBookingId}")

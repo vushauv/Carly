@@ -1,125 +1,101 @@
-//mobile/lib/api/flatlyApi.ts
-
-import { apiRequest } from "./apiClient";
+// mobile/lib/api/flatlyApi.ts
+import { apiRequest, ApiError } from "./apiClient";
 import { getProfile } from "../storage/profileStorage";
-import type { FlatCard } from "../models";
 
 // -------------------------
-// Backend DTOs (OpenAPI)
+// OpenAPI DTOs
 // -------------------------
-type FlatlyFlatImageDto = {
-  id?: number;
-  flat_id?: number;
-  image_url?: string;
+// From openapi.json (FlatlyFlatDto, FlatlyBookingDetailsResponse, etc.)
+export type FlatlyFlatImageDto = {
   sort_order?: number;
-  created_at?: string;
+  image_url?: string;
 };
 
-type FlatlyPricingRuleDto = {
-  price_per_night?: number;
-  cleaning_fee?: number;
-  min_nights?: number;
-  is_active?: boolean;
-  start_date?: string; // date
-  end_date?: string; // date
-};
-
-type FlatlyFlatDto = {
-  id: number;
+export type FlatlyFlatDto = {
+  id: string; // uuid
   name?: string;
-  description?: string;
-  status?: string;
-  country?: string;
   city?: string;
-  location?: string;
+  country?: string;
   rooms?: number;
-  beds?: number;
-  bathrooms?: number;
-  floor?: number;
+  maxGuests?: number;
   images?: FlatlyFlatImageDto[];
-  pricing?: FlatlyPricingRuleDto[];
-  address_line?: string;
-  postal_code?: string;
-  area_sqm?: number;
-  max_guests?: number;
 };
 
-type FlatlyBookingDto = {
-  id: number;
-  currency?: string;
-  status?: string;
-  comment?: string;
-  flat_id: number;
-  user_id?: number;
-  source_ref?: number;
-  check_in_date?: string; // date
-  check_out_date?: string; // date
-  guests_count?: number;
-  price_per_night?: number;
-  total_price?: number;
-  created_at?: string; // date-time
-  updated_at?: string; // date-time
-  cancelled_at?: string; // date-time
+export type FlatlyFlatDetailsDto = {
+  id?: string; // uuid
+  name?: string;
+  city?: string;
+  country?: string;
+  rooms?: number;
+  maxGuests?: number;
+  lat?: number;
+  lon?: number;
 };
 
-type CreateFlatlyBookingRequest = {
-  userId: number;
-  flatId: number;
-  dateFrom: string; // date-time
-  dateTo: string; // date-time
+export type FlatlyBookingDto = {
+  id: string; // uuid
+  flatId?: string; // uuid
+  userId?: string; // uuid (note: not the Carly numeric userId)
+  source?: string;
+  checkInDate?: string; // date (YYYY-MM-DD)
+  checkOutDate?: string; // date (YYYY-MM-DD)
   guestsCount?: number;
 };
 
-type BookingResponse = { id: number };
+export type FlatlyBookingDetailsResponse = {
+  booking?: FlatlyBookingDto;
+  flat?: FlatlyFlatDetailsDto;
+  flatImages?: FlatlyFlatImageDto[];
+};
+
+export type CreateFlatlyBookingRequest = {
+  userId: number; // Carly userId (int32)
+  flatId: string; // uuid
+  checkInDate: string; // date
+  checkOutDate: string; // date
+  guestsCount: number; // >= 1
+};
+
+export type CreateFlatlyBookingResponse = { id?: string }; // uuid
 
 // -------------------------
 // Helpers
 // -------------------------
+function asDateOnly(dayISO: string): string {
+  // Accept "YYYY-MM-DD" and also tolerate full strings; we only send date-only.
+  const s = String(dayISO ?? "").trim();
+  return s.length >= 10 ? s.slice(0, 10) : s;
+}
+
 function toBackendLocalDateTime(dayISO: string, hhmmss = "12:00:00"): string {
-  // Flatly available endpoint expects date-time query params (OpenAPI says date-time)
-  // We keep the same local-date-time style used elsewhere in your app.
-  return `${dayISO}T${hhmmss}`;
+  // GET /flatly/flats/available expects date-time query params
+  return `${asDateOnly(dayISO)}T${hhmmss}`;
 }
 
-function placeholder(seed: string): string {
-  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/900/600`;
+function friendlyFlatlyError(err: unknown): { title: string; message: string } {
+  if (err instanceof ApiError) {
+    // Typical HTTP-friendly UX
+    if (err.status === 401 || err.status === 403) {
+      return { title: "Not allowed", message: "Please log in again and retry." };
+    }
+    if (err.status === 404) {
+      return { title: "Not found", message: "That Flatly resource no longer exists." };
+    }
+    if (err.status === 409) {
+      return {
+        title: "Unavailable",
+        message: "Those dates aren’t available anymore. Pick different dates and try again.",
+      };
+    }
+    if (err.status === 422) {
+      return { title: "Invalid data", message: "Check the dates / guest count and try again." };
+    }
+    return { title: "Flatly error", message: err.message || "Request failed." };
+  }
+  return { title: "Flatly error", message: (err as any)?.message ?? "Request failed." };
 }
 
-function pickPricePerNight(dto: FlatlyFlatDto): number {
-  // If pricing rules exist, pick the first active price_per_night; else 0.
-  const rules = Array.isArray(dto.pricing) ? dto.pricing : [];
-  const active = rules.find((r) => r?.is_active && typeof r.price_per_night === "number");
-  const any = rules.find((r) => typeof r.price_per_night === "number");
-  return (active?.price_per_night ?? any?.price_per_night ?? 0) as number;
-}
-
-function mapFlatDtoToCard(dto: FlatlyFlatDto): FlatCard {
-  const id = String(dto.id);
-  const title = (dto.name ?? "Flat").trim() || "Flat";
-  const addressLine = (dto.address_line ?? dto.location ?? "—").trim() || "—";
-  const city = (dto.city ?? "—").trim() || "—";
-
-  const imgsRaw = Array.isArray(dto.images) ? dto.images : [];
-  const urls = imgsRaw
-    .map((x) => String(x?.image_url ?? "").trim())
-    .filter((u) => u.length > 0);
-
-  const imageUrls = urls.length ? urls : [placeholder(`flat_${id}`)];
-
-  return {
-    id,
-    title,
-    addressLine,
-    city,
-    currency: "PLN",
-    pricePerNight: pickPricePerNight(dto),
-    rating: undefined, // FlatlyFlatDto doesn’t expose rating in OpenAPI
-    imageUrls,
-    raw: dto,
-  };
-}
-
-async function requireUserId(): Promise<number> {
+async function requireCarlyUserId(): Promise<number> {
   const p = await getProfile();
   if (!p.userId) throw new Error("No userId in profile. Please log in again.");
   return p.userId;
@@ -128,52 +104,110 @@ async function requireUserId(): Promise<number> {
 // -------------------------
 // Public API
 // -------------------------
-export async function getAvailableFlats(dateFromDayISO: string, dateToDayISO: string): Promise<FlatCard[]> {
-  const from = toBackendLocalDateTime(dateFromDayISO, "12:00:00");
-  const to = toBackendLocalDateTime(dateToDayISO, "12:00:00");
 
+/**
+ * GET /flatly/flats/available?dateFrom=...&dateTo=...
+ * Returns FlatlyFlatDto[] (uuid ids).
+ */
+export async function getAvailableFlats(dateFromDayISO: string, dateToDayISO: string): Promise<FlatlyFlatDto[]> {
   const qs = new URLSearchParams();
-  qs.set("dateFrom", from);
-  qs.set("dateTo", to);
+  qs.set("dateFrom", toBackendLocalDateTime(dateFromDayISO, "12:00:00"));
+  qs.set("dateTo", toBackendLocalDateTime(dateToDayISO, "12:00:00"));
 
-  const rows = await apiRequest<FlatlyFlatDto[]>(`/flatly/flats/available?${qs.toString()}`, { method: "GET" });
-  const list = Array.isArray(rows) ? rows : [];
-  return list.map(mapFlatDtoToCard);
+  try {
+    const rows = await apiRequest<FlatlyFlatDto[]>(`/flatly/flats/available?${qs.toString()}`, { method: "GET" });
+    return Array.isArray(rows) ? rows : [];
+  } catch (e) {
+    const ui = friendlyFlatlyError(e);
+    throw new Error(ui.message);
+  }
 }
 
-export async function getFlatDetails(flatId: number): Promise<FlatlyFlatDto> {
-  return apiRequest<FlatlyFlatDto>(`/flatly/flats/${flatId}`, { method: "GET" });
-}
-
-export async function getFlatBookingDetails(flatBookingId: number): Promise<FlatlyBookingDto> {
-  return apiRequest<FlatlyBookingDto>(`/flatly/flat-bookings/${flatBookingId}`, { method: "GET" });
-}
-
+/**
+ * POST /flatly/bookings
+ * Returns { id: uuid }
+ */
 export async function createFlatlyBooking(args: {
-  flatId: number;
-  dateFromDayISO: string;
-  dateToDayISO: string;
-  guestsCount?: number;
-}): Promise<number> {
-  const userId = await requireUserId();
+  flatId: string; // uuid
+  checkInDayISO: string; // YYYY-MM-DD
+  checkOutDayISO: string; // YYYY-MM-DD
+  guestsCount: number; // >= 1
+}): Promise<string> {
+  const userId = await requireCarlyUserId();
 
   const body: CreateFlatlyBookingRequest = {
     userId,
-    flatId: args.flatId,
-    dateFrom: toBackendLocalDateTime(args.dateFromDayISO, "12:00:00"),
-    dateTo: toBackendLocalDateTime(args.dateToDayISO, "12:00:00"),
-    guestsCount: args.guestsCount ?? 1,
+    flatId: String(args.flatId),
+    checkInDate: asDateOnly(args.checkInDayISO),
+    checkOutDate: asDateOnly(args.checkOutDayISO),
+    guestsCount: Math.max(1, Number(args.guestsCount || 1)),
   };
 
-  const res = await apiRequest<BookingResponse>(`/flatly/bookings`, {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+  try {
+    const res = await apiRequest<CreateFlatlyBookingResponse>(`/flatly/bookings`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
 
-  if (!res?.id) throw new Error("Flat booking created but no id returned by backend.");
-  return res.id;
+    const id = String(res?.id ?? "").trim();
+    if (!id) throw new Error("Flat booking created but no id returned by backend.");
+    return id;
+  } catch (e) {
+    const ui = friendlyFlatlyError(e);
+    throw new Error(ui.message);
+  }
 }
 
-export async function cancelFlatlyBooking(flatBookingId: number): Promise<void> {
-  await apiRequest<string>(`/flatly/bookings/${flatBookingId}`, { method: "DELETE" });
+/**
+ * DELETE /flatly/bookings/{flatBookingId}
+ */
+export async function cancelFlatlyBooking(flatBookingId: string): Promise<void> {
+  const id = String(flatBookingId ?? "").trim();
+  if (!id) throw new Error("Invalid Flatly booking id.");
+
+  try {
+    await apiRequest<string>(`/flatly/bookings/${encodeURIComponent(id)}`, { method: "DELETE" });
+  } catch (e) {
+    // ✅ keep HTTP status so UI can handle 422
+    if (e instanceof ApiError) throw e;
+
+    const ui = friendlyFlatlyError(e);
+    throw new Error(ui.message);
+  }
+}
+
+export async function getFlatBookingDetails(flatBookingId: string): Promise<FlatlyBookingDetailsResponse> {
+  const id = String(flatBookingId ?? "").trim();
+  if (!id) throw new Error("Invalid Flatly booking id.");
+
+  try {
+    return await apiRequest<FlatlyBookingDetailsResponse>(`/flatly/flat-bookings/${encodeURIComponent(id)}`, {
+      method: "GET",
+    });
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+
+    const ui = friendlyFlatlyError(e);
+    throw new Error(ui.message);
+  }
+}
+
+/**
+ * GET /flatly/flat-bookings/user/{userId}
+ * Returns FlatlyBookingDetailsResponse[]
+ */
+export async function getUserFlatBookings(userId: number): Promise<FlatlyBookingDetailsResponse[]> {
+  const n = Number(userId);
+  if (!Number.isFinite(n)) throw new Error("Invalid userId.");
+
+  try {
+    const rows = await apiRequest<FlatlyBookingDetailsResponse[]>(
+      `/flatly/flat-bookings/user/${encodeURIComponent(String(n))}`,
+      { method: "GET" }
+    );
+    return Array.isArray(rows) ? rows : [];
+  } catch (e) {
+    const ui = friendlyFlatlyError(e);
+    throw new Error(ui.message);
+  }
 }

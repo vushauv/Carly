@@ -1,14 +1,24 @@
 //mobile/app/(tabs)/home.tsx
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-
+import { ApiError } from "../../lib/api/apiClient";
 import CarCardView from "../components/CarCardView";
 
-import { cancelFlatlyBooking } from "../../lib/api/flatlyApi";
-import { getFlatlyBookings, markFlatlyCancelled } from "../../lib/storage/flatlyBookingsStorage";
+import {
+  cancelFlatlyBooking,
+  getUserFlatBookings,
+} from "../../lib/api/flatlyApi";
+import { getProfile } from "../../lib/storage/profileStorage";
 
 import {
   cancelCarBookingOnBackend,
@@ -17,7 +27,90 @@ import {
   type BookingStatus,
 } from "../../lib/api/bookingsApi";
 
+import {
+  getFlatlyBookings,
+  markFlatlyCancelled,
+  upsertFlatlyBooking,
+  type FlatlyBookingRecord,
+} from "../../lib/storage/flatlyBookingsStorage";
 
+
+function dateOnly(input?: string | null): string {
+  const s = String(input ?? "").trim();
+  if (!s) return "—";
+  if (s.length >= 10) return s.slice(0, 10);
+  return s;
+}
+
+function flatlyIdFromUiId(uiId: string): string {
+  return String(uiId ?? "").replace("flatly-", "");
+}
+
+function mapLocalFlatlyRecordToBooking(rec: FlatlyBookingRecord): Booking {
+  const nowISO = new Date().toISOString();
+
+  return {
+    id: `flatly-${rec.flatBookingId}`,
+    status: rec.status === "CANCELLED" ? "history" : "current",
+    state: rec.status === "CANCELLED" ? "Cancelled" : "Booked",
+    startDate: rec.dateFromDayISO || nowISO,
+    endDate: rec.dateToDayISO || nowISO,
+    car: undefined,
+    flat: rec.flatSnapshot
+      ? {
+          address: `${rec.flatSnapshot.title}, ${rec.flatSnapshot.city}${rec.flatSnapshot.country ? ` (${rec.flatSnapshot.country})` : ""}`,
+          images: rec.flatSnapshot.imageUrls ?? [],
+        }
+      : {
+          address: "Flat",
+          images: [],
+        },
+    createdAtISO: rec.createdAtISO ?? nowISO,
+    cancelledAtISO: rec.cancelledAtISO,
+  };
+}
+
+function mapFlatlyToBooking(
+  dto: any,
+  cancelledAtISO?: string
+): Booking | null {
+  const bookingId = String(dto?.booking?.id ?? "").trim();
+  if (!bookingId) return null;
+
+  const checkIn = String(dto?.booking?.checkInDate ?? "").trim();
+  const checkOut = String(dto?.booking?.checkOutDate ?? "").trim();
+
+  // Flatly images come from FlatlyFlatImageDto: { sort_order, image_url }
+  const imgs =
+    Array.isArray(dto?.flatImages) && dto.flatImages.length
+      ? dto.flatImages
+          .map((x: any) => String(x?.image_url ?? "").trim())
+          .filter(Boolean)
+      : [];
+
+  const flatName = String(dto?.flat?.name ?? "Flat").trim() || "Flat";
+  const city = String(dto?.flat?.city ?? "—").trim() || "—";
+  const country = String(dto?.flat?.country ?? "—").trim() || "—";
+
+  const nowISO = new Date().toISOString();
+
+  const cancelled = Boolean(cancelledAtISO);
+
+  return {
+    id: `flatly-${bookingId}`,
+    status: cancelled ? "history" : "current",
+    state: cancelled ? "Cancelled" : "Booked",
+    startDate: checkIn || nowISO,
+    endDate: checkOut || nowISO,
+    car: undefined,
+    flat: {
+      address: `${flatName}, ${city} (${country})`,
+      images: imgs,
+    },
+    createdAtISO: nowISO,
+    cancelledAtISO: cancelledAtISO,
+  };
+}
 
 export default function HomeTab() {
   const router = useRouter();
@@ -26,42 +119,62 @@ export default function HomeTab() {
   const [selected, setSelected] = useState<BookingStatus>("current");
   const [all, setAll] = useState<Booking[]>([]);
 
+
   const load = useCallback(async () => {
     const carBookings = await getBookingsFromBackend();
 
-    const flatly = await getFlatlyBookings();
-    const flatBookings: Booking[] = flatly.map((fb) => {
-      const cancelled = fb.status === "CANCELLED";
-      return {
-        id: `flatly-${fb.flatBookingId}`, // keep unique + routeable
-        status: cancelled ? "history" : "current",
-        state: cancelled ? "Cancelled" : "Booked",
-        startDate: fb.dateFromDayISO,
-        endDate: fb.dateToDayISO,
-        car: undefined,
-        flat: fb.flatSnapshot
-          ? {
-              address: `${fb.flatSnapshot.addressLine}, ${fb.flatSnapshot.city}`,
-              images: fb.flatSnapshot.imageUrls,
-            }
-          : {
-              address: `Flat #${fb.flatId}`,
-              images: [],
-            },
-        createdAtISO: fb.createdAtISO,
-        cancelledAtISO: fb.cancelledAtISO,
-      };
-    });
+    const p = await getProfile();
+    const userId = p.userId;
+
+    let flatBookings: Booking[] = [];
+    if (typeof userId === "number") {
+      try {
+        const [rows, local] = await Promise.all([
+          getUserFlatBookings(userId),
+          getFlatlyBookings(),
+        ]);
+
+        const localById = new Map(local.map((r) => [r.flatBookingId, r]));
+        const liveIds = new Set<string>();
+
+        // Live partner bookings (optionally marked cancelled if local says so)
+        flatBookings = (Array.isArray(rows) ? rows : [])
+          .map((dto) => {
+            const flatBookingId = String(dto?.booking?.id ?? "").trim();
+            if (!flatBookingId) return null;
+
+            liveIds.add(flatBookingId);
+
+            const localRec = localById.get(flatBookingId);
+            const cancelledAtISO =
+              localRec?.status === "CANCELLED" ? localRec.cancelledAtISO : undefined;
+
+            return mapFlatlyToBooking(dto, cancelledAtISO);
+          })
+          .filter((x): x is Booking => !!x);
+
+        // Add locally-cancelled bookings that partner no longer returns
+        for (const rec of local) {
+          if (rec.status === "CANCELLED" && !liveIds.has(rec.flatBookingId)) {
+            flatBookings.push(mapLocalFlatlyRecordToBooking(rec));
+          }
+        }
+      } catch {
+        // Partner down: show locally stored flat bookings (current + history)
+          const local = await getFlatlyBookings();
+          flatBookings = local.map(mapLocalFlatlyRecordToBooking);
+      }
+    }
 
     const merged = [...carBookings, ...flatBookings];
 
     // optional: newest first by createdAtISO (or fallback)
-    merged.sort((a, b) => String(b.createdAtISO ?? "").localeCompare(String(a.createdAtISO ?? "")));
+    merged.sort((a, b) =>
+      String(b.createdAtISO ?? "").localeCompare(String(a.createdAtISO ?? ""))
+    );
 
     setAll(merged);
-
   }, []);
-
 
   useEffect(() => {
     void load();
@@ -74,14 +187,16 @@ export default function HomeTab() {
     }, [load])
   );
 
-    useEffect(() => {
-      if (section === "current" || section === "history") {
-        setSelected(section);
-      }
-    }, [section]);
+  useEffect(() => {
+    if (section === "current" || section === "history") {
+      setSelected(section);
+    }
+  }, [section]);
 
-
-  const bookings = useMemo(() => all.filter((b) => b.status === selected), [all, selected]);
+  const bookings = useMemo(
+    () => all.filter((b) => b.status === selected),
+    [all, selected]
+  );
 
   async function onCancel(id: string) {
     const isFlatly = id.startsWith("flatly-");
@@ -97,33 +212,60 @@ export default function HomeTab() {
           onPress: async () => {
             try {
               if (isFlatly) {
-                const raw = id.replace("flatly-", "");
-                const flatBookingId = Number(raw);
+                const flatBookingId = flatlyIdFromUiId(id);
 
-                if (!Number.isFinite(flatBookingId)) {
+                if (!flatBookingId) {
                   Alert.alert("Cancel failed", "Invalid Flatly booking id.");
                   return;
                 }
 
-                // Partner cancel (can fail / be down) -> catch and show friendly message
+                // Persist a minimal snapshot so cancelled bookings never disappear
+                const b = all.find((x) => x.id === id);
+                if (b?.flat) {
+                  await upsertFlatlyBooking({
+                    flatBookingId,
+                    dateFromDayISO: dateOnly(b.startDate),
+                    dateToDayISO: dateOnly(b.endDate),
+                    flatSnapshot: {
+                      title: "Flat",
+                      addressLine: b.flat.address,
+                      city: "",
+                      imageUrls: b.flat.images ?? [],
+                    },
+                  });
+                }
+
                 try {
                   await cancelFlatlyBooking(flatBookingId);
                 } catch (e: any) {
+                  // ✅ 422 = we messed up contacting partner
+                  if (e instanceof ApiError && e.status === 422) {
+                    Alert.alert(
+                      "Cancel failed",
+                      "There was a mistake contacting the partner API (422). Your booking was NOT cancelled."
+                    );
+                    return; // ✅ stays in current
+                  }
+
                   Alert.alert(
                     "Cancel failed",
                     "Flatly partner API seems unavailable right now (or booking was not found). Please try again later."
                   );
-                  return; // IMPORTANT: don't mark local cancelled
+                  return; // ✅ stays in current
                 }
 
-                // Only mark locally cancelled after partner cancel succeeds
+                // ✅ Only move to history on SUCCESS
                 await markFlatlyCancelled(flatBookingId);
-              } else {
+              }
+                else {
                 // Carly car cancel
                 try {
                   await cancelCarBookingOnBackend(id);
                 } catch (e: any) {
-                  Alert.alert("Cancel failed", e?.message ?? "Could not cancel car booking.");
+                  Alert.alert(
+                    "Cancel failed",
+                    e?.message ?? "Could not cancel car booking."
+                  );
                   return;
                 }
               }
@@ -141,14 +283,15 @@ export default function HomeTab() {
     );
   }
 
-
-
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Home</Text>
 
-        <Pressable style={styles.profileButton} onPress={() => router.push("/profile/settings")}>
+        <Pressable
+          style={styles.profileButton}
+          onPress={() => router.push("/profile/settings")}
+        >
           <Text style={styles.profileButtonText}>Profile settings</Text>
         </Pressable>
       </View>
@@ -161,19 +304,27 @@ export default function HomeTab() {
             style={[styles.segmentBtn, selected === "current" && styles.segmentBtnActive]}
             onPress={() => setSelected("current")}
           >
-            <Text style={[styles.segmentText, selected === "current" && styles.segmentTextActive]}>current</Text>
+            <Text style={[styles.segmentText, selected === "current" && styles.segmentTextActive]}>
+              current
+            </Text>
           </Pressable>
 
           <Pressable
             style={[styles.segmentBtn, selected === "history" && styles.segmentBtnActive]}
             onPress={() => setSelected("history")}
           >
-            <Text style={[styles.segmentText, selected === "history" && styles.segmentTextActive]}>history</Text>
+            <Text style={[styles.segmentText, selected === "history" && styles.segmentTextActive]}>
+              history
+            </Text>
           </Pressable>
         </View>
       </View>
 
-      <ScrollView style={styles.body} contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+      >
         {bookings.map((b) => (
           <BookingCard
             key={b.id}
@@ -191,13 +342,6 @@ export default function HomeTab() {
       </ScrollView>
     </SafeAreaView>
   );
-}
-
-function dateOnly(input?: string | null): string {
-  const s = String(input ?? "").trim();
-  if (!s) return "—";
-  if (s.length >= 10) return s.slice(0, 10);
-  return s;
 }
 
 function BookingCard({
@@ -358,11 +502,19 @@ const styles = StyleSheet.create({
   },
 
   bottomInfo: { gap: 10 },
-  bottomRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  bottomRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   metaText: { color: "#6B7280", fontWeight: "800" },
   stars: { fontWeight: "900", color: "#111827" },
 
-  cardActions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  cardActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   linkText: { fontWeight: "900", color: "#2563EB" },
 
   cancelBtn: {
@@ -378,4 +530,3 @@ const styles = StyleSheet.create({
   emptyWrap: { paddingVertical: 24, alignItems: "center" },
   mutedText: { color: "#6B7280", fontWeight: "800" },
 });
-

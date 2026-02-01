@@ -45,3 +45,8 @@ application:
 
 springdoc:
   show-actuator: true
+
+integrations:
+    flatly:
+      base-url: https://react26-backend.azurewebsites.net/api
+      mock-mode: false
