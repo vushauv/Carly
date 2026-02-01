@@ -131,27 +131,51 @@ export const carService = {
    * Uploads a new image for a car
    * Maps to: POST /api/cars/{carId}/images
    */
+  // async uploadCarImage(carId: number, file: File): Promise<CarImage> {
+  //   console.log(`Uploading image for car ${carId}:`, file.name);
+    
+  //   const formData = new FormData();
+  //   formData.append('file', file);
+    
+  //   const url = buildApiUrl(API_CONFIG.ENDPOINTS.CARS, carId, 'images');
+    
+  //   // Use fetch directly for multipart/form-data
+  //   const response = await fetch(url, {
+  //     method: 'POST',
+  //     body: formData,
+  //   });
+    
+  //   if (!response.ok) {
+  //     const errorText = await response.text();
+  //     throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+  //   }
+    
+  //   return await response.json();
+  // },
+
   async uploadCarImage(carId: number, file: File): Promise<CarImage> {
     console.log(`Uploading image for car ${carId}:`, file.name);
-    
+  
     const formData = new FormData();
-    formData.append('file', file);
-    
-    const url = buildApiUrl(API_CONFIG.ENDPOINTS.CARS, carId, 'images');
-    
-    // Use fetch directly for multipart/form-data
+    formData.append("file", file);
+  
+    const url = buildApiUrl(API_CONFIG.ENDPOINTS.CARS, carId, "images");
+  
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       body: formData,
+      // credentials: "include"  // only if backend uses cookies
     });
-    
+  
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+      const text = await response.text();
+      throw new Error(`HTTP ${response.status}: ${text}`);
     }
-    
+  
     return await response.json();
   },
+  
+  
 
   
 
@@ -186,4 +210,13 @@ export const carService = {
     const response = await apiRequest<{count: number}>(url);
     return response.count || 0;
   },
+};
+
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file); // produces data:image/png;base64,...
+  });
 };
