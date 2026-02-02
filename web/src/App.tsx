@@ -1,6 +1,5 @@
 import "./App.css";
 import LoginPage from "./components/LoginPage/LoginPage";
-import KPIPage from "./components/KPIPage/KPIPage";
 import PartnerBookingsPage from "./components/PartnerBookingsPage/PartnerBookingsPage";
 import Content from "./components/Elements/Content/Content";
 import Header from "./components/Elements/Header/Header";
