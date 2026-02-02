@@ -34,7 +34,7 @@ logging:
     org.springframework.boot.autoconfigure: ERROR
 
 cors:
-  urls: ${cors:http://localhost:8080,http://localhost:5173,http://localhost:5000}
+  urls: ${cors:http://localhost:8080,http://localhost:5173,http://localhost:5000,http://carly.vushauv.me,https://carly.vushauv.me}
   mappings: /**
 
 application:
