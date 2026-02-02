@@ -186,7 +186,9 @@ public class CarMainService implements CarService {
                 .orElseThrow(() -> new ResourceNotFoundException("Car with id " + car.getCarId() + " was not found."));
 
         var price = managedCar.getPrice();
-        return price == null ? null : price.multiply(BigDecimal.valueOf(this.calculateDayDifference(dateRange)));
+        return price == null ? null : price.multiply(BigDecimal.valueOf(
+                DateUtils.calculateDayDifference(dateRange.getFrom(), dateRange.getTo()))
+        );
     }
 
     public Map<Integer, List<Integer>> linkCarImages(List<Car> cars)
@@ -205,12 +207,6 @@ public class CarMainService implements CarService {
     {
         if(minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0)
             throw new BadRequestException("minPrice cannot be greater than maxPrice");
-    }
-
-    private long calculateDayDifference(DateRange dateRange)
-    {
-        // Computes a ceiling - if a days is touched - counts as till the end of the day
-        return DateUtils.calculateDayDifference(dateRange.getFrom(), dateRange.getTo()) + 1;
     }
 
     private List<Integer> searchCarsByFeatures(CarSearchCriteria searchCriteria,
