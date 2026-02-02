@@ -2,6 +2,8 @@ import React, { useMemo, useState } from "react";
 import FilterBarLayout from "../FilterBarLayout/FilterBarLayout";
 import Input from "../Input/Input";
 import styles from "./FiltersForm.module.css";
+import infoIcon from "@/assets/icons/info-icon.svg"
+
 
 type FilterFieldType = "text" | "number" | "date" | "select";
 
@@ -73,7 +75,7 @@ function FiltersForm<K extends string>({
                   </select>
                   {f.hint && (
                     <img
-                      src="/src/assets/icons/info-icon.svg"
+                      src={infoIcon}
                       alt="Hint"
                       className={styles.hintIcon}
                       title={f.hint}
