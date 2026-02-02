@@ -6,7 +6,7 @@ import Content from "./components/Elements/Content/Content";
 import Header from "./components/Elements/Header/Header";
 import { useState } from "react";
 import Footer from "./components/Elements/Footer/Footer";
-import ManageCarsPage from "./components/Cars//ManageCarsPage/ManageCarsPage";
+import ManageCarsPage from "./components/Cars/ManageCarsPage/ManageCarsPage";
 import ManageBookingsPage from "./components/Bookings//ManageBookingsPage/ManageBookingsPage";
 import UsersPage from "./components/Users/UsersPage/UsersPage";
 import UserViewPage from "./components/Users/UserViewPage/UserViewPage";

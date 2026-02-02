@@ -10,7 +10,7 @@ import { carsColumns, carsRowKey, carsActions } from "../services/datatable.conf
 import Pagination from "../../Elements//Pagination/Pagination";
 import { carService } from "../services/carService";
 
-const PAGE_SIZE = 4; // Changed from 10 to 3 to match service default
+const PAGE_SIZE = 3; // Changed from 10 to 3 to match service default
 
 const ManageCarsPage = () => {
   const navigate = useNavigate();
@@ -39,23 +39,26 @@ const ManageCarsPage = () => {
       };
 
       // Apply filters if any are provided
-      const hasFilters = Object.values(filtersToApply).some(value => value !== "" && value !== undefined);
+      const hasFilters = Object.values(filtersToApply).some(
+        value => value !== "" && value !== undefined
+      );
       
-      let result;
-      if (hasFilters) {
-        // Use search endpoint with filters - fetch one extra to check if there's a next page
-        result = await carService.getAllCars(page, PAGE_SIZE + 1, serviceFilters);
-      } else {
-        // Use regular getAllCars without filters - fetch one extra to check if there's a next page
-        result = await carService.getAllCars(page, PAGE_SIZE + 1);
-      }
+      // load current page
+      const pageResult = hasFilters
+        ? await carService.getAllCars(page, PAGE_SIZE, serviceFilters)
+        : await carService.getAllCars(page, PAGE_SIZE);
       
-      // Extract cars array from result (assuming result has a cars property)
-      const carsData = result.cars || result;
+      const pageData = pageResult.cars || pageResult;
       
-      // Set cars (excluding the extra one) and determine if there's a next page
-      setCars(carsData.slice(0, PAGE_SIZE));
-      setHasNextPage(carsData.length > PAGE_SIZE);
+      // probe next page
+      const nextPageResult = hasFilters
+        ? await carService.getAllCars(page + 1, PAGE_SIZE, serviceFilters)
+        : await carService.getAllCars(page + 1, PAGE_SIZE);
+      
+      const nextPageData = nextPageResult.cars || nextPageResult;
+      
+      setCars(pageData);
+      setHasNextPage(nextPageData.length > 0);
     } catch (err) {
       console.error("Failed to load cars:", err);
       // Error handling removed - no user-facing error message
