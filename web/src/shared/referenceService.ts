@@ -1,7 +1,7 @@
 // src/shared/api/referenceService.ts
 
 import { API_CONFIG, apiRequest, buildApiUrl } from "./api.config";
-import type { PickupLocation } from "../components/Bookings/BookingCreatePage/types";
+import type { PickupLocation } from "../components/Bookings/ManageBookingsPage/types";
 
 /* =======================
    Generic reference types

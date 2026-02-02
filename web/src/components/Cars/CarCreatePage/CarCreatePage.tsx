@@ -87,7 +87,7 @@ const CarCreatePage = () => {
         if (!formData.status && map.status?.values.length) {
           setFormData(prev => ({
             ...prev,
-            status: map.status!.values[0].name
+            status: map.status!.values[0]
           }));
         }
       })

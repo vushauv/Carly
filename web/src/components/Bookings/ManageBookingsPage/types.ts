@@ -71,7 +71,7 @@ export interface BookingSearchFilters {
   bookingId?: number;
   userId?: number;
   carId?: number;
-  status?:  "CREATED" | "COMPLETED" | "CANCELLED";
+  status?: BookingStatus;
   startDateFrom?: string;
   startDateTo?: string;
   endDateFrom?: string;

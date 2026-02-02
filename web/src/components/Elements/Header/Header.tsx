@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { useAuthStore } from "../../../stores/authStore";
 import Button from "../Button/Button";
 
+import logo from "@/assets/icons/carly-logo.png";
+
 const Header = () => {
   const { isLoggedIn, user, logout } = useAuthStore();
 
@@ -17,7 +19,7 @@ const Header = () => {
 
         <Link to="/kpi" className={styles.homeLink}>
           <img
-            src="/src/assets/icons/carly-logo.png"
+            src={logo}
             alt="Carly Logo"
             className={styles.logo}
           />

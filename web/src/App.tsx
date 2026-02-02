@@ -1,6 +1,5 @@
 import "./App.css";
 import LoginPage from "./components/LoginPage/LoginPage";
-import KPIPage from "./components/KPIPage/KPIPage";
 import PartnerBookingsPage from "./components/PartnerBookingsPage/PartnerBookingsPage";
 import Content from "./components/Elements/Content/Content";
 import Header from "./components/Elements/Header/Header";
@@ -20,7 +19,7 @@ import BookingViewPage from "./components/Bookings/BookingViewPage/BookingViewPa
 import BookingEditPage from "./components/Bookings//BookingEditPage/BookingEditPage";
 import BookingCreatePage from "./components/Bookings//BookingCreatePage/BookingCreatePage";
 import FlatBookingViewPage from "./components/PartnerBookingsPage/FlatBookingViewPage";
-import { useAuthStore } from "./stores/authStore";
+
 
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -34,14 +33,14 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
 
           {/* Protected Routes */}
-          <Route
+          {/* <Route
             path="/kpi"
             element={
               <ProtectedRoute>
                 <KPIPage />
               </ProtectedRoute>
             }
-          />
+          /> */}
 
           <Route
             path="/cars"
@@ -174,7 +173,7 @@ function App() {
             }
           />
 
-          <Route path="*" element={<Navigate to="/kpi" />} />
+          <Route path="*" element={<Navigate to="/users" />} />
         </Routes>
       </Content>
 

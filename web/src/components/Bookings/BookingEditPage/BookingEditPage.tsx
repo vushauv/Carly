@@ -19,8 +19,7 @@ import Input from "../../Elements/Input/Input";
 const STATUSES: BookingStatus[] = [
   "CREATED",
   "CONFIRMED",
-  "CANCELLED",
-  "FINISHED",
+  "CANCELLED"
 ];
 
 /* ---------------- form model ---------------- */
@@ -60,9 +59,9 @@ const BookingEditPage = () => {
         setForm({
           pickupLocationId: booking.pickupLocation.id,
           returnLocationId: booking.returnLocation.id,
-          carBookingStatus: booking.carStatus.name as BookingStatus,
+          carBookingStatus: booking.carStatus.name.toUpperCase() as BookingStatus,
           flatBookingStatus:
-            (booking.flatStatus as BookingStatus) ?? "CREATED",
+            (booking.flatStatus?.toUpperCase() as BookingStatus) ?? "CREATED",
           // carBookingDateFrom: stripTimezone(booking.carBookingDateFrom),
           // carBookingDateTo: stripTimezone(booking.carBookingDateTo),
           carBookingDateFrom: toLocalStart(stripTimezone(booking.carBookingDateFrom).split("T")[0]),
@@ -78,10 +77,6 @@ const BookingEditPage = () => {
 
   const stripTimezone = (value: string) => value.split(".")[0];
 
-  const normalizeBackendDate = (value: string): string => {
-    // Keep only yyyy-MM-ddTHH:mm:ss
-    return value.replace(/(\.\d+)?([+-]\d{2}:?\d{2}|Z)$/, "");
-  };
 
   const update = <K extends keyof BookingEditForm>(
     key: K,

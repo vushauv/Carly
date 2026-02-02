@@ -9,6 +9,8 @@ import DataTable from "../../Elements//DataTable/DataTable";
 import { bookingsColumns, bookingsRowKey, bookingsActions } from "./datatable.conf";
 import Pagination from "../../Elements//Pagination/Pagination";
 import { bookingService } from "./bookingService";
+import { type BookingStatus } from "./types";
+
 
 const PAGE_SIZE = 3; // Match users page pattern
 
@@ -30,7 +32,7 @@ const ManageBookingsPage = () => {
         {
           bookingId: f.bookingId ? Number(f.bookingId) : undefined,
           userId: f.userId ? Number(f.userId) : undefined,
-          status: f.status?.trim() || undefined,
+          status: f.status?.trim().toUpperCase() as BookingStatus  || undefined,
           startDateFrom: f.dateFrom?.trim()
             ? `${f.dateFrom}T00:00:00`
             : undefined,
@@ -47,7 +49,7 @@ const ManageBookingsPage = () => {
         {
           bookingId: f.bookingId ? Number(f.bookingId) : undefined,
           userId: f.userId ? Number(f.userId) : undefined,
-          status: f.status?.trim() || undefined,
+          status: f.status?.trim().toUpperCase() as BookingStatus || undefined,
           startDateFrom: f.dateFrom?.trim()
             ? `${f.dateFrom}T00:00:00`
             : undefined,
@@ -79,7 +81,7 @@ const ManageBookingsPage = () => {
         const pageData = await bookingService.getAllBookings(pageToLoad, PAGE_SIZE, {
           bookingId: appliedFilters.bookingId ? Number(appliedFilters.bookingId) : undefined,
           userId: appliedFilters.userId ? Number(appliedFilters.userId) : undefined,
-          status: appliedFilters.status?.trim() || undefined,
+          status: appliedFilters.status?.trim().toUpperCase() as BookingStatus || undefined,
           startDateFrom: appliedFilters.dateFrom?.trim() ? `${appliedFilters.dateFrom}T00:00:00` : undefined,
           startDateTo: appliedFilters.dateTo?.trim() ? `${appliedFilters.dateTo}T23:59:59` : undefined,
         });

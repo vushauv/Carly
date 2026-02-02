@@ -54,7 +54,7 @@ const createOptionsFromReference = (ref?: ReferenceDictionary): { value: string;
 // Hook to get dynamic car filter fields with reference data
 export const useCarFilterFields = (): FilterFieldDef<CarFilterKey>[] => {
     const [refs, setRefs] = useState<Record<string, ReferenceDictionary>>({});
-    const [loading, setLoading] = useState(true);
+    // const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         referenceService
@@ -77,7 +77,7 @@ export const useCarFilterFields = (): FilterFieldDef<CarFilterKey>[] => {
             .catch(err => {
                 console.error("Failed to load car references:", err);
             })
-            .finally(() => setLoading(false));
+            // .finally(() => setLoading(false));
     }, []);
 
     return [

@@ -170,7 +170,7 @@ const ManageCarsPage = () => {
         onReset={handleResetFilters}
       />
 
-      {/* Display active filters summary */}
+      {/* Display active filters summary
       {Object.keys(activeFilters).length > 0 && (
         <div className={styles.activeFilters}>
           <strong>Active filters:</strong>
@@ -188,7 +188,7 @@ const ManageCarsPage = () => {
             Clear all filters
           </button>
         </div>
-      )}
+      )} */}
 
       <AddNewEntityComponent
         title="Cars"

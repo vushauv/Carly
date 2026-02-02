@@ -5,7 +5,6 @@ import type { FlatBooking } from "../Bookings/ManageBookingsPage/types";
 import DataTable from "../Elements/DataTable/DataTable";
 import Pagination from "../Elements/Pagination/Pagination";
 import { bookingService } from "../Bookings/ManageBookingsPage/bookingService";
-import Button from "../Elements/Button/Button";
 
 const PAGE_SIZE = 3;
 
@@ -61,6 +60,8 @@ const FlatlyBookings = () => {
         loadFlatBookingsPage(0);
     }, []);
 
+
+
     const flatBookingsActions = useMemo(
         () => [
             {
@@ -71,7 +72,7 @@ const FlatlyBookings = () => {
             {
                 id: "cancel",
                 label: "Cancel",
-                color: "danger",
+                color: "danger" as ("primary" | "secondary" | "danger"),
                 onClick: (flatBooking: FlatBooking) => handleFlatBookingAction("cancel", flatBooking),
             },
         ],

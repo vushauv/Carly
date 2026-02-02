@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import cn from "classnames";
 import styles from "./Input.module.css";
 
+import infoIcon from "@/assets/icons/info-icon.svg"
+
+
+
 type NativeInputProps = Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
   "onChange" | "value"
@@ -59,7 +63,7 @@ function Input({
 
         {(hint || errorMessage) && (
           <img
-            src="/src/assets/icons/info-icon.svg"
+            src={infoIcon}
             alt="Hint"
             onClick={() => setHintVisibility((state) => !state)}
             onMouseDown={(e) => e.preventDefault()}

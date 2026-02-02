@@ -1,6 +1,6 @@
 // API Configuration - centralized hostname management
 export const API_CONFIG = {
-  BASE_URL: 'http://carly-api.azurewebsites.net',
+  BASE_URL: 'http://carlyapi.azurewebsites.net',
   ENDPOINTS: {
     USERS: '/users',
     CARS: '/cars',

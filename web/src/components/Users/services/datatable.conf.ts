@@ -1,4 +1,4 @@
-import type { ColumnDef, RowAction } from "../../components/DataTable/DataTable";
+import type { ColumnDef, RowAction } from "../../Elements/DataTable/DataTable";
 import type { User } from "./types";
 
 export const usersRowKey = (u: User) => u.userId;
