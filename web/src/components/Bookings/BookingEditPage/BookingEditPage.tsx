@@ -77,10 +77,6 @@ const BookingEditPage = () => {
 
   const stripTimezone = (value: string) => value.split(".")[0];
 
-  const normalizeBackendDate = (value: string): string => {
-    // Keep only yyyy-MM-ddTHH:mm:ss
-    return value.replace(/(\.\d+)?([+-]\d{2}:?\d{2}|Z)$/, "");
-  };
 
   const update = <K extends keyof BookingEditForm>(
     key: K,
