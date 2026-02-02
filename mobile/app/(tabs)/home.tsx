@@ -1,23 +1,14 @@
-//mobile/app/(tabs)/home.tsx
+// mobile/app/(tabs)/home.tsx
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
+
 import { ApiError } from "../../lib/api/apiClient";
 import CarCardView from "../components/CarCardView";
 
-import {
-  cancelFlatlyBooking,
-  getUserFlatBookings,
-} from "../../lib/api/flatlyApi";
+import { cancelFlatlyBooking, getUserFlatBookings } from "../../lib/api/flatlyApi";
 import { getProfile } from "../../lib/storage/profileStorage";
 
 import {
@@ -29,11 +20,9 @@ import {
 
 import {
   getFlatlyBookings,
-  markFlatlyCancelled,
-  upsertFlatlyBooking,
+  removeFlatlyBooking,
   type FlatlyBookingRecord,
 } from "../../lib/storage/flatlyBookingsStorage";
-
 
 function dateOnly(input?: string | null): string {
   const s = String(input ?? "").trim();
@@ -49,43 +38,52 @@ function flatlyIdFromUiId(uiId: string): string {
 function mapLocalFlatlyRecordToBooking(rec: FlatlyBookingRecord): Booking {
   const nowISO = new Date().toISOString();
 
+  // ✅ We only want ACTIVE ones in UI; cancelled should vanish entirely.
+  if (rec.status === "CANCELLED") {
+    // Return a "ghost" that caller can filter out.
+    return {
+      id: `flatly-${rec.flatBookingId}`,
+      status: "history",
+      state: "Cancelled",
+      startDate: rec.dateFromDayISO || nowISO,
+      endDate: rec.dateToDayISO || nowISO,
+      car: undefined,
+      flat: { address: "Flat", images: [] },
+      createdAtISO: rec.createdAtISO ?? nowISO,
+      cancelledAtISO: rec.cancelledAtISO,
+    };
+  }
+
   return {
     id: `flatly-${rec.flatBookingId}`,
-    status: rec.status === "CANCELLED" ? "history" : "current",
-    state: rec.status === "CANCELLED" ? "Cancelled" : "Booked",
+    status: "current",
+    state: "Booked",
     startDate: rec.dateFromDayISO || nowISO,
     endDate: rec.dateToDayISO || nowISO,
     car: undefined,
     flat: rec.flatSnapshot
       ? {
-          address: `${rec.flatSnapshot.title}, ${rec.flatSnapshot.city}${rec.flatSnapshot.country ? ` (${rec.flatSnapshot.country})` : ""}`,
+          address: `${rec.flatSnapshot.title}, ${rec.flatSnapshot.city}${
+            rec.flatSnapshot.country ? ` (${rec.flatSnapshot.country})` : ""
+          }`,
           images: rec.flatSnapshot.imageUrls ?? [],
         }
-      : {
-          address: "Flat",
-          images: [],
-        },
+      : { address: "Flat", images: [] },
     createdAtISO: rec.createdAtISO ?? nowISO,
-    cancelledAtISO: rec.cancelledAtISO,
+    cancelledAtISO: undefined,
   };
 }
 
-function mapFlatlyToBooking(
-  dto: any,
-  cancelledAtISO?: string
-): Booking | null {
+function mapFlatlyToBooking(dto: any): Booking | null {
   const bookingId = String(dto?.booking?.id ?? "").trim();
   if (!bookingId) return null;
 
   const checkIn = String(dto?.booking?.checkInDate ?? "").trim();
   const checkOut = String(dto?.booking?.checkOutDate ?? "").trim();
 
-  // Flatly images come from FlatlyFlatImageDto: { sort_order, image_url }
   const imgs =
     Array.isArray(dto?.flatImages) && dto.flatImages.length
-      ? dto.flatImages
-          .map((x: any) => String(x?.image_url ?? "").trim())
-          .filter(Boolean)
+      ? dto.flatImages.map((x: any) => String(x?.image_url ?? "").trim()).filter(Boolean)
       : [];
 
   const flatName = String(dto?.flat?.name ?? "Flat").trim() || "Flat";
@@ -94,21 +92,16 @@ function mapFlatlyToBooking(
 
   const nowISO = new Date().toISOString();
 
-  const cancelled = Boolean(cancelledAtISO);
-
   return {
     id: `flatly-${bookingId}`,
-    status: cancelled ? "history" : "current",
-    state: cancelled ? "Cancelled" : "Booked",
+    status: "current", // partner list = active bookings
+    state: "Booked",
     startDate: checkIn || nowISO,
     endDate: checkOut || nowISO,
     car: undefined,
-    flat: {
-      address: `${flatName}, ${city} (${country})`,
-      images: imgs,
-    },
+    flat: { address: `${flatName}, ${city} (${country})`, images: imgs },
     createdAtISO: nowISO,
-    cancelledAtISO: cancelledAtISO,
+    cancelledAtISO: undefined,
   };
 }
 
@@ -119,7 +112,6 @@ export default function HomeTab() {
   const [selected, setSelected] = useState<BookingStatus>("current");
   const [all, setAll] = useState<Booking[]>([]);
 
-
   const load = useCallback(async () => {
     const carBookings = await getBookingsFromBackend();
 
@@ -127,51 +119,25 @@ export default function HomeTab() {
     const userId = p.userId;
 
     let flatBookings: Booking[] = [];
+
     if (typeof userId === "number") {
       try {
-        const [rows, local] = await Promise.all([
-          getUserFlatBookings(userId),
-          getFlatlyBookings(),
-        ]);
-
-        const localById = new Map(local.map((r) => [r.flatBookingId, r]));
-        const liveIds = new Set<string>();
-
-        // Live partner bookings (optionally marked cancelled if local says so)
+        const rows = await getUserFlatBookings(userId);
         flatBookings = (Array.isArray(rows) ? rows : [])
-          .map((dto) => {
-            const flatBookingId = String(dto?.booking?.id ?? "").trim();
-            if (!flatBookingId) return null;
-
-            liveIds.add(flatBookingId);
-
-            const localRec = localById.get(flatBookingId);
-            const cancelledAtISO =
-              localRec?.status === "CANCELLED" ? localRec.cancelledAtISO : undefined;
-
-            return mapFlatlyToBooking(dto, cancelledAtISO);
-          })
+          .map(mapFlatlyToBooking)
           .filter((x): x is Booking => !!x);
-
-        // Add locally-cancelled bookings that partner no longer returns
-        for (const rec of local) {
-          if (rec.status === "CANCELLED" && !liveIds.has(rec.flatBookingId)) {
-            flatBookings.push(mapLocalFlatlyRecordToBooking(rec));
-          }
-        }
       } catch {
-        // Partner down: show locally stored flat bookings (current + history)
-          const local = await getFlatlyBookings();
-          flatBookings = local.map(mapLocalFlatlyRecordToBooking);
+        // Partner down: show locally stored ACTIVE flat bookings
+        const local = await getFlatlyBookings();
+        flatBookings = local
+          .map(mapLocalFlatlyRecordToBooking)
+          .filter((b) => b.status === "current");
       }
     }
 
     const merged = [...carBookings, ...flatBookings];
 
-    // optional: newest first by createdAtISO (or fallback)
-    merged.sort((a, b) =>
-      String(b.createdAtISO ?? "").localeCompare(String(a.createdAtISO ?? ""))
-    );
+    merged.sort((a, b) => String(b.createdAtISO ?? "").localeCompare(String(a.createdAtISO ?? "")));
 
     setAll(merged);
   }, []);
@@ -188,22 +154,20 @@ export default function HomeTab() {
   );
 
   useEffect(() => {
-    if (section === "current" || section === "history") {
-      setSelected(section);
-    }
+    if (section === "current" || section === "history") setSelected(section);
   }, [section]);
 
-  const bookings = useMemo(
-    () => all.filter((b) => b.status === selected),
-    [all, selected]
-  );
+  // ✅ Flatly cancelled should never show. History tab = only car history.
+  const bookings = useMemo(() => all.filter((b) => b.status === selected), [all, selected]);
 
   async function onCancel(id: string) {
     const isFlatly = id.startsWith("flatly-");
 
     Alert.alert(
       "Cancel booking?",
-      "Are you sure? This will move it to History as Cancelled.",
+      isFlatly
+        ? "Are you sure? The Flatly booking will be cancelled and will disappear from your list."
+        : "Are you sure? This will move it to History as Cancelled.",
       [
         { text: "No", style: "cancel" },
         {
@@ -213,68 +177,47 @@ export default function HomeTab() {
             try {
               if (isFlatly) {
                 const flatBookingId = flatlyIdFromUiId(id);
-
                 if (!flatBookingId) {
                   Alert.alert("Cancel failed", "Invalid Flatly booking id.");
                   return;
                 }
 
-                // Persist a minimal snapshot so cancelled bookings never disappear
-                const b = all.find((x) => x.id === id);
-                if (b?.flat) {
-                  await upsertFlatlyBooking({
-                    flatBookingId,
-                    dateFromDayISO: dateOnly(b.startDate),
-                    dateToDayISO: dateOnly(b.endDate),
-                    flatSnapshot: {
-                      title: "Flat",
-                      addressLine: b.flat.address,
-                      city: "",
-                      imageUrls: b.flat.images ?? [],
-                    },
-                  });
-                }
-
                 try {
                   await cancelFlatlyBooking(flatBookingId);
                 } catch (e: any) {
-                  // ✅ 422 = we messed up contacting partner
                   if (e instanceof ApiError && e.status === 422) {
                     Alert.alert(
                       "Cancel failed",
                       "There was a mistake contacting the partner API (422). Your booking was NOT cancelled."
                     );
-                    return; // ✅ stays in current
+                    return;
                   }
 
                   Alert.alert(
                     "Cancel failed",
                     "Flatly partner API seems unavailable right now (or booking was not found). Please try again later."
                   );
-                  return; // ✅ stays in current
-                }
-
-                // ✅ Only move to history on SUCCESS
-                await markFlatlyCancelled(flatBookingId);
-              }
-                else {
-                // Carly car cancel
-                try {
-                  await cancelCarBookingOnBackend(id);
-                } catch (e: any) {
-                  Alert.alert(
-                    "Cancel failed",
-                    e?.message ?? "Could not cancel car booking."
-                  );
                   return;
                 }
+
+                // ✅ remove from local storage + UI immediately
+                await removeFlatlyBooking(flatBookingId);
+                setAll((prev) => prev.filter((b) => b.id !== id));
+                Alert.alert("Cancelled", "Your Flat booking was cancelled.");
+                return;
               }
 
-              // Refresh UI after successful cancel
+              // Carly car cancel
+              try {
+                await cancelCarBookingOnBackend(id);
+              } catch (e: any) {
+                Alert.alert("Cancel failed", e?.message ?? "Could not cancel car booking.");
+                return;
+              }
+
               await load();
               Alert.alert("Cancelled", "Your booking was cancelled.");
             } catch (e: any) {
-              // Last-resort catch so nothing becomes "Uncaught (in promise)"
               Alert.alert("Cancel failed", e?.message ?? "Unknown error");
             }
           },
@@ -288,10 +231,7 @@ export default function HomeTab() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Home</Text>
 
-        <Pressable
-          style={styles.profileButton}
-          onPress={() => router.push("/profile/settings")}
-        >
+        <Pressable style={styles.profileButton} onPress={() => router.push("/profile/settings")}>
           <Text style={styles.profileButtonText}>Profile settings</Text>
         </Pressable>
       </View>
@@ -320,11 +260,7 @@ export default function HomeTab() {
         </View>
       </View>
 
-      <ScrollView
-        style={styles.body}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.body} contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
         {bookings.map((b) => (
           <BookingCard
             key={b.id}
@@ -362,36 +298,7 @@ function BookingCard({
 
   return (
     <View style={styles.card}>
-      {booking.car && booking.flat ? (
-        <>
-          <CarCardView
-            title={`${booking.car.brand} ${booking.car.model}`}
-            subtitle={carSubtitle}
-            images={booking.car.images}
-            fallbackSource={require("../../assets/images/no-images.png")}
-            metaLeft={booking.car.fuelType ? `⛽ ${booking.car.fuelType}` : "🚗 Car"}
-            metaRight={cancelled ? "❌ Cancelled" : "✅ Booked"}
-            footerLeft={
-              typeof booking.car.pricePerDay === "number" && booking.car.currency
-                ? `${booking.car.pricePerDay} ${booking.car.currency} / day`
-                : undefined
-            }
-            imageHeight={200}
-          />
-
-          <View style={styles.sectionDivider} />
-
-          <CarCardView
-            title={booking.flat.address}
-            subtitle={"Flat"}
-            images={booking.flat.images}
-            fallbackSource={require("../../assets/images/no-images.png")}
-            metaLeft={"🏠 Flat"}
-            metaRight={cancelled ? "❌ Cancelled" : "✅ Booked"}
-            imageHeight={200}
-          />
-        </>
-      ) : booking.car ? (
+      {booking.car ? (
         <CarCardView
           title={`${booking.car.brand} ${booking.car.model}`}
           subtitle={carSubtitle}
@@ -495,26 +402,11 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  sectionDivider: {
-    height: 1,
-    backgroundColor: "#FDE68A",
-    marginVertical: 2,
-  },
-
   bottomInfo: { gap: 10 },
-  bottomRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
+  bottomRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   metaText: { color: "#6B7280", fontWeight: "800" },
-  stars: { fontWeight: "900", color: "#111827" },
 
-  cardActions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
+  cardActions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   linkText: { fontWeight: "900", color: "#2563EB" },
 
   cancelBtn: {

@@ -1,5 +1,4 @@
 package pw.react.backend.integrations.flatly;
-
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,14 +10,16 @@ import org.springframework.web.util.UriComponentsBuilder;
 import pw.react.backend.integrations.flatly.dto.*;
 import pw.react.backend.integrations.flatly.dto.requests.FlatlyCreateBookingRequest;
 import pw.react.backend.integrations.flatly.dto.responses.FlatlyCreateBookingResponse;
+import org.springframework.web.client.HttpClientErrorException;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.net.URI;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class FlatlyClient {
@@ -53,31 +54,44 @@ public class FlatlyClient {
             return ResponseEntity.ok().build();
         }
 
-        return restTemplate.exchange(
-                baseUrl + "/bookings/" + flatBookingId,
-                HttpMethod.DELETE,
-                new HttpEntity<>(jsonHeaders()),
-                Void.class
-        );
+        String url = baseUrl + "/bookings/" + flatBookingId;
+        try {
+            return restTemplate.exchange(
+                    url,
+                    HttpMethod.DELETE,
+                    new HttpEntity<>(jsonHeaders()),
+                    Void.class
+            );
+        } catch (HttpClientErrorException e) {
+            log.error(
+                    "Flatly DELETE {} failed: status={} body={} headers={}",
+                    url,
+                    e.getStatusCode().value(),
+                    e.getResponseBodyAsString(),
+                    e.getResponseHeaders()
+            );
+            return ResponseEntity.status(e.getStatusCode()).build();
+        }
     }
 
     public ResponseEntity<FlatlyBookingDto> getFlatBookingById(UUID flatBookingId) {
         if (mockMode) {
             FlatlyBookingDto b = new FlatlyBookingDto();
             b.setId(flatBookingId);
-
-            // IMPORTANT: needed so service can fetch /flats/{flatId}/images
             b.setFlatId(UUID.randomUUID());
-
             return ResponseEntity.ok(b);
         }
 
-        return restTemplate.exchange(
-                baseUrl + "/bookings/" + flatBookingId,
-                HttpMethod.GET,
-                new HttpEntity<>(jsonHeaders()),
-                FlatlyBookingDto.class
-        );
+        try {
+            return restTemplate.exchange(
+                    baseUrl + "/bookings/" + flatBookingId,
+                    HttpMethod.GET,
+                    new HttpEntity<>(jsonHeaders()),
+                    FlatlyBookingDto.class
+            );
+        } catch (HttpClientErrorException e) {
+            return ResponseEntity.status(e.getStatusCode()).build();
+        }
     }
     public ResponseEntity<FlatlyFlatDetailsDto> getFlatById(UUID flatId) {
         if (mockMode) {

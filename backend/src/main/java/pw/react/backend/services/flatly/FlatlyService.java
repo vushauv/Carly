@@ -367,7 +367,7 @@ public class FlatlyService {
 
             log.info("Flatly cancelBooking attempt {} status={}", attempt, code);
 
-            if (code == 200 || code == 404) {
+            if (code == 200 || code == 204 || code == 404) {
                 break;
             }
         }
@@ -376,8 +376,9 @@ public class FlatlyService {
             throw new IllegalStateException("Flatly cancelBooking failed: no response");
         }
 
-        if (flatlyStatus.value() != 200 && flatlyStatus.value() != 404) {
-            throw new IllegalStateException("Flatly cancelBooking failed. status=" + flatlyStatus.value());
+        int finalCode = flatlyStatus.value();
+        if (finalCode != 200 && finalCode != 204 && finalCode != 404) {
+            throw new IllegalStateException("Flatly cancelBooking failed. status=" + finalCode);
         }
 
         FlatlyResponseHandler.assertCancelBooking(flatlyStatus, flatBookingId);
