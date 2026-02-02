@@ -1,6 +1,7 @@
 package pw.react.backend.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -56,8 +57,14 @@ public class FlatlyController {
 
     // download all Flatly partner bookings (providerExternalBookingId is not null)
     @GetMapping(PathResolver.Flatly.FlatBookings)
-    public ResponseEntity<List<FlatlyBookingDetailsExtendedResponse>> getAllFlatBookings() {
-        return ResponseEntity.ok(flatlyService.getAllFlatBookings());
+    public ResponseEntity<List<FlatlyBookingDetailsExtendedResponse>> getAllFlatBookings(
+            @RequestParam(required = false) @Min(0) Integer page,
+            @RequestParam(required = false) @Min(1) Integer size
+    ) {
+        if (page == null || size == null) {
+            return ResponseEntity.ok(flatlyService.getAllFlatBookings());
+        }
+        return ResponseEntity.ok(flatlyService.getAllFlatBookings(page, size));
     }
 
     @DeleteMapping(PathResolver.Flatly.Bookings + "/{flatBookingId}")

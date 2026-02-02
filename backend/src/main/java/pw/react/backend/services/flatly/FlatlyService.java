@@ -3,6 +3,7 @@ package pw.react.backend.services.flatly;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pw.react.backend.domain.booking.Booking;
@@ -246,6 +247,11 @@ public class FlatlyService {
         for (Booking b : all) {
             if (!hasFlatPart(b)) continue;
 
+            // skip cancelled flat bookings - after successful Cancellation, Flatly deletes the records and they are
+            // not available to query - trying to get the booking by its id will result in 422
+            String flatStatus = b.getFlatBookingStatus() != null ? b.getFlatBookingStatus().getName() : null;
+            if (flatStatus != null && "CANCELLED".equalsIgnoreCase(flatStatus)) continue;
+
             UUID flatlyBookingId = b.getProviderExternalBookingId();
             if (flatlyBookingId == null) continue;
 
@@ -267,6 +273,40 @@ public class FlatlyService {
 
         List<FlatlyBookingDetailsExtendedResponse> out = new ArrayList<>();
         for (Booking b : all) {
+            if (!hasFlatPart(b)) continue;
+
+            UUID flatlyBookingId = b.getProviderExternalBookingId();
+            if (flatlyBookingId == null) continue;
+
+            try {
+                FlatlyBookingDetailsResponse base = getFlatBookingDetailsWithImages(flatlyBookingId);
+
+                FlatlyBookingDetailsExtendedResponse ext = new FlatlyBookingDetailsExtendedResponse();
+                ext.setBooking(base.getBooking());
+                ext.setFlat(base.getFlat());
+                ext.setFlatImages(base.getFlatImages());
+                ext.setUserId(b.getUser() != null ? b.getUser().getUserId() : null);
+                ext.setFlatBookingStatus(b.getFlatBookingStatus() != null ? b.getFlatBookingStatus().getName() : null);
+
+                out.add(ext);
+            } catch (Exception ex) {
+                log.warn("Skipping Flatly booking {} due to error: {}", flatlyBookingId, ex.getMessage());
+            }
+        }
+
+        return out;
+    }
+
+    @Transactional(readOnly = true)
+    public List<FlatlyBookingDetailsExtendedResponse> getAllFlatBookings(int page, int size) {
+        var pageRequest = PageRequest.of(page, size);
+        var paged = bookingRepository
+                .findAllByProviderExternalBookingIdIsNotNullOrderByBookingIdDesc(pageRequest);
+        List<Booking> content = paged.getContent();
+        if (content.isEmpty()) return List.of();
+
+        List<FlatlyBookingDetailsExtendedResponse> out = new ArrayList<>();
+        for (Booking b : content) {
             if (!hasFlatPart(b)) continue;
 
             UUID flatlyBookingId = b.getProviderExternalBookingId();

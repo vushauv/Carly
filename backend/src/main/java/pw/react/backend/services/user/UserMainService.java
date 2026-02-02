@@ -80,6 +80,37 @@ public class UserMainService implements UserService {
     }
 
     @Override
+    public List<User> searchUsers(int pageNumber, int pageSize, Integer userId, String name, String email) {
+        String n = normalize(name);
+        String e = normalize(email);
+
+        return userRepository.searchUsers(
+                userId,
+                n,
+                e,
+                PageRequest.of(pageNumber, pageSize)
+        );
+    }
+
+    @Override
+    public List<User> searchUsers(Integer userId, String name, String email, int pageNumber, int pageSize) {
+        return userRepository.searchUsers(
+                userId,
+                (name == null || name.isBlank()) ? null : name,
+                (email == null || email.isBlank()) ? null : email,
+                PageRequest.of(pageNumber, pageSize)
+        );
+    }
+
+
+    private String normalize(String s) {
+        if (s == null) return null;
+        String t = s.trim();
+        return t.isEmpty() ? null : t;
+    }
+
+
+    @Override
     public void updateUser(Integer id, UpdateUserRequest request) {
 
         User user = getUserByID(id);
