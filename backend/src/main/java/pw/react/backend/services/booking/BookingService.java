@@ -6,6 +6,7 @@ import pw.react.backend.dto.request.booking.BookingSearchCriteria;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,4 +20,5 @@ public interface BookingService
     List<Booking> getBookingsPage(int page, int size);
     Page<Booking> search(BookingSearchCriteria criteria, int page, int size);
     void cancelCarBooking(Integer bookingId) throws ResourceNotFoundException;
+    BigDecimal calculateBookingTotalPrice(Integer bookingId);
 }

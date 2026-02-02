@@ -15,6 +15,7 @@ import pw.react.backend.exceptions.custom.CarBookingConflictException;
 import pw.react.backend.repositories.booking.BookingRepository;
 import org.springframework.data.domain.Page;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.chrono.ChronoLocalDateTime;
@@ -107,6 +108,7 @@ public class BookingMainService implements BookingService {
                         .orElseThrow(() -> new IllegalStateException("Default location missing"));
                 booking.setReturnLocation(defaultReturn);
             }
+            booking.setCarTotalPrice(carService.calculateTotalPrice(carId, normalisedRange));
         }
         return bookingRepository.saveAll(bookings);
     }
@@ -168,5 +170,16 @@ public class BookingMainService implements BookingService {
         bookingRepository.save(booking);
 
         log.info("Car booking cancelled: bookingId={}", bookingId);
+    }
+
+    @Override
+    public BigDecimal calculateBookingTotalPrice(Integer bookingId) {
+        var booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() ->new ResourceNotFoundException("Booking with id " + bookingId + " not found"));
+        var carTotalPrice = booking.getCarTotalPrice();
+        var flatTotalPrice = booking.getFlatTotalPrice();
+        flatTotalPrice = flatTotalPrice == null ? BigDecimal.ZERO : flatTotalPrice;
+
+        return carTotalPrice.add(flatTotalPrice);
     }
 }

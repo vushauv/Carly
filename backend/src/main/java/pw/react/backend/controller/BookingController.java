@@ -144,6 +144,7 @@ public class    BookingController {
 
             updatedBooking.setCarBookingDateFrom(normalised.getFrom());
             updatedBooking.setCarBookingDateTo(normalised.getTo());
+            existing.setCarTotalPrice(carService.calculateTotalPrice(carId, normalised));
         }
         // We merge update only if car is available
         // Merge only provided fields (non-null)

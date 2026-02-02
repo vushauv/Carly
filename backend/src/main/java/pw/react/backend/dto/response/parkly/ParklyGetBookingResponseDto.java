@@ -6,6 +6,7 @@ import pw.react.backend.domain.enums.BookingStatus;
 import pw.react.backend.dto.models.BookingStatusDto;
 import pw.react.backend.dto.models.LocationDto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -21,4 +22,5 @@ public class ParklyGetBookingResponseDto {
     private LocationDto returnLocation;
 
     private Integer carId;
+    private BigDecimal totalPrice;
 }

@@ -13,6 +13,7 @@ import pw.react.backend.dto.response.booking.BookingResponse;
 import pw.react.backend.dto.response.booking.GetBookingResponseDto;
 import pw.react.backend.utils.converters.response.DisplayNameConverter;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Mapper(componentModel = "spring",
@@ -46,6 +47,7 @@ public interface BookingMapper {
 
     // OUT:
     @Mapping(target = "id", source = "bookingId")
+    @Mapping(target = "totalPrice", source = "booking", qualifiedByName = "calculateTotalPrice")
     BookingResponse bookingToResponse(Booking booking);
 
     List<BookingResponse> bookingToResponseList(List<Booking> bookings);
@@ -59,7 +61,8 @@ public interface BookingMapper {
             @Mapping(target = "carStatus.name", source = "carBookingStatus.name", qualifiedByName = "toDisplayName"),
             @Mapping(target = "flatStatus.name", source = "flatBookingStatus.name", qualifiedByName = "toDisplayName"),
             @Mapping(target = "carStatus.id", source = "carBookingStatus.bookingStatusDictionaryId"),
-            @Mapping(target = "flatStatus.id", source = "flatBookingStatus.bookingStatusDictionaryId")
+            @Mapping(target = "flatStatus.id", source = "flatBookingStatus.bookingStatusDictionaryId"),
+            @Mapping(target = "totalPrice", source = "booking", qualifiedByName = "calculateTotalPrice")
     })
     GetBookingResponseDto bookingToGetBookingResponse(Booking booking);
 
@@ -113,5 +116,14 @@ public interface BookingMapper {
         BookingStatusDictionary s = new BookingStatusDictionary();
         s.setBookingStatusDictionaryId(id);
         return s;
+    }
+
+    @Named("calculateTotalPrice")
+    default BigDecimal calculateTotalPrice(Booking booking) {
+        BigDecimal carTotalPrice = booking.getCarTotalPrice();
+        BigDecimal flatTotalPrice = booking.getFlatTotalPrice();
+
+        if (flatTotalPrice == null) flatTotalPrice = BigDecimal.ZERO;
+        return carTotalPrice.add(flatTotalPrice);
     }
 }

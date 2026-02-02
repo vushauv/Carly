@@ -20,6 +20,7 @@ import pw.react.backend.domain.car.CarToFeatureLink;
 import pw.react.backend.domain.enums.*;
 import pw.react.backend.domain.user.User;
 import pw.react.backend.domain.user.UserTypeDictionary;
+import pw.react.backend.dto.models.DateRange;
 import pw.react.backend.repositories.LocationRepository;
 import pw.react.backend.repositories.booking.BookingRepository;
 import pw.react.backend.repositories.car.CarFeatureDictionaryRepository;
@@ -29,6 +30,7 @@ import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.repositories.user.UserTypeDictionaryRepository;
 import pw.react.backend.repositories.booking.BookingStatusDictionaryRepository;
 import pw.react.backend.services.car.CarImageService;
+import pw.react.backend.services.car.CarService;
 import pw.react.backend.utils.files.bootstrap.MockMultipartFile;
 
 import java.io.IOException;
@@ -53,6 +55,7 @@ public class DataSeeder implements ApplicationRunner {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CarImageService carImageService;
+    private final CarService carService;
 
     @Override
     @Transactional
@@ -364,6 +367,7 @@ public class DataSeeder implements ApplicationRunner {
         b.setCarBookingStatus(carBookingStatus);
         b.setCarBookingDateFrom(from);
         b.setCarBookingDateTo(to);
+        b.setCarTotalPrice(carService.calculateTotalPrice(car.getCarId(), new DateRange(from, to)));
         b.setEnabled(true);
         return b;
     }

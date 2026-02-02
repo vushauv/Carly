@@ -179,11 +179,11 @@ public class CarMainService implements CarService {
     }
 
     // Method to be used to calculate the total price of the car on the booking
-    public BigDecimal calculateTotalPrice(Car car, DateRange dateRange)
+    public BigDecimal calculateTotalPrice(Integer carId, DateRange dateRange)
         throws ResourceNotFoundException
     {
-        Car managedCar = carRepository.findById(car.getCarId())
-                .orElseThrow(() -> new ResourceNotFoundException("Car with id " + car.getCarId() + " was not found."));
+        Car managedCar = carRepository.findById(carId)
+                .orElseThrow(() -> new ResourceNotFoundException("Car with id " + carId + " was not found."));
 
         var price = managedCar.getPrice();
         return price == null ? null : price.multiply(BigDecimal.valueOf(
