@@ -72,6 +72,7 @@ const FlatlyBookings = () => {
       {
         id: "cancel",
         label: "Cancel",
+        color: "danger",
         onClick: (flatBooking: FlatBooking) => handleFlatBookingAction("cancel", flatBooking),
       },
     ],
@@ -88,7 +89,7 @@ const FlatlyBookings = () => {
             {flatBooking.booking.id.substring(0, 8)}...
           </span>
         ),
-        width: "15%",
+        width: "10%",
       },
       {
         id: "flat",
@@ -101,18 +102,28 @@ const FlatlyBookings = () => {
             </div>
           </div>
         ),
-        width: "25%",
+        width: "15%",
       },
+
       {
-        id: "dates",
-        header: "Stay Period",
+        id: "check-in",
+        header: "Check-in",
         cell: (flatBooking: FlatBooking) => (
           <div className={styles.dates}>
-            <div>Check-in: {new Date(flatBooking.booking.checkInDate).toLocaleDateString()}</div>
-            <div>Check-out: {new Date(flatBooking.booking.checkOutDate).toLocaleDateString()}</div>
+            {new Date(flatBooking.booking.checkInDate).toLocaleDateString()}
           </div>
         ),
-        width: "20%",
+        width: "15%",
+      },
+      {
+        id: "check-out",
+        header: "Check-out",
+        cell: (flatBooking: FlatBooking) => (
+          <div className={styles.dates}>
+            {new Date(flatBooking.booking.checkOutDate).toLocaleDateString()}
+          </div>
+        ),
+        width: "15%",
       },
       {
         id: "guests",
@@ -134,14 +145,7 @@ const FlatlyBookings = () => {
         ),
         width: "15%",
       },
-      {
-        id: "source",
-        header: "Source",
-        cell: (flatBooking: FlatBooking) => (
-          <span>{flatBooking.booking.source}</span>
-        ),
-        width: "15%",
-      },
+      
     ],
     []
   );

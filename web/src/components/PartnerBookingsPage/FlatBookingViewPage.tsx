@@ -102,7 +102,7 @@ const FlatBookingViewPage = () => {
       <div className={styles.header}>
         <h1 className={styles.title}>Flat Booking Details</h1>
         <div className={styles.actions}>
-          <Button label="Cancel Booking" onClick={handleCancelFlatBooking} disabled={canceling} />
+          <Button label="Cancel" color="danger"  onClick={handleCancelFlatBooking} disabled={canceling} />
           <Button label="Back to Partner Bookings" onClick={() => navigate("/partner-bookings")} />
         </div>
       </div>

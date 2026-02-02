@@ -17,12 +17,14 @@
   font-size: 2rem;
   font-weight: bold;
   color: #333;
-  margin: 0;
+  margin-right: 30px;
+  
 }
 
 .actions {
   display: flex;
   gap: 12px;
+  
 }
 
 .content {
@@ -49,7 +51,7 @@
 
 .detailsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
   gap: 15px;
 }
 
