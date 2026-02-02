@@ -19,6 +19,7 @@ import pw.react.backend.dto.request.booking.CreateBookingRequestDto;
 import pw.react.backend.dto.request.booking.UpdateBookingRequestDto;
 import pw.react.backend.dto.response.booking.BookingResponse;
 import pw.react.backend.dto.response.booking.GetBookingResponseDto;
+import pw.react.backend.dto.response.booking.UpdateBookingResponseDto;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.exceptions.custom.CarBookingConflictException;
 import pw.react.backend.services.booking.BookingService;
@@ -100,8 +101,7 @@ public class    BookingController {
         // Parse dates (ISO-8601 LocalDateTime, e.g. 2026-02-01T10:00:00)
         java.time.LocalDateTime from = DateUtils.parseLocalDateTime(dateFrom);
         java.time.LocalDateTime to = DateUtils.parseLocalDateTime(dateTo);
-        var criteria = bookingCriteriaMapper.toBookingSearchCriteria(bookingId, status,
-                to, from, userId);
+        var criteria = bookingCriteriaMapper.toBookingSearchCriteria(bookingId, status, to, from, userId);
 
         List<GetBookingResponseDto> result = bookingMapper.bookingToGetBookingResponseList(
                 bookingService.search(criteria, resolvedPage, resolvedSize).getContent()
@@ -112,7 +112,7 @@ public class    BookingController {
 
     @PutMapping(path = "/{bookingId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateBooking(
+    public ResponseEntity<UpdateBookingResponseDto> updateBooking(
             @RequestHeader HttpHeaders headers,
             @PathVariable Integer bookingId,
             @RequestBody UpdateBookingRequestDto updatedBooking
@@ -139,18 +139,20 @@ public class    BookingController {
 
             DateRange normalised = DateUtils.validateAndNormalise(dateRange);
 
-            if (!carService.checkCarAvailability(carId, normalised)) {
+            if (!carService.checkCarAvailability(carId, bookingId ,normalised)) {
                 throw new CarBookingConflictException(carId, normalised);
             }
 
             updatedBooking.setCarBookingDateFrom(normalised.getFrom());
             updatedBooking.setCarBookingDateTo(normalised.getTo());
+            existing.setCarTotalPrice(carService.calculateTotalPrice(carId, normalised));
         }
         // We merge update only if car is available
         // Merge only provided fields (non-null)
         bookingMapper.applyUpdate(updatedBooking, existing);
         bookingService.updateBooking(bookingId, existing);
         log.info(String.format("Booking with id %s successfully modified.", existing.getBookingId()));
+        return ResponseEntity.ok(bookingMapper.toUpdateBookingResponseDto(existing));
     }
 
     @DeleteMapping(path = "/{bookingId}")
@@ -177,17 +179,6 @@ public class    BookingController {
         logHeaders(headers);
         bookingService.cancelCarBooking(bookingId);
     }
-
-    //cancelling flat booking delegated to FlatlyController
-//    @PostMapping(path = "/{bookingId}/cancel-flat")
-//    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    public void cancelFlatBooking(
-//            @RequestHeader HttpHeaders headers,
-//            @PathVariable Integer bookingId
-//    ) {
-//        logHeaders(headers);
-//        bookingService.cancelFlatBooking(bookingId);
-//    }
 
     private void logHeaders(@RequestHeader HttpHeaders headers) {
         log.info("Controller request headers {}",

@@ -7,6 +7,8 @@ import org.hibernate.annotations.Where;
 import pw.react.backend.domain.Auditable;
 import pw.react.backend.domain.car.Car;
 import pw.react.backend.domain.user.User;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -59,4 +61,10 @@ public class Booking extends Auditable {
     // TODO: must be non-nullable
     @Column(name = "CarBookingDateTo", nullable = false)
     private LocalDateTime carBookingDateTo;
+
+    @Column(name = "carTotalPrice", nullable = false)
+    private BigDecimal carTotalPrice;
+
+    @Column(name = "flatTotalPrice", nullable = true)
+    private BigDecimal flatTotalPrice;
 }

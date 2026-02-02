@@ -15,6 +15,7 @@ import pw.react.backend.repositories.car.*;
 import pw.react.backend.repositories.car.models.CarImageUrlRow;
 import pw.react.backend.services.car.model.CarSearchCriteria;
 import pw.react.backend.utils.DateUtils;
+import pw.react.backend.utils.converters.response.DisplayNameConverter;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -147,12 +148,13 @@ public class CarMainService implements CarService {
                 searchCriteria);
     }
 
-    public boolean checkCarAvailability(Integer carId, DateRange dateRange)
+    public boolean checkCarAvailability(Integer carId,Integer bookingId,DateRange dateRange)
             throws ResourceNotFoundException
     {
         if(!carRepository.existsById(carId))
             throw new ResourceNotFoundException("Car with id " + carId + " was not found.");
         var res = carRepository.checkCarAvailability(carId,
+                bookingId,
                 dateRange.getFrom(), dateRange.getTo(),
                 BookingStatus.CANCELLED.getCode());
 
@@ -177,14 +179,16 @@ public class CarMainService implements CarService {
     }
 
     // Method to be used to calculate the total price of the car on the booking
-    public BigDecimal calculateTotalPrice(Car car, DateRange dateRange)
+    public BigDecimal calculateTotalPrice(Integer carId, DateRange dateRange)
         throws ResourceNotFoundException
     {
-        Car managedCar = carRepository.findById(car.getCarId())
-                .orElseThrow(() -> new ResourceNotFoundException("Car with id " + car.getCarId() + " was not found."));
+        Car managedCar = carRepository.findById(carId)
+                .orElseThrow(() -> new ResourceNotFoundException("Car with id " + carId + " was not found."));
 
         var price = managedCar.getPrice();
-        return price == null ? null : price.multiply(BigDecimal.valueOf(this.calculateDayDifference(dateRange)));
+        return price == null ? null : price.multiply(BigDecimal.valueOf(
+                DateUtils.calculateDayDifference(dateRange.getFrom(), dateRange.getTo()))
+        );
     }
 
     public Map<Integer, List<Integer>> linkCarImages(List<Car> cars)
@@ -203,12 +207,6 @@ public class CarMainService implements CarService {
     {
         if(minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0)
             throw new BadRequestException("minPrice cannot be greater than maxPrice");
-    }
-
-    private long calculateDayDifference(DateRange dateRange)
-    {
-        // Computes a ceiling - if a days is touched - counts as till the end of the day
-        return DateUtils.calculateDayDifference(dateRange.getFrom(), dateRange.getTo()) + 1;
     }
 
     private List<Integer> searchCarsByFeatures(CarSearchCriteria searchCriteria,
@@ -353,7 +351,8 @@ public class CarMainService implements CarService {
         var resolvedList = new ArrayList<CarFeature>();
         for(var feature: requestedCarFeatures) {
             var dictId = feature.getDictionary().getCarFeatureDictionaryId();
-            var resolved = carFeatureRepository.findFeatureBy(dictId, feature.getValue());
+            var mappedName = DisplayNameConverter.fromDisplayName(feature.getValue());
+            var resolved = carFeatureRepository.findFeatureBy(dictId, mappedName);
             resolved.ifPresent(resolvedList::add);
         }
         return resolvedList;

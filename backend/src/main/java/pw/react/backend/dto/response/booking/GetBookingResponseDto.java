@@ -9,6 +9,7 @@ import pw.react.backend.dto.models.LocationDto;
 import pw.react.backend.utils.JsonDateDeserializer;
 import pw.react.backend.utils.JsonDateSerializer;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -35,5 +36,7 @@ public class GetBookingResponseDto {
     @JsonDeserialize(using = JsonDateDeserializer.class)
     @JsonSerialize(using = JsonDateSerializer.class)
     private LocalDateTime carBookingDateTo;
+
+    private BigDecimal totalPrice;
 }
 

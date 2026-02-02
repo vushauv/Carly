@@ -5,6 +5,7 @@ import pw.react.backend.dto.models.DateRange;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
 public class DateUtils {
@@ -35,14 +36,13 @@ public class DateUtils {
     private static DateRange normaliseToWholeDays(DateRange dateRange)
     {
         LocalDate fromDate = dateRange.getFrom().toLocalDate();
-        LocalDate toDate   = dateRange.getTo().toLocalDate();
+        LocalDateTime toDate = dateRange.getTo().truncatedTo(ChronoUnit.SECONDS);
 
         LocalDateTime from = fromDate.atStartOfDay(); // 00:00
 
-        LocalDateTime to = dateRange.getTo().toLocalTime()
-                .equals(java.time.LocalTime.MIDNIGHT)
-                ? dateRange.getTo()
-                : toDate.plusDays(1).atStartOfDay();
+        LocalDateTime to = toDate.toLocalTime().equals(LocalTime.MIDNIGHT)
+                ? toDate
+                : toDate.toLocalDate().plusDays(1).atStartOfDay();
         // normalize end only if needed
         // next day 00:00 (exclusive)
 
