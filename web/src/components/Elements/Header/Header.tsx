@@ -33,7 +33,7 @@ const Header = () => {
         {isLoggedIn ? (
           <div className={styles.profileSection}>
             <span className={styles.userEmail}>{user?.email}</span>
-            <Button label="Log Out" onClick={handleLogout}>Logout</Button>
+            <Button className={styles.logOutButton} label="Log Out" onClick={handleLogout}>Logout</Button>
           </div>
         ) : (
           <div className={styles.emptyDiv}/> 
