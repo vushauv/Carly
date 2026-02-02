@@ -20,21 +20,26 @@ export const carService = {
       // Create searchParams object for the API matching the required structure
       const searchParams: any = {
         features: {
+          color: filters.color || undefined,
           brand: filters.brand || undefined,
           model: filters.model || undefined,
-          color: filters.color || undefined,
           fuelType: filters.fuelType || undefined,
           status: filters.status || undefined
-        },
-        availability: filters.availability || undefined
+        }
       };
 
       // Add date range if provided
       if (filters.dateFrom || filters.dateTo) {
         searchParams.date = {
-          from: filters.dateFrom ? `${filters.dateFrom}T00:00:00.000Z` : undefined,
-          to: filters.dateTo ? `${filters.dateTo}T23:59:59.999Z` : undefined
+          from: filters.dateFrom ? `${filters.dateFrom}T08:49:22.761Z` : undefined,
+          to: filters.dateTo ? `${filters.dateTo}T08:49:22.761Z` : undefined
         };
+      }
+
+      // Add price range if provided
+      if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+        searchParams.minPrice = filters.minPrice || 0;
+        searchParams.maxPrice = filters.maxPrice || 0;
       }
       
       // Remove undefined values from features
@@ -49,13 +54,8 @@ export const carService = {
         delete searchParams.date;
       }
 
-      // Remove availability if undefined
-      if (searchParams.availability === undefined) {
-        delete searchParams.availability;
-      }
-
       // Only add searchParams if there are actual filters
-      if (Object.keys(searchParams.features).length > 0 || searchParams.availability || searchParams.date) {
+      if (Object.keys(searchParams.features).length > 0 || searchParams.date || searchParams.minPrice !== undefined || searchParams.maxPrice !== undefined) {
         params.append('searchParams', JSON.stringify(searchParams));
       }
     }
@@ -276,7 +276,7 @@ const compressImage = async (
       "image/jpeg",
       quality
     )
-  );
+  ));
 
   return new File([blob], file.name.replace(/\.\w+$/, ".jpg"), {
     type: "image/jpeg",

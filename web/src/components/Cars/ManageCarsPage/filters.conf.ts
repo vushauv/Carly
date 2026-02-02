@@ -8,9 +8,10 @@ type CarFilters = {
     color: string;
     fuelType: string;
     status: string;
-    availability: string;
     dateFrom: string;
     dateTo: string;
+    minPrice: string;
+    maxPrice: string;
 };
 
 const defaultCarFilters: CarFilters = {
@@ -19,9 +20,10 @@ const defaultCarFilters: CarFilters = {
     color: "",
     fuelType: "",
     status: "",
-    availability: "",
     dateFrom: "",
     dateTo: "",
+    minPrice: "",
+    maxPrice: "",
 };
 
 type CarFilterKey =
@@ -30,9 +32,10 @@ type CarFilterKey =
     | "color"
     | "fuelType"
     | "status"
-    | "availability"
     | "dateFrom"
-    | "dateTo";
+    | "dateTo"
+    | "minPrice"
+    | "maxPrice";
 
 // Helper function to normalize reference names
 function normalizeName(s: string): string {
@@ -41,7 +44,7 @@ function normalizeName(s: string): string {
 
 // Helper function to create options from reference data
 const createOptionsFromReference = (ref?: ReferenceDictionary): { value: string; label: string }[] => {
-    if (!ref) return [];
+    if (!ref) return [{ value: "", label: "All" }];
     return [
         { value: "", label: "All" },
         ...ref.values.map(value => ({ value, label: value }))
@@ -124,19 +127,6 @@ export const useCarFilterFields = (): FilterFieldDef<CarFilterKey>[] => {
             options: createOptionsFromReference(refs.status),
         },
         {
-            key: "availability",
-            label: "Availability",
-            type: "select",
-            placeholder: "Select availability",
-            hint: "Filter by availability status",
-            errorMessage: "Please select a valid availability.",
-            options: [
-                { value: "", label: "All" },
-                { value: "AVAILABLE", label: "Available" },
-                { value: "RENTED", label: "Rented" },
-            ],
-        },
-        {
             key: "dateFrom",
             label: "Available From",
             type: "date",
@@ -151,6 +141,22 @@ export const useCarFilterFields = (): FilterFieldDef<CarFilterKey>[] => {
             placeholder: "",
             hint: "Filter cars available until this date",
             errorMessage: "Please enter a valid date.",
+        },
+        {
+            key: "minPrice",
+            label: "Min Price",
+            type: "number",
+            placeholder: "e.g. 50",
+            hint: "Minimum price per day",
+            errorMessage: "Please enter a valid minimum price.",
+        },
+        {
+            key: "maxPrice",
+            label: "Max Price",
+            type: "number",
+            placeholder: "e.g. 200",
+            hint: "Maximum price per day",
+            errorMessage: "Please enter a valid maximum price.",
         },
     ];
 };

@@ -36,18 +36,11 @@ type CarFilterKey =
     | "priceMax";
 
 const carFilterFields: FilterFieldDef<CarFilterKey>[] = [
-    {
-        key: "carId",
-        label: "Car ID",
-        type: "text",
-        placeholder: "e.g. 123",
-        hint: "Search by car ID",
-        errorMessage: "Please enter a valid car ID.",
-    },
+
     {
         key: "brand",
         label: "Brand",
-        type: "text",
+        type: "select",
         placeholder: "e.g. Toyota, BMW",
         hint: "Search by car brand",
         errorMessage: "Please enter a valid brand.",
@@ -55,7 +48,7 @@ const carFilterFields: FilterFieldDef<CarFilterKey>[] = [
     {
         key: "model",
         label: "Model",
-        type: "text",
+        type: "select",
         placeholder: "e.g. Yaris, A4",
         hint: "Search by car model",
         errorMessage: "Please enter a valid model.",
@@ -63,7 +56,7 @@ const carFilterFields: FilterFieldDef<CarFilterKey>[] = [
     {
         key: "color",
         label: "Color",
-        type: "text",
+        type: "select",
         placeholder: "e.g. Red, Blue",
         hint: "Search by car color",
         errorMessage: "Please enter a valid color.",
@@ -71,7 +64,7 @@ const carFilterFields: FilterFieldDef<CarFilterKey>[] = [
     {
         key: "fuelType",
         label: "Fuel Type",
-        type: "text",
+        type: "select",
         placeholder: "e.g. Petrol, Diesel, Electric",
         hint: "Search by fuel type",
         errorMessage: "Please enter a valid fuel type.",
@@ -79,19 +72,12 @@ const carFilterFields: FilterFieldDef<CarFilterKey>[] = [
     {
         key: "status",
         label: "Status",
-        type: "text",
+        type: "select",
         placeholder: "e.g. Available, Rented",
         hint: "Search by car status",
         errorMessage: "Please enter a valid status.",
     },
-    {
-        key: "availability",
-        label: "Availability",
-        type: "text",
-        placeholder: "AVAILABLE / RENTED",
-        hint: "Filter by availability status",
-        errorMessage: "Please enter AVAILABLE or RENTED.",
-    },
+
     {
         key: "priceMin",
         label: "Min Price",

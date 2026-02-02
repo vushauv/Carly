@@ -35,7 +35,8 @@ export interface CarSearchFilters {
   model?: string;
   fuelType?: string;
   status?: string;
-  availability?: "AVAILABLE" | "RENTED";
-  priceMin?: number;
-  priceMax?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  minPrice?: number;
+  maxPrice?: number;
 }

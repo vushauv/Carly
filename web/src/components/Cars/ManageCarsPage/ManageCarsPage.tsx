@@ -31,9 +31,8 @@ const ManageCarsPage = () => {
         color: filtersToApply.color,
         fuelType: filtersToApply.fuelType,
         status: filtersToApply.status,
-        availability: filtersToApply.availability as "AVAILABLE" | "RENTED" | undefined,
-        priceMin: filtersToApply.priceMin ? parseFloat(filtersToApply.priceMin) : undefined,
-        priceMax: filtersToApply.priceMax ? parseFloat(filtersToApply.priceMax) : undefined,
+        minPrice: filtersToApply.priceMin ? parseFloat(filtersToApply.priceMin) : undefined,
+        maxPrice: filtersToApply.priceMax ? parseFloat(filtersToApply.priceMax) : undefined,
       };
 
       // Apply filters if any are provided
@@ -95,9 +94,8 @@ const ManageCarsPage = () => {
             color: activeFilters.color,
             fuelType: activeFilters.fuelType,
             status: activeFilters.status,
-            availability: activeFilters.availability as "AVAILABLE" | "RENTED" | undefined,
-            priceMin: activeFilters.priceMin ? parseFloat(activeFilters.priceMin) : undefined,
-            priceMax: activeFilters.priceMax ? parseFloat(activeFilters.priceMax) : undefined,
+            minPrice: activeFilters.priceMin ? parseFloat(activeFilters.priceMin) : undefined,
+            maxPrice: activeFilters.priceMax ? parseFloat(activeFilters.priceMax) : undefined,
           } : undefined
         );
 
