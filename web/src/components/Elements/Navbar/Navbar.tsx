@@ -10,7 +10,7 @@ type NavKey =
   | "partner_bookings";
 
 const navItems: { key: NavKey; label: string; to: string }[] = [
-  { key: "kpi", label: "KPI", to: "/kpi" },
+  // { key: "kpi", label: "KPI", to: "/kpi" },
   { key: "manage_bookings", label: "Manage Bookings", to: "/manage-bookings" },
   { key: "user_list", label: "User List", to: "/users" },
   { key: "manage_cars", label: "Manage Cars", to: "/cars" },

@@ -5,7 +5,6 @@ import type { FlatBooking } from "../Bookings/ManageBookingsPage/types";
 import DataTable from "../Elements/DataTable/DataTable";
 import Pagination from "../Elements/Pagination/Pagination";
 import { bookingService } from "../Bookings/ManageBookingsPage/bookingService";
-import Button from "../Elements/Button/Button";
 
 const PAGE_SIZE = 3;
 
