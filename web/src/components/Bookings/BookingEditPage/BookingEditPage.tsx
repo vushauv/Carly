@@ -19,8 +19,7 @@ import Input from "../../Elements/Input/Input";
 const STATUSES: BookingStatus[] = [
   "CREATED",
   "CONFIRMED",
-  "CANCELLED",
-  "FINISHED",
+  "CANCELLED"
 ];
 
 /* ---------------- form model ---------------- */
@@ -60,9 +59,9 @@ const BookingEditPage = () => {
         setForm({
           pickupLocationId: booking.pickupLocation.id,
           returnLocationId: booking.returnLocation.id,
-          carBookingStatus: booking.carStatus.name as BookingStatus,
+          carBookingStatus: booking.carStatus.name.toUpperCase() as BookingStatus,
           flatBookingStatus:
-            (booking.flatStatus as BookingStatus) ?? "CREATED",
+            (booking.flatStatus?.toUpperCase() as BookingStatus) ?? "CREATED",
           // carBookingDateFrom: stripTimezone(booking.carBookingDateFrom),
           // carBookingDateTo: stripTimezone(booking.carBookingDateTo),
           carBookingDateFrom: toLocalStart(stripTimezone(booking.carBookingDateFrom).split("T")[0]),

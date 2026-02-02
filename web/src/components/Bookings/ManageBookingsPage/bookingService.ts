@@ -84,7 +84,6 @@ export const bookingService = {
   
     console.log(`Updating booking ${bookingId}:`);
   
-    data.carBookingStatus = data.carBookingStatus.toUpperCase();
   
     console.log(data);
   
