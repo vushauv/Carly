@@ -5,7 +5,7 @@ import { getProfile } from "./profileStorage";
 
 /**
  * Legacy global keys (BAD): shared across all users on device.
- * We'll delete these on login/register so nothing "seeds" new accounts.
+ * We delete these on login/register so nothing "seeds" new accounts.
  */
 const LEGACY_KEY_LIKED_CARS = "carly.likedCars.v2";
 const LEGACY_KEY_DISLIKED_IDS = "carly.dislikedCarIds.v2";
@@ -35,8 +35,11 @@ async function getUserKey(): Promise<string> {
   return "anon";
 }
 
+/**
+ * Call this on login/register to kill old global storage.
+ * (You already do this in mobile/app/index.tsx)
+ */
 export async function purgeLegacyCarPrefsGlobalKeys(): Promise<void> {
-  // This is the key fix for "new account sees seeded likes/dislikes".
   await Promise.all([
     AsyncStorage.removeItem(LEGACY_KEY_LIKED_CARS),
     AsyncStorage.removeItem(LEGACY_KEY_DISLIKED_IDS),
@@ -49,6 +52,7 @@ export type LikedCar = Pick<
   | "title"
   | "subtitle"
   | "imageUrl"
+  | "imageUrls"
   | "brand"
   | "model"
   | "fuelType"
@@ -104,6 +108,7 @@ export async function addLikedCar(car: CarCard): Promise<void> {
     title: car.title,
     subtitle: car.subtitle,
     imageUrl: car.imageUrl,
+    imageUrls: car.imageUrls,
     brand: car.brand,
     model: car.model,
     fuelType: car.fuelType,
@@ -115,7 +120,7 @@ export async function addLikedCar(car: CarCard): Promise<void> {
   // Dedup by id, newest first
   const without = current.filter((c) => c.id !== liked.id);
 
-  // ✅ correct spread (your current code has `[liked, .without]` which is broken) :contentReference[oaicite:1]{index=1}
+  // ✅ correct spread
   await writeJson(keyLiked(userKeyStr), [liked, ...without]);
 }
 

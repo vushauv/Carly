@@ -13,7 +13,7 @@ export type FlatlyBookingSnapshot = {
 };
 
 export type FlatlyBookingRecord = {
-  flatBookingId: string; // uuid (string)
+  flatBookingId: string; // uuid
   dateFromDayISO: string; // YYYY-MM-DD
   dateToDayISO: string; // YYYY-MM-DD
 
@@ -33,7 +33,7 @@ const LEGACY_KEY = "carly.flatlyBookings.v1";
  * New per-user key
  */
 function keyForUser(userKey: string) {
-  return `carly.user.${userKey}.flatlyBookings.v2`; // bump version (uuid switch)
+  return `carly.user.${userKey}.flatlyBookings.v2`;
 }
 
 async function getUserKey(): Promise<string> {
@@ -71,11 +71,16 @@ export async function purgeLegacyFlatlyBookingsGlobalKey(): Promise<void> {
 
 export async function getFlatlyBookings(): Promise<FlatlyBookingRecord[]> {
   const userKeyStr = await getUserKey();
-  const items = await readJson<FlatlyBookingRecord[]>(keyForUser(userKeyStr), []);
+  const items = await readJson<FlatlyBookingRecord[]>(
+    keyForUser(userKeyStr),
+    []
+  );
   return Array.isArray(items) ? items : [];
 }
 
-export async function upsertFlatlyBooking(rec: Omit<FlatlyBookingRecord, "createdAtISO" | "status">): Promise<void> {
+export async function upsertFlatlyBooking(
+  rec: Omit<FlatlyBookingRecord, "createdAtISO" | "status">
+): Promise<void> {
   const userKeyStr = await getUserKey();
   const now = new Date().toISOString();
 
@@ -94,6 +99,10 @@ export async function upsertFlatlyBooking(rec: Omit<FlatlyBookingRecord, "create
   await writeJson(keyForUser(userKeyStr), next);
 }
 
+/**
+ * Old behavior (kept for compatibility): marks cancelled instead of deleting.
+ * Your new rule is "delete cancelled from UI", so Home should NOT call this.
+ */
 export async function markFlatlyCancelled(flatBookingId: string): Promise<void> {
   const id = String(flatBookingId ?? "").trim();
   if (!id) return;
@@ -103,23 +112,38 @@ export async function markFlatlyCancelled(flatBookingId: string): Promise<void> 
 
   const current = await getFlatlyBookings();
 
-  // If we don't have it yet, create a minimal record so it doesn't disappear.
   const exists = current.some((b) => b.flatBookingId === id);
 
-  const next: FlatlyBookingRecord[] = (exists ? current : [
-    {
-      flatBookingId: id,
-      dateFromDayISO: "—",
-      dateToDayISO: "—",
-      status: "CREATED",
-      createdAtISO: now,
-    },
-    ...current,
-  ]).map((b) =>
-    b.flatBookingId === id
-      ? { ...b, status: "CANCELLED", cancelledAtISO: now }
-      : b
+  const next: FlatlyBookingRecord[] = (exists
+    ? current
+    : [
+        {
+          flatBookingId: id,
+          dateFromDayISO: "—",
+          dateToDayISO: "—",
+          status: "CREATED",
+          createdAtISO: now,
+        },
+        ...current,
+      ]
+  ).map((b) =>
+    b.flatBookingId === id ? { ...b, status: "CANCELLED", cancelledAtISO: now } : b
   );
+
+  await writeJson(keyForUser(userKeyStr), next);
+}
+
+/**
+ * ✅ New function: remove a booking completely from local storage.
+ * Use this after successful Flatly cancel (since Flatly deletes the flat and details are unrecoverable).
+ */
+export async function removeFlatlyBooking(flatBookingId: string): Promise<void> {
+  const id = String(flatBookingId ?? "").trim();
+  if (!id) return;
+
+  const userKeyStr = await getUserKey();
+  const current = await getFlatlyBookings();
+  const next = current.filter((b) => b.flatBookingId !== id);
 
   await writeJson(keyForUser(userKeyStr), next);
 }
