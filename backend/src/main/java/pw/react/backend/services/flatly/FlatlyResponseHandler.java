@@ -32,12 +32,10 @@ public class FlatlyResponseHandler {
     public void assertCancelBooking(HttpStatusCode status, UUID flatBookingId) {
         int code = status.value();
 
-        //Flatly returns 204 on succesful cancellation...
-        if (code == 200 || code == 204) return;
-
-        if (code == 404) {
-            throw new ResourceNotFoundException("Flatly: booking not found (404). flatBookingId=" + flatBookingId);
-        }
+        // Flatly returns 204 on successful cancellation, but may also return 200.
+        // Additionally, 404 indicates the booking does not exist on provider side
+        // which we treat as idempotent-success (already cancelled or never existed).
+        if (code == 200 || code == 204 || code == 404) return;
 
         throw new IllegalStateException("Flatly: unexpected response status=" + code + " during cancel booking.");
     }
