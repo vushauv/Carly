@@ -32,7 +32,8 @@ public class FlatlyResponseHandler {
     public void assertCancelBooking(HttpStatusCode status, UUID flatBookingId) {
         int code = status.value();
 
-        if (code == 200) return;
+        //Flatly returns 204 on succesful cancellation...
+        if (code == 200 || code == 204) return;
 
         if (code == 404) {
             throw new ResourceNotFoundException("Flatly: booking not found (404). flatBookingId=" + flatBookingId);

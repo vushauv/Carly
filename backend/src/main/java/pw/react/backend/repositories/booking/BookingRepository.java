@@ -27,6 +27,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer>, JpaS
     List<Booking> findAllByUser_UserIdAndProviderExternalBookingIdIsNotNullOrderByBookingIdDesc(Integer userId);
 
     List<Booking> findAllByProviderExternalBookingIdIsNotNullOrderByBookingIdDesc();
+    Page<Booking> findAllByProviderExternalBookingIdIsNotNullOrderByBookingIdDesc(Pageable pageable);
 
     @Modifying
     @Transactional
