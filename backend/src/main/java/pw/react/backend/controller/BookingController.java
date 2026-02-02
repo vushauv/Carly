@@ -19,6 +19,7 @@ import pw.react.backend.dto.request.booking.CreateBookingRequestDto;
 import pw.react.backend.dto.request.booking.UpdateBookingRequestDto;
 import pw.react.backend.dto.response.booking.BookingResponse;
 import pw.react.backend.dto.response.booking.GetBookingResponseDto;
+import pw.react.backend.dto.response.booking.UpdateBookingResponseDto;
 import pw.react.backend.exceptions.ResourceNotFoundException;
 import pw.react.backend.exceptions.custom.CarBookingConflictException;
 import pw.react.backend.services.booking.BookingService;
@@ -111,7 +112,7 @@ public class    BookingController {
 
     @PutMapping(path = "/{bookingId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateBooking(
+    public ResponseEntity<UpdateBookingResponseDto> updateBooking(
             @RequestHeader HttpHeaders headers,
             @PathVariable Integer bookingId,
             @RequestBody UpdateBookingRequestDto updatedBooking
@@ -151,6 +152,7 @@ public class    BookingController {
         bookingMapper.applyUpdate(updatedBooking, existing);
         bookingService.updateBooking(bookingId, existing);
         log.info(String.format("Booking with id %s successfully modified.", existing.getBookingId()));
+        return ResponseEntity.ok(bookingMapper.toUpdateBookingResponseDto(existing));
     }
 
     @DeleteMapping(path = "/{bookingId}")

@@ -11,6 +11,7 @@ import pw.react.backend.dto.request.booking.CreateBookingRequestDto;
 import pw.react.backend.dto.request.booking.UpdateBookingRequestDto;
 import pw.react.backend.dto.response.booking.BookingResponse;
 import pw.react.backend.dto.response.booking.GetBookingResponseDto;
+import pw.react.backend.dto.response.booking.UpdateBookingResponseDto;
 import pw.react.backend.utils.converters.response.DisplayNameConverter;
 
 import java.math.BigDecimal;
@@ -67,6 +68,10 @@ public interface BookingMapper {
     GetBookingResponseDto bookingToGetBookingResponse(Booking booking);
 
     List<GetBookingResponseDto> bookingToGetBookingResponseList(List<Booking> bookings);
+
+    @Mapping(target = "id", source = "bookingId")
+    @Mapping(target = "totalPrice", source = "booking", qualifiedByName = "calculateTotalPrice")
+    UpdateBookingResponseDto toUpdateBookingResponseDto(Booking booking);
 
     // Helper methods:
     @Named("toDisplayName")
