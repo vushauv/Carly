@@ -63,8 +63,11 @@ const BookingEditPage = () => {
           carBookingStatus: booking.carStatus.name as BookingStatus,
           flatBookingStatus:
             (booking.flatStatus as BookingStatus) ?? "CREATED",
-          carBookingDateFrom: booking.carBookingDateFrom,
-          carBookingDateTo: booking.carBookingDateTo,
+          // carBookingDateFrom: stripTimezone(booking.carBookingDateFrom),
+          // carBookingDateTo: stripTimezone(booking.carBookingDateTo),
+          carBookingDateFrom: toLocalStart(stripTimezone(booking.carBookingDateFrom).split("T")[0]),
+          carBookingDateTo: toLocalEnd(stripTimezone(booking.carBookingDateTo).split("T")[0]),
+  
         });
       })
       .catch(() => setError("Failed to load booking"))
@@ -72,6 +75,13 @@ const BookingEditPage = () => {
   }, [id]);
 
   /* ---------------- helpers ---------------- */
+
+  const stripTimezone = (value: string) => value.split(".")[0];
+
+  const normalizeBackendDate = (value: string): string => {
+    // Keep only yyyy-MM-ddTHH:mm:ss
+    return value.replace(/(\.\d+)?([+-]\d{2}:?\d{2}|Z)$/, "");
+  };
 
   const update = <K extends keyof BookingEditForm>(
     key: K,
@@ -94,8 +104,8 @@ const BookingEditPage = () => {
       returnLocationId: form.returnLocationId,
       carBookingStatus: form.carBookingStatus,
       flatBookingStatus: form.flatBookingStatus,
-      carBookingDateFrom: form.carBookingDateFrom.split(".+")[0],
-      carBookingDateTo: form.carBookingDateTo.split(".+")[0],
+      carBookingDateFrom: form.carBookingDateFrom,
+      carBookingDateTo: form.carBookingDateTo,
     };
 
     try {
