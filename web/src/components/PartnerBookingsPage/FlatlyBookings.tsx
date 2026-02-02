@@ -82,11 +82,11 @@ const FlatlyBookings = () => {
   const flatBookingsColumns = useMemo(
     () => [
       {
-        id: "bookingId",
-        header: "Booking ID",
+        id: "userId",
+        header: "User ID",
         cell: (flatBooking: FlatBooking) => (
           <span className={styles.bookingId}>
-            {flatBooking.booking.id.substring(0, 8)}...
+            {flatBooking.userId}
           </span>
         ),
         width: "10%",
@@ -152,7 +152,7 @@ const FlatlyBookings = () => {
 
   return (
     <div>
-      <h2 className={styles.subTitle}>Flat Bookings from Flatly</h2>
+      <h2 className={styles.subTitle}>Flat Bookings</h2>
 
       {loading ? (
         <div className={styles.loading}>Loading flat bookings...</div>

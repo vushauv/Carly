@@ -20,7 +20,12 @@ const BookingViewPage = () => {
       setError("Booking data not available");
       return;
     }
-  
+
+    if (booking.providerExternalBookingId == null) {
+      setError("No Flat connected to Cancel");
+      return;
+    }
+
     if (
       !window.confirm(
         "Are you sure you want to cancel this Flat booking? This action cannot be undone."
@@ -28,10 +33,10 @@ const BookingViewPage = () => {
     ) {
       return;
     }
-  
+
     try {
       setDeleting(true);
-      await bookingService.cancelFlatBooking(booking.id);
+      await bookingService.cancelFlatBooking(booking.providerExternalBookingId);
       navigate("/manage-bookings");
     } catch (err) {
       console.error("Failed to cancel flat booking:", err);
@@ -40,7 +45,7 @@ const BookingViewPage = () => {
       setDeleting(false);
     }
   };
-  
+
 
   useEffect(() => {
     const loadBooking = async () => {
@@ -109,7 +114,7 @@ const BookingViewPage = () => {
   const getStatusColor = (status: string): string => {
     switch (status) {
       case "PENDING": return "#ffc107";
-      case "CONFIRMED": return "#17a2b8";
+      case "CREATED": return "#17a2b8";
       case "ACTIVE": return "#28a745";
       case "COMPLETED": return "#6c757d";
       case "CANCELLED": return "#dc3545";
@@ -150,23 +155,23 @@ const BookingViewPage = () => {
         <h1 className={styles.title}>Booking Details #{booking.id}</h1>
         <div className={styles.actions}>
           <Button label="Edit Booking" color="secondary" onClick={() => navigate(`/bookings/${booking.id}/edit`)} />
-          
+
           {booking.providerExternalBookingId != null ? (
-              <Button
-                label="Cancel Flat Booking"
-                color="danger"
-                onClick={handleCancelFlatBooking}
-                disabled={deleting}
-              />
-            ) : (
-              <Button
-                label="Delete Booking"
-                color="danger"
-                onClick={handleDeleteBooking}
-                disabled={deleting}
-              />
-            )}
-          
+            <Button
+              label="Cancel Flat Booking"
+              color="danger"
+              onClick={handleCancelFlatBooking}
+              disabled={deleting}
+            />
+          ) : (
+            <Button
+              label="Delete Booking"
+              color="danger"
+              onClick={handleDeleteBooking}
+              disabled={deleting}
+            />
+          )}
+
           <Button label="Back to Bookings" onClick={() => navigate("/manage-bookings")} />
         </div>
       </div>
@@ -242,9 +247,23 @@ const BookingViewPage = () => {
 
             <div className={styles.detailItem}>
               <span className={styles.label}>External Flat ID:</span>
+              {
+                booking.providerExternalBookingId ? (
+                  <Link
+                    to={`/flat-bookings/${booking.providerExternalBookingId}`}
+                    className={styles.link}
+                  >
+                    {booking.providerExternalBookingId}
+                  </Link>
+                ) : (
+                  <span className={styles.value}>—</span>
+                )
+              }
 
-                {booking.providerExternalBookingId ?? "—" }
-              
+
+
+
+
             </div>
 
 
