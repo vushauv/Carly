@@ -23,9 +23,9 @@ public class ControllerExceptionHandler {
     public ResponseEntity<ExceptionDetails> handleNotFound(InvalidFileException ex, ServletWebRequest request) {
         log.error("Invalid Input Exception: {}", ex.getMessage());
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new ExceptionDetails(
-                        HttpStatus.NOT_FOUND,
+                        HttpStatus.UNPROCESSABLE_ENTITY,
                         ex.getMessage(),
                         request.getRequest().getServletPath()
                 ));
@@ -175,6 +175,4 @@ public class ControllerExceptionHandler {
                         request.getRequest().getServletPath()
                 ));
     }
-
-
 }
