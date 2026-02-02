@@ -25,16 +25,30 @@ const ManageUsersPage = () => {
     try {
       setLoading(true);
 
-      const usersData = await userService.getAllUsers(page, PAGE_SIZE + 1, {
+      const filters = {
         userId: f.userId ? Number(f.userId) : undefined,
         name: f.nameOrSurname?.trim() || undefined,
         email: f.email?.trim() || undefined,
-        // you can later pass isEnabled if you add it to backend params
-        // isEnabled: f.isEnabled?.trim() || undefined,
-      });
+      };
+      
+      // load actual page
+      const pageData = await userService.getAllUsers(
+        page,
+        PAGE_SIZE,
+        filters
+      );
+      
+      // probe next page
+      const nextPageData = await userService.getAllUsers(
+        page + 1,
+        PAGE_SIZE,
+        filters
+      );
+      
+      setUsers(pageData);
+      setHasNextPage(nextPageData.length > 0);
 
-      setUsers(usersData.slice(0, PAGE_SIZE));
-      setHasNextPage(usersData.length > PAGE_SIZE);
+
     } finally {
       setLoading(false);
     }
