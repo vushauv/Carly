@@ -1,0 +1,182 @@
+/* Same base styling approach as KPIPage.module.css */
+.page {
+  width: 100%;
+  font-family: var(--font);
+}
+
+.title {
+  text-align: center;
+  margin: 2rem 0 1.5rem;
+  color: var(--gray-200);
+}
+
+.title::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: #F2C94C;
+  margin: 10px auto 20px auto;
+  border-radius: 6px;
+}
+
+.subTitle {
+  margin: 1.5rem 0 0.75rem;
+  color: var(--gray-200);
+}
+
+.topActions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  width: 100%;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 180px;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: var(--gray-200);
+}
+
+.select {
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: white;
+  color: #495057;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.select:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Input component styles for consistent status select */
+.inputWrapper {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  padding: 0 0.875rem 0 0;
+  border: 1px solid var(--white-100);
+  border-radius: 0.5rem;
+  background-color: var(--white-50);
+  overflow: hidden;
+}
+
+.inputWrapper:focus-within {
+  outline: 2px solid var(--gray-200);
+}
+
+.input {
+  border: none;
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background-color: var(--white-secondary);
+  color: black;
+}
+
+.input:focus,
+.input:focus-visible {
+  border: none;
+  outline: none;
+}
+
+.formNote {
+  margin: 0px;
+  color: var(--gray-200);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  min-height: 1.25rem;
+}
+
+.hintIcon {
+  align-self: center;
+  cursor: pointer;
+}
+
+/* Styles for DataTable cells */
+.customer {
+  font-size: 0.9rem;
+}
+
+.customer small {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.car {
+  font-size: 0.9rem;
+}
+
+.car small {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.dates {
+  font-size: 0.85rem;
+}
+
+.dates small {
+  color: #6c757d;
+  font-size: 0.75rem;
+}
+
+.status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-align: left;
+  min-width: 80px;
+}
+
+.price {
+  font-weight: 600;
+  color: #28a745;
+  text-align: left;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.error {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #f5c6cb;
+  margin-bottom: 20px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.25rem 0 0.25rem;
+}
+
+.pageInfo {
+  color: var(--gray-200);
+}

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import pw.react.backend.exceptions.custom.CarBookingConflictException;
 
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -24,6 +25,18 @@ public class ControllerExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(new ExceptionDetails(
                         HttpStatus.NOT_FOUND,
+                        ex.getMessage(),
+                        request.getRequest().getServletPath()
+                ));
+    }
+
+    @ExceptionHandler(CarBookingConflictException.class)
+    public ResponseEntity<ExceptionDetails> handleCarBookingConflict(CarBookingConflictException ex, ServletWebRequest request) {
+        log.error("Invalid Input Exception: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ExceptionDetails(
+                        HttpStatus.CONFLICT,
                         ex.getMessage(),
                         request.getRequest().getServletPath()
                 ));
@@ -52,6 +65,7 @@ public class ControllerExceptionHandler {
                         request.getRequest().getServletPath())
                 );
     }
+
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ExceptionDetails> noHandlerFoundException(Exception ex, ServletWebRequest request) {
@@ -92,4 +106,5 @@ public class ControllerExceptionHandler {
                         request.getRequest().getServletPath()
                 ));
     }
+//exception handlers to be added here!!!!!!!!!!
 }
