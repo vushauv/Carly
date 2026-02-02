@@ -59,98 +59,82 @@ const CarBookings = () => {
       ];
     }, [navigate, currentPage, appliedFilters]);
 
-  const loadPartnerBookingsPage = async (
-    page: number,
-    f: Record<BookingFilterKey, string>
-  ) => {
-    try {
-      setLoading(true);
-
-      // Always filter partner bookings by userId=2 + any extra filters
-      const bookingsData = await bookingService.getAllBookings(page, PAGE_SIZE + 1, {
-        userId: PARTNER_USER_ID,
-
-        bookingId: f.bookingId ? Number(f.bookingId) : undefined,
-        carId: f.carId ? Number(f.carId) : undefined,
-
-        status: (f.status?.trim() as
-          | "PENDING"
-          | "CONFIRMED"
-          | "ACTIVE"
-          | "COMPLETED"
-          | "CANCELLED"
-          | undefined) ?? undefined,
-
-        pickupLocation: f.pickupLocation?.trim() || undefined,
-      });
-
-      setBookings(bookingsData.slice(0, PAGE_SIZE));
-      setHasNextPage(bookingsData.length > PAGE_SIZE);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancelBooking = async (bookingId: number) => {
-    if (!window.confirm("Are you sure you want to cancel this booking?")) return;
-  
-    try {
-      await bookingService.cancelBooking(bookingId);
-  
-      // Try to reload the same page; if it becomes empty, go back until we find data (or reach page 0)
-      let pageToLoad = currentPage;
-  
-      while (pageToLoad > 0) {
-        const pageData = await bookingService.getAllBookings(
-          pageToLoad,
-          PAGE_SIZE + 1,
-          {
-            userId: PARTNER_USER_ID,
-  
-            bookingId: appliedFilters.bookingId
-              ? Number(appliedFilters.bookingId)
-              : undefined,
-            carId: appliedFilters.carId
-              ? Number(appliedFilters.carId)
-              : undefined,
-            status: appliedFilters.status?.trim() as
-              | "PENDING"
-              | "CONFIRMED"
-              | "ACTIVE"
-              | "COMPLETED"
-              | "CANCELLED"
-              | undefined,
-            pickupLocation:
-              appliedFilters.pickupLocation?.trim() || undefined,
-          }
-        );
-  
-        if (pageData.length > 0) {
-          setBookings(pageData.slice(0, PAGE_SIZE));
-          setHasNextPage(pageData.length > PAGE_SIZE);
-          setCurrentPage(pageToLoad);
-          return;
-        }
-  
-        pageToLoad -= 1;
+    const buildPartnerFilters = (f: Record<BookingFilterKey, string>) => ({
+      userId: PARTNER_USER_ID,
+    
+      bookingId: f.bookingId ? Number(f.bookingId) : undefined,
+      carId: f.carId ? Number(f.carId) : undefined,
+    
+      status: (f.status?.trim() as
+        | "PENDING"
+        | "CONFIRMED"
+        | "ACTIVE"
+        | "COMPLETED"
+        | "CANCELLED"
+        | undefined) ?? undefined,
+    
+      pickupLocation: f.pickupLocation?.trim() || undefined,
+    });
+    
+    const loadPartnerBookingsPage = async (
+      page: number,
+      f: Record<BookingFilterKey, string>
+    ) => {
+      try {
+        setLoading(true);
+    
+        const filters = buildPartnerFilters(f);
+    
+        // load current page with real PAGE_SIZE
+        const pageData = await bookingService.getAllBookings(page, PAGE_SIZE, filters);
+    
+        // probe next page to compute hasNextPage
+        const nextPageData = await bookingService.getAllBookings(page + 1, PAGE_SIZE, filters);
+    
+        setBookings(pageData);
+        setHasNextPage(nextPageData.length > 0);
+      } finally {
+        setLoading(false);
       }
-  
-      // Fallback: load page 0
-      const firstPage = await bookingService.getAllBookings(
-        0,
-        PAGE_SIZE + 1,
-        {
-          userId: PARTNER_USER_ID,
+    };
+    
+
+    const handleCancelBooking = async (bookingId: number) => {
+      if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+    
+      try {
+        await bookingService.cancelBooking(bookingId);
+    
+        const filters = buildPartnerFilters(appliedFilters);
+    
+        // Try reload current page; if empty, go back
+        let pageToLoad = currentPage;
+    
+        while (pageToLoad > 0) {
+          const pageData = await bookingService.getAllBookings(pageToLoad, PAGE_SIZE, filters);
+          if (pageData.length > 0) {
+            const nextPageData = await bookingService.getAllBookings(pageToLoad + 1, PAGE_SIZE, filters);
+    
+            setBookings(pageData);
+            setHasNextPage(nextPageData.length > 0);
+            setCurrentPage(pageToLoad);
+            return;
+          }
+          pageToLoad -= 1;
         }
-      );
-  
-      setBookings(firstPage.slice(0, PAGE_SIZE));
-      setHasNextPage(firstPage.length > PAGE_SIZE);
-      setCurrentPage(0);
-    } catch (err) {
-      console.error("Failed to cancel booking:", err);
-    }
-  };
+    
+        // Fallback: load page 0 (and probe page 1)
+        const firstPage = await bookingService.getAllBookings(0, PAGE_SIZE, filters);
+        const nextPage = await bookingService.getAllBookings(1, PAGE_SIZE, filters);
+    
+        setBookings(firstPage);
+        setHasNextPage(nextPage.length > 0);
+        setCurrentPage(0);
+      } catch (err) {
+        console.error("Failed to cancel booking:", err);
+      }
+    };
+    
   
 
   const handleAction = (actionId: string, booking: BookingDetails) => {
