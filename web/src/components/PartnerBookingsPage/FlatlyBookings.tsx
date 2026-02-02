@@ -61,6 +61,8 @@ const FlatlyBookings = () => {
         loadFlatBookingsPage(0);
     }, []);
 
+
+
     const flatBookingsActions = useMemo(
         () => [
             {
@@ -71,7 +73,7 @@ const FlatlyBookings = () => {
             {
                 id: "cancel",
                 label: "Cancel",
-                color: "danger",
+                color: "danger" as ("primary" | "secondary" | "danger"),
                 onClick: (flatBooking: FlatBooking) => handleFlatBookingAction("cancel", flatBooking),
             },
         ],
