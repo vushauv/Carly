@@ -1,4 +1,4 @@
-import type { ColumnDef, RowAction } from "../DataTable/DataTable";
+import type { ColumnDef, RowAction } from "../../Elements/DataTable/DataTable";
 import type { Car } from "./types";
 
 // Helper function to get car feature value by name

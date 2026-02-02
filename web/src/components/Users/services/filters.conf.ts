@@ -1,4 +1,4 @@
-import type { FilterFieldDef } from "../FiltersForm/FiltersForm";
+import type { FilterFieldDef } from "../../Elements/FiltersForm/FiltersForm";
 
 type Filters = {
     userId: string;

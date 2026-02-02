@@ -44,7 +44,7 @@ const CarBookings = () => {
       const cancelAction = {
         id: "cancel",
         label: "Cancel",
-        color: "danger", // or whatever your Button/DataTable supports
+        color: "danger" as ("danger" | "secondary" | "primary"), // or whatever your Button/DataTable supports
         onClick: (b: BookingDetails) => handleCancelBooking(b.id),
       };
     
@@ -63,17 +63,13 @@ const CarBookings = () => {
       userId: PARTNER_USER_ID,
     
       bookingId: f.bookingId ? Number(f.bookingId) : undefined,
-      carId: f.carId ? Number(f.carId) : undefined,
     
       status: (f.status?.trim() as
-        | "PENDING"
+        | "CREATED"
         | "CONFIRMED"
-        | "ACTIVE"
-        | "COMPLETED"
         | "CANCELLED"
         | undefined) ?? undefined,
     
-      pickupLocation: f.pickupLocation?.trim() || undefined,
     });
     
     const loadPartnerBookingsPage = async (
