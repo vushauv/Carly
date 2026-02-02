@@ -41,7 +41,9 @@ public class CarImageMainService implements CarImageService {
 
     @Override
     @Transactional
-    public CarImage upload(MultipartFile file, Integer carId) throws ResourceNotFoundException {
+    public CarImage upload(MultipartFile file, Integer carId)
+            throws ResourceNotFoundException, InvalidFileException
+    {
         var car =  carRepository.findById(carId)
                 .orElseThrow(() -> new ResourceNotFoundException("Car with carId " + carId + " not found"));
 
@@ -84,7 +86,9 @@ public class CarImageMainService implements CarImageService {
 
     @Override
     @Transactional
-    public void delete(Integer carId, Integer imageId) throws ResourceNotFoundException {
+    public void delete(Integer carId, Integer imageId)
+            throws ResourceNotFoundException
+    {
         if (!carRepository.existsById(carId)) {
             throw new ResourceNotFoundException("Car with carId " + carId + " not found");
         }

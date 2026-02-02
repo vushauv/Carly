@@ -1,6 +1,10 @@
 package pw.react.backend.controller;
 
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +44,19 @@ public class ParklyController {
     private final ParklyBookingMapper parklyBookingMapper;
 
     // Parkly integration for interacting with bookings
+    @Operation(summary = "Get car booking created from Parkly system",
+            description = """
+        - Retrieves details of a car booking created via Parkly integration.
+        - The response includes booking status, rental period, locations,
+          associated car, and total booking price.
+        - Parkly can view only bookings created by their system.
+        """)
+    @ApiResponse(responseCode = "200",
+            description = "Booking successfully retrieved",
+            content = @Content(schema = @Schema(implementation = ParklyGetBookingResponseDto.class)))
+    @ApiResponse(responseCode = "403", description = "Access denied")
+    @ApiResponse(responseCode = "404", description = "Booking not found")
+    @ApiResponse(responseCode = "422", description = "Request cannot be processed")
     @GetMapping(PathResolver.Parkly.CarBookings + "/{bookingId}")
     public ResponseEntity<ParklyGetBookingResponseDto> getCarBooking(@RequestHeader HttpHeaders headers,
                                                                      @PathVariable Integer bookingId)
@@ -51,6 +68,19 @@ public class ParklyController {
         return ResponseEntity.ok(dto);
     }
 
+    @Operation(summary = "Create car booking from Parkly system",
+            description = """
+        - Creates a new car booking through Parkly integration.
+        - Returns the created booking identifier, status, and calculated total price.
+        """)
+    @ApiResponse(
+            responseCode = "201",
+            description = "Booking successfully created",
+            content = @Content(schema = @Schema(implementation = ParklyCreateBookingResponseDto.class))
+    )
+    @ApiResponse(responseCode = "400", description = "Invalid request parameters")
+    @ApiResponse(responseCode = "404", description = "Referenced resource not found")
+    @ApiResponse(responseCode = "422", description = "Validation failed or request cannot be processed")
     @PostMapping(PathResolver.Parkly.CarBookings)
     public ResponseEntity<ParklyCreateBookingResponseDto> createCarBooking(@RequestHeader HttpHeaders headers,
                                                                            @Valid @RequestBody ParklyCreateBookingRequestDto request)
@@ -63,7 +93,17 @@ public class ParklyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
+    @Operation(
+            summary = "Cancel Parkly car booking",
+            description = """
+        - Cancels an existing Parkly car booking by its identifier.
+        - Successful cancellation returns no content.
+        """)
+    @ApiResponse(responseCode = "200", description = "Booking successfully cancelled")
+    @ApiResponse(responseCode = "403", description = "Access denied")
+    @ApiResponse(responseCode = "404", description = "Booking not found")
     @PostMapping(PathResolver.Parkly.CarBookings + "/{bookingId}/cancel")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cancelCarBooking(@RequestHeader HttpHeaders headers,
                                 @PathVariable Integer bookingId)
             throws AccessDeniedException
@@ -73,6 +113,17 @@ public class ParklyController {
     }
 
     // Parkly integration for retrieving cars
+    @Operation(summary = "Get car by ID",
+            description = """
+        - Retrieves car details for Parkly integration.
+        - The response includes car features, daily price, and URLs of associated images.
+        """)
+    @ApiResponse(
+            responseCode = "200",
+            description = "Car successfully retrieved",
+            content = @Content(schema = @Schema(implementation = ParklyGetCarResponseDto.class))
+    )
+    @ApiResponse(responseCode = "404", description = "Car not found")
     @GetMapping(PathResolver.Parkly.Cars + "/{carId}")
     public ResponseEntity<ParklyGetCarResponseDto> getCar(@RequestHeader HttpHeaders headers,
                                                           @PathVariable Integer carId)
@@ -85,7 +136,42 @@ public class ParklyController {
         return ResponseEntity.ok(parklyCarMapper.toGetResponseDto(car, carId, imageUrlsByCarId.get(carId)));
     }
 
-    // SearchParams are the same
+    @Operation(summary = "Search cars",
+            description = """
+        - Searches cars using filters provided as query parameters.
+        - Supported filters include booking date range and optional car features.
+        - Nested filter parameters are passed using dot notation.
+
+        Example request:
+        `/parkly/cars?date.from=2026-02-10T00:00:00&date.to=2026-02-13T00:00:00&features.color=black`
+
+        **Filtering parameters**
+        - `date.from` — optional start of availability period (start of the current day is chosen by default).
+        - `date.to` — required end of availability period.
+        - `features.color` — filter by car color.
+        - `features.brand` — filter by brand.
+        - `features.model` — filter by model.
+        - `features.fuelType` — filter by fuel type.
+        - `features.status` — filter by vehicle status.
+
+        Pagination is optional:
+        - If `page` is not provided, all matching cars are returned.
+        - If `page` is provided, paginated results are returned.
+        - `size` controls page size (optional).
+
+        **Notes**
+        - Only cars available in the requested period are returned.
+        - Feature filters are optional.
+        - Filters are combined using AND semantics.
+        - Availability filtering checks booking overlaps for the given period.
+        """)
+    @ApiResponse(
+            responseCode = "200",
+            description = "Cars successfully retrieved",
+            content = @Content(schema = @Schema(implementation = ParklyGetCarResponseDto.class))
+    )
+    @ApiResponse(responseCode = "400", description = "Invalid search parameters")
+    @ApiResponse(responseCode = "422", description = "Request cannot be processed due to validation errors")
     @GetMapping(PathResolver.Parkly.Cars)
     public ResponseEntity<List<ParklyGetCarResponseDto>> searchCars(@RequestHeader HttpHeaders headers,
                                                                     @Valid @ModelAttribute ParklyCarSearchParams searchParams,

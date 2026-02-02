@@ -1,5 +1,9 @@
 package pw.react.backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
@@ -43,6 +47,19 @@ public class    BookingController {
     private final BookingCriteriaMapper bookingCriteriaMapper;
     private final CarService carService;
 
+    @Operation(
+            summary = "Create bookings",
+            description = """
+        - Creates one or more bookings in a single request.
+        - The request body must contain a non-empty list of booking requests.
+        - Returns created booking identifiers and total prices.
+        """
+    )
+    @ApiResponse(
+            responseCode = "201",
+            description = "Bookings successfully created",
+            content = @Content(schema = @Schema(implementation = BookingResponse.class)))
+    @ApiResponse(responseCode = "422", description = "Validation failed or request cannot be processed")
     @PostMapping
     public ResponseEntity<Collection<BookingResponse>> createBookings(
             @RequestHeader HttpHeaders headers,
@@ -57,6 +74,17 @@ public class    BookingController {
                 .body(bookingMapper.bookingToResponseList(saved));
     }
 
+    @Operation(summary = "Get booking by ID",
+            description = """
+        - Retrieves booking details by identifier.
+        - The response includes user, car, locations, statuses, booking dates, and total price.
+        """)
+    @ApiResponse(
+            responseCode = "200",
+            description = "Booking successfully retrieved",
+            content = @Content(schema = @Schema(implementation = GetBookingResponseDto.class)))
+    @ApiResponse(responseCode = "404", description = "Booking not found")
+    @ApiResponse(responseCode = "422", description = "Request cannot be processed")
     @GetMapping(path = "/{bookingId}")
     public ResponseEntity<GetBookingResponseDto> getBooking(
             @RequestHeader HttpHeaders headers,
@@ -70,6 +98,18 @@ public class    BookingController {
         return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "Search bookings",
+            description = """
+        - Retrieves bookings optionally filtered by query parameters.
+        - If `page` and `size` are provided, results are returned using pagination (default values are 0 and 10 respectively).
+        - Date filters `dateFrom` and `dateTo` are ISO-8601 LocalDateTime strings (e.g. 2026-02-01T10:00:00).
+        """)
+    @ApiResponse(
+            responseCode = "200",
+            description = "Bookings successfully retrieved",
+            content = @Content(schema = @Schema(implementation = GetBookingResponseDto.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request parameters")
+    @ApiResponse(responseCode = "422", description = "Request cannot be processed due to validation errors")
     @GetMapping
     public ResponseEntity<List<GetBookingResponseDto>> getAllBookings(
             @RequestHeader HttpHeaders headers,
@@ -109,9 +149,20 @@ public class    BookingController {
         return ResponseEntity.ok(result);
     }
 
-
+    @Operation(summary = "Update booking",
+            description = """
+        - Updates an existing booking by identifier.
+        - Only fields provided in the request body are updated (partial update semantics).
+        - If booking dates are updated, the date range is validated/normalised and availability is checked. If the date range changed, the new total price is recalculated.
+        - If a collision is detected with another active booking for the same car, the request is rejected.
+        """)
+    @ApiResponse(responseCode = "200",
+            description = "Booking successfully updated",
+            content = @Content(schema = @Schema(implementation = UpdateBookingResponseDto.class)))
+    @ApiResponse(responseCode = "404", description = "Booking not found")
+    @ApiResponse(responseCode = "409", description = "Car booking conflict")
+    @ApiResponse(responseCode = "422", description = "Request cannot be processed due to validation errors")
     @PutMapping(path = "/{bookingId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<UpdateBookingResponseDto> updateBooking(
             @RequestHeader HttpHeaders headers,
             @PathVariable Integer bookingId,
@@ -155,6 +206,16 @@ public class    BookingController {
         return ResponseEntity.ok(bookingMapper.toUpdateBookingResponseDto(existing));
     }
 
+    @Operation(
+            summary = "Delete booking",
+            description = """
+        - Deletes a booking by identifier.
+        - Returns a confirmation message on success.
+        - If the booking does not exist, returns a bad request response.
+        """)
+    @ApiResponse(responseCode = "200", description = "Booking successfully deleted")
+    @ApiResponse(responseCode = "400", description = "Booking does not exist")
+    @ApiResponse(responseCode = "422", description = "Request cannot be processed")
     @DeleteMapping(path = "/{bookingId}")
     public ResponseEntity<String> deleteBooking(
             @RequestHeader HttpHeaders headers,
@@ -170,6 +231,14 @@ public class    BookingController {
     }
 
     //instead of reusing the PUT method, we create dedicated endpoints only for cancellation - easier to hook up
+    @Operation(summary = "Cancel car booking",
+            description = """
+        - Cancels the car part of a booking by identifier.
+        - Successful cancellation returns no content.
+        """)
+    @ApiResponse(responseCode = "204", description = "Car booking successfully cancelled")
+    @ApiResponse(responseCode = "404", description = "Booking not found")
+    @ApiResponse(responseCode = "422", description = "Request cannot be processed")
     @PostMapping(path = "/{bookingId}/cancel-car")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cancelCarBooking(

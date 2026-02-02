@@ -7,7 +7,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class GetUserIDResponse {
-
     private Long userId;
-
 }
