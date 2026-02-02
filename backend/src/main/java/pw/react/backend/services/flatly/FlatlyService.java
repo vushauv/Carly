@@ -247,6 +247,11 @@ public class FlatlyService {
         for (Booking b : all) {
             if (!hasFlatPart(b)) continue;
 
+            // skip cancelled flat bookings - after successful Cancellation, Flatly deletes the records and they are
+            // not available to query - trying to get the booking by its id will result in 422
+            String flatStatus = b.getFlatBookingStatus() != null ? b.getFlatBookingStatus().getName() : null;
+            if (flatStatus != null && "CANCELLED".equalsIgnoreCase(flatStatus)) continue;
+
             UUID flatlyBookingId = b.getProviderExternalBookingId();
             if (flatlyBookingId == null) continue;
 
