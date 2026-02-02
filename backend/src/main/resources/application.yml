@@ -1,0 +1,52 @@
+azure:
+  backend:
+    url: https://pw2024.azurewebsites.net
+
+management:
+  endpoints:
+    access:
+      default: none
+    web:
+      exposure:
+        include: health,loggers,beans,env,shutdown,startup,threaddump,heapdump
+  endpoint:
+    health:
+      access: read_only
+    loggers:
+      access: read_only
+    beans:
+      access: read_only
+    shutdown:
+      access: read_only
+    startup:
+      access: read_only
+    threaddump:
+      access: read_only
+    heapdump:
+      access: read_only
+    env:
+      access: read_only
+
+logging:
+  level:
+    root: INFO
+    pw.react.backend: INFO
+    org.springframework.boot.autoconfigure: ERROR
+
+cors:
+  urls: ${cors:http://localhost:8080,http://localhost:5173,http://localhost:5000,http://carly.vushauv.me,https://carly.vushauv.me}
+  mappings: /**
+
+application:
+  springdoc:
+    title: Backend PW API
+    description: Backend starter for PW project.
+    version: @project.version@
+
+springdoc:
+  show-actuator: true
+
+integrations:
+    flatly:
+      base-url: https://react26-backend.azurewebsites.net/api
+      mock-mode: false

@@ -1,0 +1,44 @@
+:root {
+  --font: "Noto Sans", sans-serif;
+  --yellow-main: #F2C94C;
+  --yellow-secondary: #edbd2e;
+
+  --slate-main: #475569;
+  --slate-secondary: #334155;
+  --white: white;
+
+  /*The higher the number after the color - the darker the shade is*/
+  --white-50: #fafafa;
+  --white-100: #e5e5e5;
+  --white-150:#eae9e7;
+
+  --gray-50: rgb(150, 150, 150);
+  --gray-100: rgb(100, 100, 100);
+  --gray-200: rgb(51, 51, 51);
+  --theme-color: linear-gradient(
+    to right,
+    #fbfbf9,
+    #eae9e7
+  );
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  justify-content: baseline;
+  align-items: center;
+  gap: 30px;
+}
+
+
+* {
+  font-family: var(--font);
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background-image: var(--theme-color);
+  padding: 15px 5px;
+  margin: 0px;
+}

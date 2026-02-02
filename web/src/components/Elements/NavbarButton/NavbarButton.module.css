@@ -1,0 +1,23 @@
+.button {
+  /* background-color: var(--gray-100); */
+  color: var(--gray-200);
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-family: var(--font);
+  font-size: 18px;
+  width: auto;
+  box-shadow: none;
+  background: transparent;
+}
+
+.button:hover:not(:disabled) {
+  background-color: var(--gray-50);
+  color: var(--white);
+}
+
+.active {
+  background-color: var(--yellow-main);
+  color: var(--gray-200);
+  cursor: default;
+}

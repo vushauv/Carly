@@ -1,0 +1,38 @@
+.searchShell{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem 1rem;
+    border-radius: 0.5rem;
+
+    box-shadow: 
+    0 0 8px rgba(0, 0, 0, 0.05),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+    background-color: var(--white);
+}
+
+
+.searchCriteria{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    
+    gap: 1rem;
+    justify-content: baseline;
+
+}
+
+.searchActions{
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+    width: 100%;
+}
+
+.buttons{
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}

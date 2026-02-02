@@ -1,0 +1,14 @@
+.content{
+    display: flex;
+    padding: 60px 30px;
+    flex-direction: column;
+    align-items: center;  
+    justify-content: center; 
+
+    width: 100%;
+    border-radius: 20px;
+    min-height: 75vh; /* this is changed from height to min-height so that if the Content doesn't fit in the screen, not the Content itself is scrollable but the whole page */
+    background-color: var(--white);
+    border:none;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+}
