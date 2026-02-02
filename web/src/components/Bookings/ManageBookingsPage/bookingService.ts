@@ -1,5 +1,5 @@
 // Booking API service - connects to localhost:8080
-import type { BookingDetails, CreateBookingRequest, BookingUpdateRequest, BookingSearchFilters } from "./types";
+import type { BookingDetails, CreateBookingRequest, BookingUpdateRequest, BookingSearchFilters, FlatBooking, FlatBookingDetails } from "./types";
 import { API_CONFIG, buildApiUrl, apiRequest } from "../../../shared/api.config";
 
 export const bookingService = {
@@ -76,43 +76,26 @@ export const bookingService = {
   /**
    * Updates an existing booking's information
    */
-  // async updateBooking(id: number, data: BookingUpdateRequest): Promise<void> {
-  //   console.log(`Updating booking ${id}:`, data);
-    
-  //   const url = buildApiUrl(API_CONFIG.ENDPOINTS.BOOKINGS, id);
-  //   await apiRequest<void>(url, {
-  //     method: 'PUT',
-  //     body: JSON.stringify(data),
-  //   });
-    
-  //   console.log("Booking updated successfully");
-  // },
-
-  // bookingService.ts
-
-async updateBooking(
-  bookingId: number,
-  data: BookingUpdateRequest
-): Promise<void> {
-  const url = buildApiUrl(API_CONFIG.ENDPOINTS.BOOKINGS, bookingId);
-
-  console.log(`Updating booking ${bookingId}:`);
-
-  data.carBookingStatus = data.carBookingStatus.toUpperCase();
-
- 
-
-  console.log(data);
-
-  return apiRequest<void>(url, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-},
-
+  async updateBooking(
+    bookingId: number,
+    data: BookingUpdateRequest
+  ): Promise<void> {
+    const url = buildApiUrl(API_CONFIG.ENDPOINTS.BOOKINGS, bookingId);
+  
+    console.log(`Updating booking ${bookingId}:`);
+  
+    data.carBookingStatus = data.carBookingStatus.toUpperCase();
+  
+    console.log(data);
+  
+    return apiRequest<void>(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+  },
 
   /**
    * Permanently removes a booking from the system
@@ -138,20 +121,60 @@ async updateBooking(
     });
   },
 
-  async cancelFlatBooking(bookingId: number): Promise<void> {
-    const url = buildApiUrl(API_CONFIG.ENDPOINTS.FLATLY, bookingId);
-    await apiRequest(url, {
-      method: "DELETE",
-    });
+  // async cancelFlatBooking(bookingId: number): Promise<void> {
+  //   const url = buildApiUrl(API_CONFIG.ENDPOINTS.FLATLY, bookingId, "bookings");
+  //   await apiRequest(url, {
+  //     method: "DELETE",
+  //   });
+
+  //   // 
+  // },
+
+  /**
+   * Retrieves all flat bookings from Flatly
+   * Maps to: GET /api/flatly/flat-bookings
+   */
+  async getFlatBookings(): Promise<FlatBooking[]> {
+    console.log('[BookingService] Fetching flat bookings from Flatly');
+    
+    const url = buildApiUrl(API_CONFIG.ENDPOINTS.FLATLY, 'flat-bookings');
+    
+    try {
+      const response = await apiRequest<FlatBooking[]>(url);
+      console.log('[BookingService] Flat bookings response:', response);
+      
+      return Array.isArray(response) ? response : [];
+    } catch (error) {
+      console.error('[BookingService] Error fetching flat bookings:', error);
+      throw error;
+    }
   },
 
   /**
-   * Helper method to search bookings with filters
+   * Retrieves detailed information for a specific flat booking
+   * Maps to: GET /api/flatly/flat-bookings/{flatBookingId}
    */
-  // async searchBookings(filters: Partial<BookingSearchFilters>, pageNumber: number = 0, pageSize: number = 10): Promise<{bookings: BookingDetails[], totalCount: number}> {
-  //   console.log(`Searching bookings with filters:`, filters);
-  //   return this.getAllBookings(pageNumber, pageSize, filters);
-  // },
+  async getFlatBookingById(flatBookingId: string): Promise<FlatBookingDetails> {
+    console.log(`[BookingService] Fetching flat booking by ID: ${flatBookingId}`);
+    
+    const url = buildApiUrl(API_CONFIG.ENDPOINTS.FLATLY, 'flat-bookings', flatBookingId);
+    return await apiRequest<FlatBookingDetails>(url);
+  },
+
+  /**
+   * Cancels a flat booking in Flatly
+   * Maps to: DELETE /api/flatly/flat-bookings/{flatBookingId}
+   */
+  async cancelFlatBooking(flatBookingId: string): Promise<void> {
+    console.log(`[BookingService] Canceling flat booking ${flatBookingId}`);
+    
+    const url = buildApiUrl(API_CONFIG.ENDPOINTS.FLATLY, 'flat-bookings', flatBookingId);
+    await apiRequest<void>(url, {
+      method: 'DELETE',
+    });
+    
+    console.log('[BookingService] Flat booking canceled successfully');
+  },
 
   /**
    * Helper method to get total booking count for pagination

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Button from "../Elements/Button/Button";
 import CarBookings from "./CarBookings";
-import FlatBookings from "./FlatBookings";
+import FlatlyBookings from "./FlatlyBookings";
 import styles from "./PartnerBookingsPage.module.css";
 
 type Mode = "car" | "flat";
@@ -23,7 +23,7 @@ const PartnerBookingsPage = () => {
         </div>
       </div>
 
-      {mode === "car" ? <CarBookings /> : <FlatBookings />}
+      {mode === "car" ? <CarBookings /> : <FlatlyBookings />}
     </div>
   );
 };

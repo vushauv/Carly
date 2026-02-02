@@ -84,3 +84,58 @@ export interface BookingSearchFilters {
   priceMin?: number;
   priceMax?: number;
 }
+
+// Flat booking types for Flatly integration
+export interface FlatBooking {
+  booking: {
+    id: string;
+    flatId: string;
+    userId: string;
+    source: string;
+    checkInDate: string;
+    checkOutDate: string;
+    guestsCount: number;
+  };
+  flat: {
+    id: string;
+    name: string;
+    city: string;
+    country: string;
+    rooms: number;
+    maxGuests: number;
+    lat: number;
+    lon: number;
+  };
+  flatImages: {
+    sort_order: number;
+    image_url: string;
+  }[];
+  userId: number;
+  flatBookingStatus: string;
+}
+
+export interface FlatBookingDetails {
+  booking: {
+    id: string;
+    flatId: string;
+    userId: string;
+    source: string;
+    checkInDate: string;
+    checkOutDate: string;
+    guestsCount: number;
+  };
+  flat: {
+    id: string;
+    name: string;
+    city: string;
+    country: string;
+    rooms: number;
+    maxGuests: number;
+    lat: number;
+    lon: number;
+  };
+  flatImages: {
+    sort_order: number;
+    image_url: string;
+  }[];
+}

@@ -19,6 +19,7 @@ import CarImagesPage from "./components/Cars/CarImagesPage/CarImagesPage";
 import BookingViewPage from "./components/Bookings/BookingViewPage/BookingViewPage";
 import BookingEditPage from "./components/Bookings//BookingEditPage/BookingEditPage";
 import BookingCreatePage from "./components/Bookings//BookingCreatePage/BookingCreatePage";
+import FlatBookingViewPage from "./components/PartnerBookingsPage/FlatBookingViewPage";
 
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -101,6 +102,12 @@ function App() {
           <Route
             path="/partner-bookings"
             element={loggedIn ? <PartnerBookingsPage /> : <Navigate to="/login" />}
+          />
+
+          {/* Flat Booking View Route */}
+          <Route
+            path="/flat-bookings/:id"
+            element={loggedIn ? <FlatBookingViewPage /> : <Navigate to="/login" />}
           />
 
           <Route path="*" element={<Navigate to="/kpi" />} />
