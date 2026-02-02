@@ -34,6 +34,8 @@ import {
   type FlatlyFlatDto,
 } from "../../lib/api/flatlyApi";
 
+import { getReferenceData, type LocationDto } from "../../lib/api/referenceDataApi";
+
 import type { LikedCar } from "../../lib/storage/storage";
 import { clearLikedCars, getLikedCars, removeLikedCar } from "../../lib/storage/storage";
 
@@ -111,6 +113,13 @@ function friendlyBookingError(err: unknown): { title: string; message: string } 
   return { title: "Booking failed", message: "Something went wrong. Please try again." };
 }
 
+function locationLabel(l: LocationDto | undefined | null): string {
+  const addr = String(l?.address ?? "").trim();
+  if (addr) return addr;
+  if (typeof l?.id === "number") return `Location #${l.id}`;
+  return "—";
+}
+
 export default function LikedCarsTab() {
   const [liked, setLiked] = useState<LikedCar[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -126,6 +135,15 @@ export default function LikedCarsTab() {
   // car booking dates
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
+
+  // locations (Reference API)
+  const [pickupLocations, setPickupLocations] = useState<LocationDto[]>([]);
+  const [returnLocations, setReturnLocations] = useState<LocationDto[]>([]);
+  const [pickupLocationId, setPickupLocationId] = useState<number | null>(null);
+  const [returnLocationId, setReturnLocationId] = useState<number | null>(null);
+  const [pickupPickerOpen, setPickupPickerOpen] = useState(false);
+  const [returnPickerOpen, setReturnPickerOpen] = useState(false);
+  const [locationsLoading, setLocationsLoading] = useState(false);
 
   // partner flats
   const [flatsLoading, setFlatsLoading] = useState(false);
@@ -183,11 +201,41 @@ export default function LikedCarsTab() {
     [dateFrom, minFrom]
   );
 
-  function openCarBooking(c: LikedCar) {
+  async function loadLocationsOnce(): Promise<void> {
+    if (pickupLocations.length > 0 && returnLocations.length > 0) return;
+
+    setLocationsLoading(true);
+    try {
+      const ref = await getReferenceData(["PICKUP_LOCATIONS", "RETURN_LOCATIONS"]);
+      const pick = Array.isArray(ref?.pickupLocations) ? ref.pickupLocations : [];
+      const ret = Array.isArray(ref?.returnLocations) ? ref.returnLocations : [];
+
+      setPickupLocations(pick);
+      setReturnLocations(ret);
+
+      if (pickupLocationId == null && pick.length > 0) setPickupLocationId(pick[0].id);
+      if (returnLocationId == null && ret.length > 0) setReturnLocationId(ret[0].id);
+    } catch (e: any) {
+      Alert.alert(
+        "Locations unavailable",
+        "Couldn’t load locations from the backend. Please try again later."
+      );
+    } finally {
+      setLocationsLoading(false);
+    }
+  }
+
+  async function openCarBooking(c: LikedCar) {
     setCar(c);
     setDateFrom("");
     setDateTo("");
+
+    // reset each time (optional)
+    setPickupLocationId(null);
+    setReturnLocationId(null);
+
     setStep("bookCar");
+    await loadLocationsOnce();
   }
 
   function closeFlow() {
@@ -201,6 +249,8 @@ export default function LikedCarsTab() {
     setBookingId("");
     setGuestsCount("1");
     setFlatBookingSubmitting(false);
+    setPickupPickerOpen(false);
+    setReturnPickerOpen(false);
   }
 
   function goToCurrentBookings() {
@@ -213,6 +263,11 @@ export default function LikedCarsTab() {
 
   async function confirmCarBooking() {
     if (!car) return;
+
+    if (pickupLocationId == null || returnLocationId == null) {
+      Alert.alert("Missing location", "Please select pickup and return locations.");
+      return;
+    }
 
     if (!dateFrom || dateFrom < minFrom) {
       Alert.alert("Invalid Date From", "Date From must be today or later.");
@@ -231,6 +286,8 @@ export default function LikedCarsTab() {
         carId: Number(car.id),
         dateFromISO: fromLocal,
         dateToISO: toLocal,
+        pickupLocationId,
+        returnLocationId,
       });
 
       setBookingId(newBookingId);
@@ -246,6 +303,7 @@ export default function LikedCarsTab() {
       Alert.alert("Missing dates", "Book a car first (dates are required).");
       return;
     }
+
     setStep("browseFlats");
     setFlatsLoading(true);
     try {
@@ -262,22 +320,27 @@ export default function LikedCarsTab() {
   }
 
   function onBookFlat() {
-    const f = flats[flatIndex];
+    const f = flats[flatIndex] as any;
     if (!f) return;
 
-    const maxGuests = typeof (f as any).maxGuests === "number" ? (f as any).maxGuests : undefined;
+    const maxGuests =
+      typeof f.maxGuests === "number" ? (f.maxGuests as number) : undefined;
+
     const startDefault = "1";
-    const clamped = maxGuests && Number(startDefault) > maxGuests ? String(maxGuests) : startDefault;
+    const clamped =
+      maxGuests && Number(startDefault) > maxGuests ? String(maxGuests) : startDefault;
 
     setGuestsCount(clamped);
     setStep("flatGuests");
   }
 
   async function submitFlatBooking() {
-    const f = flats[flatIndex];
+    const f = flats[flatIndex] as any;
     if (!f) return;
 
-    const maxGuests = typeof (f as any).maxGuests === "number" ? (f as any).maxGuests : undefined;
+    const maxGuests =
+      typeof f.maxGuests === "number" ? (f.maxGuests as number) : undefined;
+
     const n = Number(String(guestsCount ?? "").trim());
 
     if (!Number.isFinite(n) || n < 1) {
@@ -292,25 +355,22 @@ export default function LikedCarsTab() {
     setFlatBookingSubmitting(true);
     try {
       const flatBookingId = await createFlatlyBooking({
-        flatId: String((f as any).id),
+        flatId: String(f.id),
         checkInDayISO: dateFrom,
         checkOutDayISO: dateTo,
         guestsCount: n,
       });
 
-      // ✅ Store ACTIVE booking locally (per-user) so you have fallback if partner API is down.
-      // This does NOT keep cancelled ones.
-      const flatName = String((f as any).name ?? "Flat").trim() || "Flat";
-      const city = String((f as any).city ?? "—").trim() || "—";
-      const country = String((f as any).country ?? "—").trim() || "—";
-      const rooms = typeof (f as any).rooms === "number" ? (f as any).rooms : undefined;
-      const maxG = typeof (f as any).maxGuests === "number" ? (f as any).maxGuests : undefined;
+      // Store ACTIVE booking locally (fallback if partner API is down)
+      const flatName = String(f.name ?? "Flat").trim() || "Flat";
+      const city = String(f.city ?? "—").trim() || "—";
+      const country = String(f.country ?? "—").trim() || "—";
+      const rooms = typeof f.rooms === "number" ? f.rooms : undefined;
+      const maxG = typeof f.maxGuests === "number" ? f.maxGuests : undefined;
 
       const urls =
-        Array.isArray((f as any).images) && (f as any).images.length
-          ? (f as any).images
-              .map((x: any) => String(x?.image_url ?? "").trim())
-              .filter(Boolean)
+        Array.isArray(f.images) && f.images.length
+          ? f.images.map((x: any) => String(x?.image_url ?? "").trim()).filter(Boolean)
           : [];
 
       await upsertFlatlyBooking({
@@ -318,14 +378,13 @@ export default function LikedCarsTab() {
         dateFromDayISO: dateFrom,
         dateToDayISO: dateTo,
         flatSnapshot: {
-          name: flatName,
+          title: flatName,
+          addressLine: flatName,
           city,
           country,
-          rooms,
-          maxGuests: maxG,
           imageUrls: urls,
         },
-      });
+      } as any);
 
       setBookingId(flatBookingId);
       setStep("flatSuccess");
@@ -365,7 +424,7 @@ export default function LikedCarsTab() {
               <Text style={styles.clearBtnText}>Clear all</Text>
             </Pressable>
 
-            {liked.map((c) => (
+            {liked.map((c: any) => (
               <CarCardView
                 key={c.id}
                 title={c.title}
@@ -377,7 +436,7 @@ export default function LikedCarsTab() {
                 footerLeft={`${c.pricePerDay} ${c.currency} / day`}
                 footerRight={
                   <View style={styles.actionsInline}>
-                    <Pressable style={styles.bookBtn} onPress={() => openCarBooking(c)}>
+                    <Pressable style={styles.bookBtn} onPress={() => void openCarBooking(c)}>
                       <Text style={styles.bookBtnText}>Book</Text>
                     </Pressable>
 
@@ -393,9 +452,11 @@ export default function LikedCarsTab() {
         )}
       </ScrollView>
 
+      {/* Full-screen flow modal */}
       <Modal visible={modalOpen} transparent={false} animationType="slide" onRequestClose={closeFlow}>
         <SafeAreaView style={[styles.flowSafe, { paddingTop: insets.top, paddingBottom: insets.bottom }]} edges={[]}>
           <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+            {/* Header */}
             <View style={[styles.flowHeader, { paddingTop: 6 }]}>
               <Text style={styles.flowTitle}>
                 {step === "bookCar" && "Book car"}
@@ -410,9 +471,40 @@ export default function LikedCarsTab() {
               </Pressable>
             </View>
 
+            {/* Content */}
             {step === "bookCar" ? (
               <ScrollView contentContainerStyle={styles.flowContent} showsVerticalScrollIndicator={false}>
                 <Text style={styles.flowCarTitle}>{car?.title ?? ""}</Text>
+
+                <Text style={styles.fieldLabel}>Pickup location</Text>
+                <Pressable
+                  style={styles.locationField}
+                  onPress={() => setPickupPickerOpen(true)}
+                  disabled={locationsLoading}
+                >
+                  <Text style={styles.locationFieldText}>
+                    {locationLabel(pickupLocations.find((x) => x.id === pickupLocationId)) ||
+                      "Select pickup location"}
+                  </Text>
+                </Pressable>
+
+                <Text style={styles.fieldLabel}>Return location</Text>
+                <Pressable
+                  style={styles.locationField}
+                  onPress={() => setReturnPickerOpen(true)}
+                  disabled={locationsLoading}
+                >
+                  <Text style={styles.locationFieldText}>
+                    {locationLabel(returnLocations.find((x) => x.id === returnLocationId)) ||
+                      "Select return location"}
+                  </Text>
+                </Pressable>
+
+                {locationsLoading ? (
+                  <View style={{ marginTop: 8 }}>
+                    <Text style={{ color: "#6B7280", fontWeight: "800" }}>Loading locations…</Text>
+                  </View>
+                ) : null}
 
                 <Text style={styles.fieldLabel}>From</Text>
                 <View style={styles.calendarWrap}>
@@ -517,9 +609,7 @@ export default function LikedCarsTab() {
 
                         const urls =
                           Array.isArray(f.images) && f.images.length
-                            ? f.images
-                                .map((x: any) => String(x?.image_url ?? "").trim())
-                                .filter(Boolean)
+                            ? f.images.map((x: any) => String(x?.image_url ?? "").trim()).filter(Boolean)
                             : [];
 
                         const hasImages = urls.length > 0;
@@ -543,21 +633,14 @@ export default function LikedCarsTab() {
                                 >
                                   {hasImages ? (
                                     urls.map((u: string) => (
-                                      <Image
-                                        key={u}
-                                        source={{ uri: u }}
-                                        style={styles.flatImage}
-                                        resizeMode="cover"
-                                      />
+                                      <View key={u} style={styles.flatImageFrame}>
+                                        <Image source={{ uri: u }} style={styles.flatImage} resizeMode="cover" />
+                                      </View>
                                     ))
                                   ) : (
-                                    <View style={styles.noImageWrap}>
-                                      <Image
-                                        source={require("../../assets/images/no-images.png")}
-                                        style={styles.flatImage}
-                                        resizeMode="cover"
-                                      />
-                                      <View style={styles.noImageOverlay}>
+                                    <View style={styles.flatImageFrame}>
+                                      <View style={styles.noImageHero}>
+                                        <Text style={styles.noImageIcon}>🏠</Text>
                                         <Text style={styles.noImageText}>No image available</Text>
                                       </View>
                                     </View>
@@ -694,6 +777,82 @@ export default function LikedCarsTab() {
                 <View style={{ height: 20 }} />
               </ScrollView>
             ) : null}
+
+            {/* Pickup picker */}
+            <Modal
+              visible={pickupPickerOpen}
+              transparent
+              animationType="slide"
+              onRequestClose={() => setPickupPickerOpen(false)}
+            >
+              <View style={styles.sheetBackdrop}>
+                <View style={styles.sheet}>
+                  <View style={styles.sheetHeader}>
+                    <Text style={styles.sheetTitle}>Select pickup location</Text>
+                    <Pressable onPress={() => setPickupPickerOpen(false)}>
+                      <Text style={styles.sheetClose}>Close</Text>
+                    </Pressable>
+                  </View>
+
+                  <ScrollView contentContainerStyle={{ paddingBottom: 18 }}>
+                    {pickupLocations.map((l) => {
+                      const selected = l.id === pickupLocationId;
+                      return (
+                        <Pressable
+                          key={l.id}
+                          style={[styles.sheetItem, selected && styles.sheetItemSelected]}
+                          onPress={() => {
+                            setPickupLocationId(l.id);
+                            setPickupPickerOpen(false);
+                          }}
+                        >
+                          <Text style={styles.sheetItemText}>{locationLabel(l)}</Text>
+                          {selected ? <Text style={styles.sheetCheck}>✓</Text> : null}
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              </View>
+            </Modal>
+
+            {/* Return picker */}
+            <Modal
+              visible={returnPickerOpen}
+              transparent
+              animationType="slide"
+              onRequestClose={() => setReturnPickerOpen(false)}
+            >
+              <View style={styles.sheetBackdrop}>
+                <View style={styles.sheet}>
+                  <View style={styles.sheetHeader}>
+                    <Text style={styles.sheetTitle}>Select return location</Text>
+                    <Pressable onPress={() => setReturnPickerOpen(false)}>
+                      <Text style={styles.sheetClose}>Close</Text>
+                    </Pressable>
+                  </View>
+
+                  <ScrollView contentContainerStyle={{ paddingBottom: 18 }}>
+                    {returnLocations.map((l) => {
+                      const selected = l.id === returnLocationId;
+                      return (
+                        <Pressable
+                          key={l.id}
+                          style={[styles.sheetItem, selected && styles.sheetItemSelected]}
+                          onPress={() => {
+                            setReturnLocationId(l.id);
+                            setReturnPickerOpen(false);
+                          }}
+                        >
+                          <Text style={styles.sheetItemText}>{locationLabel(l)}</Text>
+                          {selected ? <Text style={styles.sheetCheck}>✓</Text> : null}
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              </View>
+            </Modal>
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
@@ -780,6 +939,16 @@ const styles = StyleSheet.create({
 
   fieldLabel: { marginTop: 14, marginBottom: 6, color: "#111827", fontWeight: "900" },
 
+  locationField: {
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+  },
+  locationFieldText: { fontWeight: "900", color: "#111827" },
+
   calendarWrap: {
     borderRadius: 14,
     overflow: "hidden",
@@ -830,24 +999,35 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginTop: 6,
   },
-  flatCarouselWrap: { position: "relative" },
-flatImage: {
-  width: SCREEN_WIDTH - 32,
-  height: 170,
-  backgroundColor: "#FEF3C7",
-},
 
-  noImageWrap: { position: "relative" },
-  noImageOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingVertical: 10,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    alignItems: "center",
+  flatCarouselWrap: {
+    position: "relative",
+    borderRadius: 18,
+    overflow: "hidden",
   },
-  noImageText: { color: "#fff", fontWeight: "900" },
+
+  flatImageFrame: {
+    width: SCREEN_WIDTH - 32,
+    height: 170,
+    overflow: "hidden",
+  },
+
+  flatImage: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#FEF3C7",
+  },
+
+  noImageHero: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#FEF3C7",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  noImageIcon: { fontSize: 38 },
+  noImageText: { fontWeight: "900", color: "#111827", opacity: 0.8 },
 
   dotsRow: {
     position: "absolute",
@@ -880,4 +1060,46 @@ flatImage: {
     flexDirection: "row",
     gap: 10,
   },
+
+  // bottom sheet pickers
+  sheetBackdrop: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
+  sheet: {
+    backgroundColor: "#FFFBEB",
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+  },
+  sheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  sheetTitle: { fontSize: 18, fontWeight: "900", color: "#111827" },
+  sheetClose: { fontWeight: "900", color: "#2563EB" },
+
+  sheetItem: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  sheetItemSelected: {
+    backgroundColor: "#FACC15",
+    borderColor: "#F59E0B",
+  },
+  sheetItemText: { fontWeight: "900", color: "#111827" },
+  sheetCheck: { fontWeight: "900", color: "#111827", fontSize: 18 },
 });

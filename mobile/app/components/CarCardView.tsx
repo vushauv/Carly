@@ -24,10 +24,10 @@ type Props = {
   metaLeft?: string;
   metaRight?: string;
 
-  /** Footer left text (often price) */
+  /** Footer left text */
   footerLeft?: string;
 
-  /** Right side of footer (buttons etc.) */
+  /** Right side of footer  */
   footerRight?: React.ReactNode;
 
   /** Optional outer style override */

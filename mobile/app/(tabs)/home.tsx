@@ -38,7 +38,7 @@ function flatlyIdFromUiId(uiId: string): string {
 function mapLocalFlatlyRecordToBooking(rec: FlatlyBookingRecord): Booking {
   const nowISO = new Date().toISOString();
 
-  // ✅ We only want ACTIVE ones in UI; cancelled should vanish entirely.
+  // we only want ACTIVE ones in UI; cancelled should vanish entirely.
   if (rec.status === "CANCELLED") {
     // Return a "ghost" that caller can filter out.
     return {
@@ -94,7 +94,7 @@ function mapFlatlyToBooking(dto: any): Booking | null {
 
   return {
     id: `flatly-${bookingId}`,
-    status: "current", // partner list = active bookings
+    status: "current",
     state: "Booked",
     startDate: checkIn || nowISO,
     endDate: checkOut || nowISO,
@@ -127,7 +127,7 @@ export default function HomeTab() {
           .map(mapFlatlyToBooking)
           .filter((x): x is Booking => !!x);
       } catch {
-        // Partner down: show locally stored ACTIVE flat bookings
+        // if artner down: show locally stored ACTIVE flat bookings
         const local = await getFlatlyBookings();
         flatBookings = local
           .map(mapLocalFlatlyRecordToBooking)
@@ -157,7 +157,7 @@ export default function HomeTab() {
     if (section === "current" || section === "history") setSelected(section);
   }, [section]);
 
-  // ✅ Flatly cancelled should never show. History tab = only car history.
+  // flatly cancelled should never show. History tab = only car history.
   const bookings = useMemo(() => all.filter((b) => b.status === selected), [all, selected]);
 
   async function onCancel(id: string) {
@@ -200,7 +200,7 @@ export default function HomeTab() {
                   return;
                 }
 
-                // ✅ remove from local storage + UI immediately
+                // remove from local storage + UI immediately
                 await removeFlatlyBooking(flatBookingId);
                 setAll((prev) => prev.filter((b) => b.id !== id));
                 Alert.alert("Cancelled", "Your Flat booking was cancelled.");
@@ -307,7 +307,9 @@ function BookingCard({
           metaLeft={booking.car.fuelType ? `⛽ ${booking.car.fuelType}` : "🚗 Car"}
           metaRight={cancelled ? "❌ Cancelled" : "✅ Booked"}
           footerLeft={
-            typeof booking.car.pricePerDay === "number" && booking.car.currency
+            booking.totalPrice != null
+              ? `💰 Total: ${booking.totalPrice.toFixed(2)}`
+              : typeof booking.car.pricePerDay === "number" && booking.car.currency
               ? `${booking.car.pricePerDay} ${booking.car.currency} / day`
               : undefined
           }

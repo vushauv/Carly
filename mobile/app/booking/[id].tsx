@@ -135,7 +135,7 @@ export default function BookingDetails() {
                   return;
                 }
 
-                // ✅ Requirement #2: remove it completely from local + UI
+                // remove it completely from local + UI
                 await removeFlatlyBooking(flatBookingId);
 
                 Alert.alert("Cancelled", "Your Flat booking was cancelled.");

@@ -12,12 +12,8 @@ export type BookingCar = {
   brand: string;
   model: string;
 
-  // backend doesn't really store it -> keep for back-compat, but we won't show it in UI
-  plate: string;
-
   images: string[];
 
-  // ✅ extra car details (like Search)
   fuelType?: string;
   color?: string;
   pricePerDay?: number;
@@ -30,12 +26,14 @@ export type BookingFlat = {
 };
 
 export type Booking = {
-  id: string; // UI routes use string
-  status: BookingStatus; // current/history
-  state: BookingState; // Booked/Cancelled label
+  id: string
+  status: BookingStatus;
+  state: BookingState;
 
   startDate: string;
   endDate: string;
+
+  totalPrice?: number;
 
   car?: BookingCar;
   flat?: BookingFlat;
@@ -45,7 +43,7 @@ export type Booking = {
 };
 
 // -------------------------
-// Backend DTOs (from OpenAPI)
+// Backend DTOs
 // -------------------------
 type LocationDto = {
   id: number;
@@ -70,6 +68,7 @@ type GetBookingResponse = {
   providerExternalBookingId?: number;
   carBookingDateFrom?: string; // date-time
   carBookingDateTo?: string; // date-time
+  totalPrice?: number;
 };
 
 type BookingResponse = { id: number };
@@ -187,7 +186,6 @@ async function enrichCar(carId: number): Promise<BookingCar | undefined> {
   return {
     brand,
     model,
-    plate: "—", // keep but DO NOT show in UI
     images,
     fuelType,
     color,
@@ -203,9 +201,6 @@ async function requireUserId(): Promise<number> {
 }
 
 function toBackendLocalDateTime(iso: string): string {
-  // If you pass "YYYY-MM-DDTHH:mm:ss" already, keep it.
-  // If you pass with timezone, backend expects LocalDateTime (no zone).
-  // Safe quick strip: take first 19 chars "YYYY-MM-DDTHH:mm:ss"
   const s = String(iso ?? "").trim();
   if (!s) return s;
   if (s.length >= 19) return s.slice(0, 19);
@@ -248,6 +243,7 @@ export async function getBookingsFromBackend(): Promise<Booking[]> {
         state,
         startDate: start,
         endDate: end,
+        totalPrice: typeof b.totalPrice === "number" ? b.totalPrice : undefined,
         car,
         flat: undefined,
         createdAtISO: nowISO,
@@ -287,6 +283,7 @@ export async function getBookingByIdFromBackend(bookingId: string): Promise<Book
     state,
     startDate: toISODateOnlyOrDateTime(b.carBookingDateFrom),
     endDate: toISODateOnlyOrDateTime(b.carBookingDateTo),
+    totalPrice: typeof b.totalPrice === "number" ? b.totalPrice : undefined,
     car,
     flat: undefined,
     createdAtISO: nowISO,

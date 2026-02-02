@@ -1,7 +1,4 @@
 //mobile/app/(tabs)/search.tsx
-//npm i react-native-calendars
-//npx expo install @react-native-async-storage/async-storage
-//npx expo install @react-navigation/native
 
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
@@ -59,7 +56,6 @@ export default function SearchTab() {
   const [modelsByBrand, setModelsByBrand] = useState<Record<string, string[]>>({});
   const [colors, setColors] = useState<CarColor[]>([]);
 
-  // Smooth toast (no flicker)
   const toastTextRef = useRef<string>("");
   const toastOpacity = useRef(new Animated.Value(0)).current;
 
@@ -110,7 +106,7 @@ export default function SearchTab() {
       const res = await searchCars({ ...(nextFilters as any), __page: nextPage });
 
       setCars((prev) => {
-        // ✅ When user changes filters (mode === "replace"), show matches even if seen before.
+        // when user changes filters (mode === "replace"), show matches even if seen before.
         // Otherwise you can easily end up with "No more cars" while backend returned data.
         const incoming =
           mode === "replace"
@@ -142,7 +138,6 @@ export default function SearchTab() {
       await Promise.all([hydratePrefs(), hydrateLookups()]);
       await loadCars(filters, page, "replace");
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function onApplyFilters(next: CarSearchFilters) {
@@ -315,10 +310,10 @@ function Chip({ label }: { label: string }) {
 
 function CarCardContent({ car, onSeeMore }: { car: CarCard; onSeeMore: (c: CarCard) => void }) {
   const images = useMemo(() => {
-    // ✅ Use backend images (variable length)
+    //  Use backend images (variable length)
     if (Array.isArray(car.imageUrls) && car.imageUrls.length > 0) return car.imageUrls;
 
-    // ✅ Safety fallback: exactly ONE random
+    // Safety fallback: exactly ONE random image
     return [car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id + "_" + Date.now())}/900/600`];
   }, [car.id, car.imageUrl, car.imageUrls]);
 
@@ -385,7 +380,7 @@ function FiltersModal({
 }) {
   const [draft, setDraft] = useState<CarSearchFilters>(initial);
 
-  // IMPORTANT: string inputs for price so user can type normally
+  // string inputs for price so user can type normally
   const [minText, setMinText] = useState<string>(String(initial.priceRange.min));
   const [maxText, setMaxText] = useState<string>(String(initial.priceRange.max));
 
