@@ -30,6 +30,7 @@ function Input({
 }: InputProps) {
   const [hintVisibility, setHintVisibility] = useState(false);
   const [error, setError] = useState(false);
+  
 
   /**
    * 🔑 Sync internal error state with external errorMessage

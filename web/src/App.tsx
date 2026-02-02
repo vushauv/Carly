@@ -4,9 +4,9 @@ import KPIPage from "./components/KPIPage/KPIPage";
 import PartnerBookingsPage from "./components/PartnerBookingsPage/PartnerBookingsPage";
 import Content from "./components/Elements/Content/Content";
 import Header from "./components/Elements/Header/Header";
-import { useState } from "react";
 import Footer from "./components/Elements/Footer/Footer";
-import ManageCarsPage from "./components/Cars/ManageCarsPage/ManageCarsPage";
+import ProtectedRoute from "./components/Elements/ProtectedRoute/ProtectedRoute";
+import ManageCarsPage from "./components/Cars//ManageCarsPage/ManageCarsPage";
 import ManageBookingsPage from "./components/Bookings//ManageBookingsPage/ManageBookingsPage";
 import UsersPage from "./components/Users/UsersPage/UsersPage";
 import UserViewPage from "./components/Users/UserViewPage/UserViewPage";
@@ -20,94 +20,158 @@ import BookingViewPage from "./components/Bookings/BookingViewPage/BookingViewPa
 import BookingEditPage from "./components/Bookings//BookingEditPage/BookingEditPage";
 import BookingCreatePage from "./components/Bookings//BookingCreatePage/BookingCreatePage";
 import FlatBookingViewPage from "./components/PartnerBookingsPage/FlatBookingViewPage";
+import { useAuthStore } from "./stores/authStore";
 
 import { Routes, Route, Navigate } from "react-router-dom";
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState<boolean>(true);
-
   return (
     <>
-      <Header loggedIn={loggedIn} />
+      <Header />
 
       <Content>
         <Routes>
-          <Route path="/login" element={loggedIn ? <Navigate to="/kpi" /> : <LoginPage setLoggedIn={setLoggedIn} />} />
+          <Route path="/login" element={<LoginPage />} />
 
+          {/* Protected Routes */}
           <Route
             path="/kpi"
-            element={loggedIn ? <KPIPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <KPIPage />
+              </ProtectedRoute>
+            }
           />
 
           <Route
             path="/cars"
-            element={loggedIn ? <ManageCarsPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <ManageCarsPage />
+              </ProtectedRoute>
+            }
           />
 
           {/* Car Management Routes */}
           <Route
             path="/cars/new"
-            element={loggedIn ? <CarCreatePage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <CarCreatePage />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/cars/:id/images"
-            element={loggedIn ? <CarImagesPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <CarImagesPage />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/cars/:id"
-            element={loggedIn ? <CarViewPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <CarViewPage />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/cars/:id/edit"
-            element={loggedIn ? <CarEditPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <CarEditPage />
+              </ProtectedRoute>
+            }
           />
 
           {/* User Management Routes */}
           <Route
             path="/users"
-            element={loggedIn ? <UsersPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <UsersPage />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/users/register"
-            element={loggedIn ? <UserRegisterPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <UserRegisterPage />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/users/:id"
-            element={loggedIn ? <UserViewPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <UserViewPage />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/users/:id/edit"
-            element={loggedIn ? <UserEditPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <UserEditPage />
+              </ProtectedRoute>
+            }
           />
 
           <Route
             path="/manage-bookings"
-            element={loggedIn ? <ManageBookingsPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <ManageBookingsPage />
+              </ProtectedRoute>
+            }
           />
 
           {/* Booking Management Routes */}
           <Route
             path="/bookings/new"
-            element={loggedIn ? <BookingCreatePage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <BookingCreatePage />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/bookings/:id"
-            element={loggedIn ? <BookingViewPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <BookingViewPage />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/bookings/:id/edit"
-            element={loggedIn ? <BookingEditPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <BookingEditPage />
+              </ProtectedRoute>
+            }
           />
 
           <Route
             path="/partner-bookings"
-            element={loggedIn ? <PartnerBookingsPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <PartnerBookingsPage />
+              </ProtectedRoute>
+            }
           />
 
           {/* Flat Booking View Route */}
           <Route
             path="/flat-bookings/:id"
-            element={loggedIn ? <FlatBookingViewPage /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <FlatBookingViewPage />
+              </ProtectedRoute>
+            }
           />
 
           <Route path="*" element={<Navigate to="/kpi" />} />

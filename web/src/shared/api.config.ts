@@ -8,6 +8,7 @@ export const API_CONFIG = {
     REFERENCE: '/reference/data',
     PARKLY: '/parkly/car-bookings',
     FLATLY: '/flatly',
+    AUTH: '/users',
   }
 } as const;
 

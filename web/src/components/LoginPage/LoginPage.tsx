@@ -1,39 +1,63 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./LoginPage.module.css";
 import Button from "../Elements/Button/Button";
 import Input from "../Elements/Input/Input";
+import { useAuthStore } from "../../stores/authStore";
+import { API_CONFIG, buildApiUrl, apiRequest } from "../../shared/api.config";
 
-type LoginPageProps = {
-  setLoggedIn: (value: boolean) => void;
-};
+const LoginPage = () => {
+  const navigate = useNavigate();
+  const { login, isLoggedIn } = useAuthStore();
 
-const LoginPage = ({ setLoggedIn }: LoginPageProps) => {
-  const [error, setError] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>("Error Area");
-  const [hasRequestedCode, setHasRequestedCode] = useState<boolean>(false); //this will tell us if it should be "send" or "resend" code
-  const [cooldown, setCooldown] = useState<number>(0);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
 
+  // Redirect if already logged in
   useEffect(() => {
-    //this will be executed when cooldown created and then each second
-    if (cooldown <= 0) return;
-    const interval = setInterval(() => {
-      //each interval will actually just run for one second (so not each second) because then cooldown will be updated and useEffect will be triggered again (cleanup previous interval and create a new one)
-      setCooldown((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [cooldown]);
-
-  const startCooldown = () => setCooldown(60);
-
-  const handleSendCode = () => {
-    //handle the actual code sending logic here
-    if (!hasRequestedCode) {
-      setHasRequestedCode(true);
+    if (isLoggedIn) {
+      navigate("/kpi");
     }
-    startCooldown();
-  };
+  }, [isLoggedIn, navigate]);
 
-  const isCooldownActive = cooldown > 0;
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      setError(true);
+      setErrorMessage("Please enter both email and password");
+      return;
+    }
+
+    try {
+      setIsLoggingIn(true);
+      setError(false);
+      setErrorMessage(null);
+
+      const url = buildApiUrl(API_CONFIG.ENDPOINTS.AUTH, 'login');
+      const response = await apiRequest<{ userId: number; }>(url, {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.userId) {
+        login(email);
+        navigate("/kpi");
+      } else {
+        setError(true);
+        setErrorMessage("Invalid email or password. Please try again.");
+      }
+    } catch (err) {
+      setError(true);
+      setErrorMessage("Login failed. Please check your credentials and try again.");
+      console.error("Login failed:", err);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   return (
     <section className={styles.sectionWrapper}>
@@ -41,53 +65,50 @@ const LoginPage = ({ setLoggedIn }: LoginPageProps) => {
         <h2 className={styles.title}>Sign in To Carly</h2>
         <p className={styles.subtitle}>Access your admin dashboard</p>
       </div>
+
       <fieldset className={styles.formWrapper}>
-        <form onSubmit={(e) => e.preventDefault()} className={styles.form}>
-          {error ? (
+        <form onSubmit={handleLogin} className={styles.form}>
+          {error && (
             <div className={styles.errorArea}>
               <p className={styles.errorMessage}>{errorMessage}</p>
             </div>
-          ) : null}
+          )}
+
           <div className={styles.inputField}>
-            <label
-              htmlFor="email" /*htmlFor activates the input once the label is clicked*/
-            >
-              Email:
-            </label>
+            <label htmlFor="email">Email:</label>
             <Input
               id="email"
               type="email"
-              placeholder="Email"
-              hint="example@gmail.com"
-              errorMessage="Enter a valid email address"
+              hint="Enter your email address"
+              errorMessage={error && !email ? "Email is required" : ""}
               className={styles.input}
-              isRequired={true}
-            ></Input>
+              isRequired
+              value={email}
+              onChange={setEmail}
+            />
           </div>
-          <div className={styles.sendCodeWrapper}>
-            <Button
-              onClick={handleSendCode}
-              disabled={hasRequestedCode && isCooldownActive}
-            >
-              {!hasRequestedCode ? "Send Code" : "Resend Code"}
-            </Button>
-            {isCooldownActive ? (
-              <span className={styles.cooldownText}> in {cooldown}s</span>
-            ) : null}
-          </div>
+
           <div className={styles.inputField}>
-            <label htmlFor="code">Code:</label>
+            <label htmlFor="password">Password:</label>
             <Input
-              id="code"
-              type="text"
-              placeholder="Code"
-              hint="Check your email to get the code"
-              errorMessage="Enter n-digit code"
+              id="password"
+              type="password"
+              hint="Enter your password"
+              errorMessage={error && !password ? "Password is required" : ""}
               className={styles.input}
-              isRequired={true}
-            ></Input>
+              isRequired
+              value={password}
+              onChange={setPassword}
+            />
           </div>
-          <Button onClick={() => setLoggedIn(true)}>Enter Code</Button>
+
+          <div className={styles.buttonGroup}>
+            <Button 
+              label={isLoggingIn ? "Signing In..." : "Sign In"} 
+              type="submit" 
+              disabled={isLoggingIn || !email || !password}
+            />
+          </div>
         </form>
       </fieldset>
     </section>

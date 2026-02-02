@@ -1,13 +1,16 @@
 import Navbar from "../Navbar/Navbar";
 import styles from "./Header.module.css";
 import { Link } from "react-router-dom";
+import { useAuthStore } from "../../../stores/authStore";
+import Button from "../Button/Button";
 
+const Header = () => {
+  const { isLoggedIn, user, logout } = useAuthStore();
 
-export interface HeaderProps {
-  loggedIn: boolean;
-}
+  const handleLogout = () => {
+    logout();
+  };
 
-const Header = ({ loggedIn }: HeaderProps) => {
   return (
     <header className={styles.header}>
       <div className={styles.headerContent}>
@@ -20,13 +23,21 @@ const Header = ({ loggedIn }: HeaderProps) => {
           />
         </Link>
 
-        {loggedIn ? (
+        {isLoggedIn ? (
           <Navbar>
             {/* NavBar of the app as a component - visible only when the user is logged in*/}
           </Navbar>
         ) : null}
-        {/* Profile compoennt as a dropdown list using which the user can view profile and log in/out*/}
-        <div className={styles.emptyDiv}/> {/* Empty div to balance the grid layout (for navbar to be centered)*. to be changed for a profile component later on*/}
+        
+        {/* Profile component with user info and logout */}
+        {isLoggedIn ? (
+          <div className={styles.profileSection}>
+            <span className={styles.userEmail}>{user?.email}</span>
+            <Button label="Log Out" onClick={handleLogout}>Logout</Button>
+          </div>
+        ) : (
+          <div className={styles.emptyDiv}/> 
+        )}
       </div>
     </header>
   );
