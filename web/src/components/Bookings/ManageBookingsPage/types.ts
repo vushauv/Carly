@@ -1,7 +1,7 @@
 // Booking types based on rental car business logic
 
 
-export type BookingStatus = "CREATED" | "CONFIRMED" | "CANCELLED" | "FINISHED";
+export type BookingStatus = "CREATED" | "CONFIRMED" | "CANCELLED" ;
 
 export type BookingUpdateRequest = {
   pickupLocationId: number;

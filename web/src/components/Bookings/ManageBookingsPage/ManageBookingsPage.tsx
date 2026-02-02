@@ -24,16 +24,43 @@ const ManageBookingsPage = () => {
     try {
       setLoading(true);
 
-      const bookingsData = await bookingService.getAllBookings(page, PAGE_SIZE + 1, {
-        bookingId: f.bookingId ? Number(f.bookingId) : undefined,
-        userId: f.userId ? Number(f.userId) : undefined,
-        status: f.status?.trim() || undefined,
-        startDateFrom: f.dateFrom?.trim() ? `${f.dateFrom}T00:00:00` : undefined,
-        startDateTo: f.dateTo?.trim() ? `${f.dateTo}T23:59:59` : undefined,
-      });
+      const pageData = await bookingService.getAllBookings(
+        page,
+        PAGE_SIZE,
+        {
+          bookingId: f.bookingId ? Number(f.bookingId) : undefined,
+          userId: f.userId ? Number(f.userId) : undefined,
+          status: f.status?.trim() || undefined,
+          startDateFrom: f.dateFrom?.trim()
+            ? `${f.dateFrom}T00:00:00`
+            : undefined,
+          startDateTo: f.dateTo?.trim()
+            ? `${f.dateTo}T23:59:59`
+            : undefined,
+        }
+      );
+      
+      // probe next page
+      const nextPageData = await bookingService.getAllBookings(
+        page + 1,
+        PAGE_SIZE,
+        {
+          bookingId: f.bookingId ? Number(f.bookingId) : undefined,
+          userId: f.userId ? Number(f.userId) : undefined,
+          status: f.status?.trim() || undefined,
+          startDateFrom: f.dateFrom?.trim()
+            ? `${f.dateFrom}T00:00:00`
+            : undefined,
+          startDateTo: f.dateTo?.trim()
+            ? `${f.dateTo}T23:59:59`
+            : undefined,
+        }
+      );
+      
+      setBookings(pageData);
+      setHasNextPage(nextPageData.length > 0);
 
-      setBookings(bookingsData.slice(0, PAGE_SIZE));
-      setHasNextPage(bookingsData.length > PAGE_SIZE);
+    
     } finally {
       setLoading(false);
     }
@@ -49,7 +76,7 @@ const ManageBookingsPage = () => {
       let pageToLoad = currentPage;
 
       while (pageToLoad > 0) {
-        const pageData = await bookingService.getAllBookings(pageToLoad, PAGE_SIZE + 1, {
+        const pageData = await bookingService.getAllBookings(pageToLoad, PAGE_SIZE, {
           bookingId: appliedFilters.bookingId ? Number(appliedFilters.bookingId) : undefined,
           userId: appliedFilters.userId ? Number(appliedFilters.userId) : undefined,
           status: appliedFilters.status?.trim() || undefined,
@@ -167,10 +194,11 @@ const ManageBookingsPage = () => {
           loadBookingsPage(newPage, appliedFilters);
         }}
         onNext={() => {
-          if (!hasNextPage) return;
           const newPage = currentPage + 1;
           setCurrentPage(newPage);
           loadBookingsPage(newPage, appliedFilters);
+
+          
         }}
       />
     </div>
