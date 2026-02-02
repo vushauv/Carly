@@ -4,7 +4,7 @@ import styles from "./ManageCarsPage.module.css";
 import AddNewEntityComponent from "../../Elements/AddNewEntityComponent/AddNewComponent";
 import FiltersForm from "../../Elements/FiltersForm/FiltersForm";
 import type { Car } from "../services/types";
-import { type CarFilters, type CarFilterKey, carFilterFields } from "../services/filters.conf";
+import { type CarFilters, type CarFilterKey, useCarFilterFields } from "../services/filters.conf";
 import DataTable from "../../Elements//DataTable/DataTable";
 import { carsColumns, carsRowKey, carsActions } from "../services/datatable.conf";
 import Pagination from "../../Elements//Pagination/Pagination";
@@ -19,6 +19,9 @@ const ManageCarsPage = () => {
   const [hasNextPage, setHasNextPage] = useState<boolean>(true);
   const [loading, setLoading] = useState(false);
   const [activeFilters, setActiveFilters] = useState<Partial<CarFilters>>({});
+
+  // Use the dynamic filter fields hook
+  const carFilterFields = useCarFilterFields();
 
   const loadCarsPage = async (page: number, filtersToApply: Partial<CarFilters> = {}) => {
     try {

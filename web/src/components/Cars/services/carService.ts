@@ -7,6 +7,8 @@ export const carService = {
    * Retrieves a paginated list of cars with optional filtering
    * Maps to: GET /api/cars?searchParams={filters}&page={pageNumber}&size={pageSize}
    */
+
+
   async getAllCars(pageNumber: number = 0, pageSize: number = 3, filters?: Partial<CarSearchFilters>): Promise<{cars: Car[], totalCount: number}> {
     console.log(`[CarService] Fetching cars: page ${pageNumber}, size ${pageSize}`, filters ? `with filters: ${JSON.stringify(filters)}` : '');
     
@@ -15,27 +17,29 @@ export const carService = {
       size: pageSize.toString(),
     });
 
-    // Add filters as searchParams object if provided
+    // Add filters as individual query parameters instead of JSON searchParams
     if (filters && Object.keys(filters).length > 0) {
-      // Create searchParams object for the API
-      const searchParams = {
-        features: {
-          brand: filters.brand,
-          model: filters.model, 
-          color: filters.color,
-          fuelType: filters.fuelType,
-          status: filters.status
-        },
-        availability: filters.availability
-      };
+      // Add feature filters with dot notation
+      if (filters.color) params.append('features.color', filters.color);
+      if (filters.brand) params.append('features.brand', filters.brand);
+      if (filters.model) params.append('features.model', filters.model);
+      if (filters.fuelType) params.append('features.fuelType', filters.fuelType);
+      if (filters.status) params.append('features.status', filters.status);
       
-      // Remove undefined values
-      const cleanSearchParams = JSON.parse(JSON.stringify(searchParams));
-      params.append('searchParams', JSON.stringify(cleanSearchParams));
+      // Add date filters
+      if (filters.dateFrom) params.append('date.from', `${filters.dateFrom}T08:49:22.761Z`);
+      if (filters.dateTo) params.append('date.to', `${filters.dateTo}T08:49:22.761Z`);
+      
+      // Add price filters
+      if (filters.minPrice !== undefined) params.append('minPrice', filters.minPrice.toString());
+      if (filters.maxPrice !== undefined) params.append('maxPrice', filters.maxPrice.toString());
     }
 
+    console.log("Params:")
+    console.log(params)
+
     const url = buildApiUrl(API_CONFIG.ENDPOINTS.CARS) + `?${params}`;
-    console.log(`[CarService] Request URL: ${url}`);
+    console.log(`[CarService] request URL: ${url}`);
     
     try {
       const response = await apiRequest<Car[]>(url);
