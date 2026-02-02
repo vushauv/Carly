@@ -1,4 +1,4 @@
-// app/index.tsx
+//mobile/app/index.tsx
 import {
   View,
   Text,
@@ -11,12 +11,19 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { useState } from "react";
 
-import { loginUser, getUserById } from "../lib/userApi";
-import { saveProfile } from "../lib/profileStorage";
+import { useState } from "react";
+import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { ApiError } from "../lib/api/apiClient";
+import { resetSearchLookupsMemo } from "../lib/api/carlyApi";
+import { loginUser, getUserById } from "../lib/api/userApi";
+
+import { saveProfile } from "../lib/storage/profileStorage";
+import { purgeLegacyCarPrefsGlobalKeys } from "../lib/storage/storage";
+import { clearCachedReferenceData } from "../lib/storage/referenceDataStorage";
+import { purgeLegacyFlatlyBookingsGlobalKey } from "../lib/storage/flatlyBookingsStorage";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -44,17 +51,57 @@ export default function LoginScreen() {
       // GET /users/{id} -> user info
       const info = await getUserById(userId);
 
-      const fullName = `${info.firstName ?? ""} ${info.lastName ?? ""}`.trim();
-
       await saveProfile({
         userId,
         email: info.email ?? e,
         phoneDigits: info.contactNumber ? String(info.contactNumber) : "",
-        fullName: fullName || "—",
+        firstName: info.firstName ?? "",
+        secondName: info.secondName ?? "",
+        lastName: info.lastName ?? "",
       });
 
-      router.replace("/tabs/SearchTab");
-    } catch (err: any) {
+      await purgeLegacyCarPrefsGlobalKeys();
+      await purgeLegacyFlatlyBookingsGlobalKey();
+
+      await clearCachedReferenceData();
+      resetSearchLookupsMemo();
+      router.replace("/(tabs)/search");
+     } catch (err: any) {
+      if (err instanceof ApiError) {
+        // If backend returns ExceptionDetails, it's likely in err.body
+        const body = err.body as any;
+
+        // Support BOTH shapes:
+        // 1) { code: "EMAIL_NOT_FOUND", message: "..." }
+        // 2) { message: "EMAIL_NOT_FOUND", ... }
+        const code: string | undefined =
+          (body && typeof body === "object" && (body.code || body.message)) || undefined;
+
+        if (err.status === 422) {
+          Alert.alert("Invalid input", "Please enter a valid email and password.");
+          return;
+        }
+
+        if (err.status === 401) {
+          if (code === "EMAIL_NOT_FOUND") {
+            Alert.alert("Login failed", "No account exists for this email.");
+            return;
+          }
+          if (code === "INVALID_PASSWORD") {
+            Alert.alert("Login failed", "Wrong password.");
+            return;
+          }
+
+          // fallback if backend doesn't send code
+          Alert.alert("Login failed", "Invalid email or password.");
+          return;
+        }
+
+        // Other HTTP errors
+        Alert.alert("Error", err.message);
+        return;
+      }
+
       Alert.alert("Login failed", err?.message ?? "Unknown error");
     } finally {
       setLoading(false);
@@ -96,7 +143,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <Text style={styles.footerText}>Not registered yet?</Text>
-            <TouchableOpacity onPress={() => router.push("/RegisterScreen")} disabled={loading}>
+            <TouchableOpacity onPress={() => router.push("/register")} disabled={loading}>
               <Text style={styles.signUp}>Sign Up</Text>
             </TouchableOpacity>
           </View>

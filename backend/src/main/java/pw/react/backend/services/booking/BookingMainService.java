@@ -15,6 +15,7 @@ import pw.react.backend.exceptions.custom.CarBookingConflictException;
 import pw.react.backend.repositories.booking.BookingRepository;
 import org.springframework.data.domain.Page;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.chrono.ChronoLocalDateTime;
@@ -71,7 +72,6 @@ public class BookingMainService implements BookingService {
                 .orElse(false);
     }
 
-    // TODO: add possibility to make a booking for one day only
     @Override
     @Transactional
     public List<Booking> batchSave(List<Booking> bookings)
@@ -85,23 +85,19 @@ public class BookingMainService implements BookingService {
             var carId = booking.getCar().getCarId();
             var userId = booking.getUser().getUserId();
             var dateRange = new DateRange(booking.getCarBookingDateFrom(), booking.getCarBookingDateTo());
-            var now = LocalDateTime.now();
-
-            if(dateRange.getFrom().isBefore(now))
-                throw new BadRequestException("The dateFrom cannot be before current time");
-            // Checks if a valid dateRange is provided
-            DateUtils.normaliseDates(dateRange);
+            var normalisedRange = DateUtils.validateAndNormalise(dateRange);
 
             booking.setCarBookingStatus(created);
+            // persist normalised values
+            booking.setCarBookingDateFrom(normalisedRange.getFrom());
+            booking.setCarBookingDateTo(normalisedRange.getTo());
             if(!userService.userExistsById(userId))
-                throw new ResourceNotFoundException("User with id "
-                        + booking.getUser().getUserId() +
-                        " not found. The request is cancelled.");
+                throw new ResourceNotFoundException("User with id " + booking.getUser().getUserId() + " not found. The request is cancelled.");
 
-            if(!carService.checkCarAvailability(carId, dateRange))
-                throw new CarBookingConflictException(carId, dateRange);
+            if(!carService.checkCarAvailability(carId, null, normalisedRange))
+                throw new CarBookingConflictException(carId, normalisedRange);
 
-            // using defaults
+            // using defaults. TODO: make return and pickup locations mandatory
             if (booking.getPickupLocation() == null) {
                 var defaultPickup = locationRepository.findById(defaultPickUpLocation)
                         .orElseThrow(() -> new IllegalStateException("Default location missing"));
@@ -112,6 +108,7 @@ public class BookingMainService implements BookingService {
                         .orElseThrow(() -> new IllegalStateException("Default location missing"));
                 booking.setReturnLocation(defaultReturn);
             }
+            booking.setCarTotalPrice(carService.calculateTotalPrice(carId, normalisedRange));
         }
         return bookingRepository.saveAll(bookings);
     }
@@ -140,6 +137,8 @@ public class BookingMainService implements BookingService {
         int size = (pageSize <= 0 ? defaultPageSize : pageSize);
 
         // TODO: IntelliSense tells me 'where' is deprecated
+        // WSE: so what, let it complain :)
+        
         //some ORM magic, but allows to filer based on the input criteria
         Specification<Booking> spec = Specification.where(BookingSpecifications.isEnabled())
                 .and(BookingSpecifications.hasBookingId(criteria.getBookingId()))
@@ -174,32 +173,13 @@ public class BookingMainService implements BookingService {
     }
 
     @Override
-    @Transactional
-    public void cancelFlatBooking(Integer bookingId) {
-        var CANCELLED_STATUS = BookingStatus.CANCELLED.name();
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
+    public BigDecimal calculateBookingTotalPrice(Integer bookingId) {
+        var booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() ->new ResourceNotFoundException("Booking with id " + bookingId + " not found"));
+        var carTotalPrice = booking.getCarTotalPrice();
+        var flatTotalPrice = booking.getFlatTotalPrice();
+        flatTotalPrice = flatTotalPrice == null ? BigDecimal.ZERO : flatTotalPrice;
 
-        BookingStatusDictionary cancelled = bookingStatusDictionaryRepository.findByName(CANCELLED_STATUS)
-                .orElseThrow(() -> new ResourceNotFoundException(CANCELLED_STATUS + " status missing (seed data)"));
-
-        //safeguard - if already cancelled then do nothing
-        if (booking.getFlatBookingStatus() != null &&
-                CANCELLED_STATUS.equalsIgnoreCase(booking.getFlatBookingStatus().getName())) {
-            return;
-        }
-        //TODO: after deciding, make sure we pass the correct one: our BookingId vs their FlatBookingId!!!
-
-        //first we cancell the FlatBooking via their API,
-        var success = flatlyService.cancelFlatBookingInFlatly(bookingId);
-        log.info("Flat booking cancelled on Flatly's side: bookingId={}", bookingId);
-
-        //on success, we change the status in our system to 'Cancelled'
-        if(success) {
-            booking.setFlatBookingStatus(cancelled);
-            bookingRepository.save(booking);
-            log.info("Flat booking cancelled on Carly's side: bookingId={}", bookingId);
-        }
+        return carTotalPrice.add(flatTotalPrice);
     }
-
 }

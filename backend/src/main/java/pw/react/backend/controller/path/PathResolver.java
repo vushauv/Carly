@@ -1,7 +1,7 @@
 package pw.react.backend.controller.path;
 
 public final class PathResolver {
-    public static final String Root = "/api";
+    public static final String Root = ""; //useful if we wanna add v1/v2.. etc in the future
     public static class Car {
         public static final String Base = Root + "/cars";
         public static final String Images = "/images";

@@ -23,6 +23,7 @@ public interface CarFeatureMapper {
 
     // IN mappings:
     @Mapping(target = "dictionary.carFeatureDictionaryId", source="dictionaryId")
+    @Mapping(target = "value",source="value", qualifiedByName = "fromDisplayName")
     CarFeature toCarFeature(CarFeatureDto carFeatureDto);
     List<CarFeature> toCarFeatureList(List<CarFeatureDto> carFeatures);
 
@@ -41,5 +42,11 @@ public interface CarFeatureMapper {
     default String toDisplayName(String name) {
         if (name == null) return null;
         return DisplayNameConverter.toDisplayName(name);
+    }
+
+    @Named("fromDisplayName")
+    default String fromDisplayName(String name) {
+        if (name == null) return null;
+        return DisplayNameConverter.fromDisplayName(name);
     }
 }

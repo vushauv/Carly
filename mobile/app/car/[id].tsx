@@ -1,9 +1,10 @@
+//mobile/app/car/[id].tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import CarCardView from "../../app/components/CarCardView";
-import { getCarDetailsForId } from "../../lib/viewedCarsStorage";
+import { getCarDetailsForId } from "../../lib//storage/viewedCarsStorage";
 import type { CarCard } from "../../lib/models";
 
 export default function CarDetails() {
@@ -22,13 +23,14 @@ export default function CarDetails() {
 
   const images = useMemo(() => {
     if (!car) return [];
-    const base = car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id)}/900/600`;
-    return [
-      base,
-      `https://picsum.photos/seed/${encodeURIComponent(car.id + "_2")}/900/600`,
-      `https://picsum.photos/seed/${encodeURIComponent(car.id + "_3")}/900/600`,
-    ];
+
+    // ✅ Use backend-provided images if present
+    if (Array.isArray(car.imageUrls) && car.imageUrls.length > 0) return car.imageUrls;
+
+    // ✅ Fallback: exactly one placeholder
+    return [car.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(car.id + "_" + Date.now())}/900/600`];
   }, [car]);
+
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -58,7 +60,6 @@ export default function CarDetails() {
               <Text style={styles.line}>Model: {car.model}</Text>
               <Text style={styles.line}>Fuel: {car.fuelType}</Text>
               <Text style={styles.line}>Color: {car.color}</Text>
-              <Text style={styles.line}>Rating: {car.rating?.toFixed(1) ?? "—"}</Text>
             </View>
           </>
         )}

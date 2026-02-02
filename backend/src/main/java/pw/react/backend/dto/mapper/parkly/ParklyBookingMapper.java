@@ -10,6 +10,8 @@ import pw.react.backend.dto.response.parkly.ParklyCreateBookingResponseDto;
 import pw.react.backend.dto.response.parkly.ParklyGetBookingResponseDto;
 import pw.react.backend.utils.converters.response.DisplayNameConverter;
 
+import java.math.BigDecimal;
+
 @Mapper(componentModel = "spring",
         unmappedTargetPolicy = ReportingPolicy.IGNORE,
         uses = LocationMapper.class)
@@ -23,10 +25,12 @@ public interface ParklyBookingMapper {
     @Mapping(target = "status.id", source = "carBookingStatus.bookingStatusDictionaryId")
     @Mapping(target = "dateFrom", source = "carBookingDateFrom")
     @Mapping(target = "dateTo", source = "carBookingDateTo")
+    @Mapping(target = "totalPrice", source = "booking", qualifiedByName = "calculateTotalPrice")
     ParklyGetBookingResponseDto toGetCarResponseDto(Booking booking);
 
     @Mapping(target = "status.name", source = "carBookingStatus.name", qualifiedByName = "toDisplayName")
     @Mapping(target = "status.id", source = "carBookingStatus.bookingStatusDictionaryId")
+    @Mapping(target = "totalPrice", source = "booking", qualifiedByName = "calculateTotalPrice")
     ParklyCreateBookingResponseDto toCreateBookingResponseDto(Booking booking);
 
     // IN mappings:
@@ -58,5 +62,14 @@ public interface ParklyBookingMapper {
         Location l = new Location();
         l.setLocationId(id);
         return l;
+    }
+
+    @Named("calculateTotalPrice")
+    default BigDecimal calculateTotalPrice(Booking booking) {
+        BigDecimal carTotalPrice = booking.getCarTotalPrice();
+        BigDecimal flatTotalPrice = booking.getFlatTotalPrice();
+
+        if (flatTotalPrice == null) flatTotalPrice = BigDecimal.ZERO;
+        return carTotalPrice.add(flatTotalPrice);
     }
 }

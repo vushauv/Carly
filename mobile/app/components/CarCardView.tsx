@@ -1,3 +1,4 @@
+//mobile/app/components/CarCardView.tsx
 import React, { useMemo, useState } from "react";
 import {
   Image,

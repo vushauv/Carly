@@ -2,26 +2,6 @@ azure:
   backend:
     url: https://pw2024.azurewebsites.net
 
-##section for Flatly integration
-integrations:
-  flatly:
-    base-url: http://localhost:8080 #TODO: add environment variable!
-
-spring:
-  profiles:
-    active: local,cors
-    ##local or dev, if dev then the data seeder runs
-  servlet:
-    multipart:
-      ## MULTIPART (MultipartProperties)
-      enabled: true
-      # Threshold after which files are written to disk.
-      file-size-threshold: 2KB
-      # Max file size.
-      max-file-size: 200MB
-      # Max Request Size
-      max-request-size: 215MB
-# Actuator
 management:
   endpoints:
     access:
@@ -44,28 +24,29 @@ management:
       access: read_only
     heapdump:
       access: read_only
-# http://localhost:8080/actuator/env/spring.profiles.active
     env:
       access: read_only
 
-
-# Loggers
 logging:
   level:
     root: INFO
     pw.react.backend: INFO
     org.springframework.boot.autoconfigure: ERROR
 
-# CORS
 cors:
   urls: ${cors:http://localhost:8080,http://localhost:5173,http://localhost:5000}
   mappings: /**
 
-# spring-doc
 application:
   springdoc:
     title: Backend PW API
     description: Backend starter for PW project.
     version: @project.version@
+
 springdoc:
   show-actuator: true
+
+integrations:
+    flatly:
+      base-url: https://react26-backend.azurewebsites.net/api
+      mock-mode: false

@@ -9,8 +9,12 @@ import pw.react.backend.domain.user.UserTypeDictionary;
 import pw.react.backend.dto.mapper.user.UserMapper;
 import pw.react.backend.dto.request.user.UpdateUserRequest;
 import pw.react.backend.exceptions.ResourceNotFoundException;
+import pw.react.backend.exceptions.custom.EmailAlreadyInUseException;
+import pw.react.backend.exceptions.custom.UserAlreadyExistsException;
 import pw.react.backend.repositories.user.UserRepository;
 import pw.react.backend.repositories.user.UserTypeDictionaryRepository;
+import pw.react.backend.exceptions.custom.EmailNotFoundException;
+import pw.react.backend.exceptions.custom.InvalidPasswordException;
 
 import java.util.List;
 
@@ -26,14 +30,12 @@ public class UserMainService implements UserService {
     public User registerUser(User user) {
 
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new IllegalStateException("Email already in use");
+            throw new UserAlreadyExistsException(user.getEmail());
         }
 
-        // Changed this line
-        // TODO: test
-        UserTypeDictionary customerType =
+        var customerType =
                 userTypeDictionaryRepository.findById((short)UserRole.CUSTOMER.getCode())
-                        .orElseThrow(() -> new IllegalStateException("UserTypeDictionary not found: " + UserRole.CUSTOMER.getCode()));
+                .orElseThrow(() -> new IllegalStateException("UserTypeDictionary not found: " + UserRole.CUSTOMER.getCode()));
 
         user.setUserType(customerType);
         user.setEnabled(true);
@@ -46,10 +48,10 @@ public class UserMainService implements UserService {
 
         User user = userRepository
                 .findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+                .orElseThrow(EmailNotFoundException::new);
 
         if (user.getPassword() != null && !user.getPassword().equals(password)) {
-            throw new IllegalArgumentException("Invalid credentials");
+            throw new InvalidPasswordException();
         }
 
         return user;
@@ -117,7 +119,7 @@ public class UserMainService implements UserService {
             userRepository.findByEmail(request.getEmail())
                     .ifPresent(existingUser -> {
                         if (!existingUser.getUserId().equals(user.getUserId())) {
-                            throw new IllegalStateException("Email already in use");
+                            throw new EmailAlreadyInUseException(request.getEmail());
                         }
                     });
         }

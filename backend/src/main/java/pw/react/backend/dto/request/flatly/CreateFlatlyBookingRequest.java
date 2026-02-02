@@ -1,14 +1,12 @@
 package pw.react.backend.dto.request.flatly;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import pw.react.backend.utils.JsonDateDeserializer;
-import pw.react.backend.utils.JsonDateSerializer;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -18,20 +16,17 @@ public class CreateFlatlyBookingRequest {
     private Integer userId;
 
     @NotNull(message = "Flat id is mandatory")
-    private Integer flatId;
+    private UUID flatId;
 
-    @JsonDeserialize(using = JsonDateDeserializer.class)
-    @JsonSerialize(using = JsonDateSerializer.class)
-    @NotNull(message = "Date from is mandatory")
-    private LocalDateTime dateFrom;
+    @NotNull
+    private LocalDate checkInDate;
 
-    @JsonDeserialize(using = JsonDateDeserializer.class)
-    @JsonSerialize(using = JsonDateSerializer.class)
-    @NotNull(message = "Date to is mandatory")
-    private LocalDateTime dateTo;
+    @NotNull
+    private LocalDate checkOutDate;
 
-    //TODO: decide if we wanna prompt users for the guest count in the app, a default of 1 for now
-    private Integer guestsCount = 1;
+    @NotNull(message = "Guest count is mandatory")
+    @Min(1)
+    private Integer guestsCount;
 
 }
 

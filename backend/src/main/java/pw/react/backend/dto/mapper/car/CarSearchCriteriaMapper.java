@@ -24,6 +24,10 @@ public interface CarSearchCriteriaMapper {
             source = "date")
     @Mapping(target = "availabilityStatus",
             source = "availability")
+    @Mapping(target = "minPrice",
+            source = "minPrice")
+    @Mapping(target = "maxPrice",
+            source = "maxPrice")
     CarSearchCriteria toCarSearchCriteria(CarSearchParams carSearchParams);
 
     @Mapping(target = "carFeatures",
@@ -32,6 +36,8 @@ public interface CarSearchCriteriaMapper {
              source = "date")
     @Mapping(target = "availabilityStatus",
             constant = "AVAILABLE")
+    @Mapping(target = "minPrice", ignore = true)
+    @Mapping(target = "maxPrice", ignore = true)
     CarSearchCriteria toCarSearchCriteria(ParklyCarSearchParams carSearchParams);
 
     default List<CarFeature> searchParamsToFeatureList(CarFeatureFilters featureFilters) {

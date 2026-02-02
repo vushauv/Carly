@@ -15,6 +15,7 @@ import pw.react.backend.repositories.car.*;
 import pw.react.backend.repositories.car.models.CarImageUrlRow;
 import pw.react.backend.services.car.model.CarSearchCriteria;
 import pw.react.backend.utils.DateUtils;
+import pw.react.backend.utils.converters.response.DisplayNameConverter;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -31,7 +32,6 @@ public class CarMainService implements CarService {
     private final CarRepository carRepository;
     private final CarFeatureRepository carFeatureRepository;
     private final CarFeatureDictionaryRepository carFeatureDictionaryRepository;
-    private final CarToFeatureLinkRepository carToFeatureLinkRepository;
     private final CarImageRepository carImageRepository;
 
     @Override
@@ -77,8 +77,12 @@ public class CarMainService implements CarService {
 
     // TODO: refactor
     @Override
-    public List<Car> getAll(CarSearchCriteria searchCriteria) throws BadRequestException
+    public List<Car> getAll(CarSearchCriteria searchCriteria)
+            throws BadRequestException
     {
+        // Validate price range
+        this.validatePrice(searchCriteria.getMinPrice(), searchCriteria.getMaxPrice());
+
         var dateRange = searchCriteria.getDateRange();
         boolean hasDate = dateRange != null && dateRange.getTo() != null;
 
@@ -89,16 +93,20 @@ public class CarMainService implements CarService {
             if(availableCarIds.isEmpty())
                 return List.of();
             if(searchCriteria.getCarFeatures() == null || searchCriteria.getCarFeatures().isEmpty())
-                return carRepository.findByCarIdInOrderByCarIdAsc(availableCarIds);
+                return filterByPrice(
+                        carRepository.findByCarIdInOrderByCarIdAsc(availableCarIds),
+                        searchCriteria);
         }
 
         if(searchCriteria.getCarFeatures() == null || searchCriteria.getCarFeatures().isEmpty())
-            return carRepository.findAllByOrderByCarIdAsc();
+            return filterByPrice(carRepository.findAllByOrderByCarIdAsc(), searchCriteria);
 
         var filteredCarIds = this.searchCarsByFeatures(searchCriteria, availableCarIds);
         if(filteredCarIds.isEmpty()) return List.of();
 
-        return carRepository.findByCarIdInOrderByCarIdAsc(filteredCarIds);
+        return filterByPrice(
+                carRepository.findByCarIdInOrderByCarIdAsc(filteredCarIds),
+                searchCriteria);
     }
 
     @Override
@@ -108,6 +116,9 @@ public class CarMainService implements CarService {
         int defaultPageSize = 10;
         int pageSize = (size <= 0) ? defaultPageSize : size;
 
+        // Validate price range
+        this.validatePrice(searchCriteria.getMinPrice(), searchCriteria.getMaxPrice());
+
         var dateRange = searchCriteria.getDateRange();
         boolean hasDate = dateRange != null && dateRange.getTo() != null;
 
@@ -117,40 +128,67 @@ public class CarMainService implements CarService {
             availableCarIds = this.searchCarsByAvailability(searchCriteria);
             if(availableCarIds.isEmpty())
                 return List.of();
+
             if(searchCriteria.getCarFeatures() == null || searchCriteria.getCarFeatures().isEmpty())
-                return carRepository.findByCarIdInOrderByCarIdAsc(availableCarIds, PageRequest.of(page, pageSize)).getContent();
+                return filterByPrice(
+                        carRepository.findByCarIdInOrderByCarIdAsc(availableCarIds, PageRequest.of(page, pageSize)).getContent(),
+                        searchCriteria);
         }
 
         if(searchCriteria.getCarFeatures() == null || searchCriteria.getCarFeatures().isEmpty())
-            return carRepository.findAllByOrderByCarIdAsc(PageRequest.of(page, pageSize)).getContent();
+            return filterByPrice(
+                    carRepository.findAllByOrderByCarIdAsc(PageRequest.of(page, pageSize)).getContent(),
+                    searchCriteria);
 
         var filteredCarIds = this.searchCarsByFeatures(searchCriteria, availableCarIds);
         if(filteredCarIds.isEmpty()) return List.of();
 
-        return carRepository.findByCarIdInOrderByCarIdAsc(filteredCarIds, PageRequest.of(page, pageSize)).getContent();
+        return filterByPrice(
+                carRepository.findByCarIdInOrderByCarIdAsc(filteredCarIds, PageRequest.of(page, pageSize)).getContent(),
+                searchCriteria);
     }
 
-    public boolean checkCarAvailability(Integer carId, DateRange dateRange)
+    public boolean checkCarAvailability(Integer carId,Integer bookingId,DateRange dateRange)
             throws ResourceNotFoundException
     {
         if(!carRepository.existsById(carId))
             throw new ResourceNotFoundException("Car with id " + carId + " was not found.");
         var res = carRepository.checkCarAvailability(carId,
+                bookingId,
                 dateRange.getFrom(), dateRange.getTo(),
                 BookingStatus.CANCELLED.getCode());
 
         return res.isPresent();
     }
 
+    private List<Car> filterByPrice(List<Car> cars, CarSearchCriteria searchCriteria)
+    {
+        var min = searchCriteria.getMinPrice();
+        var max = searchCriteria.getMaxPrice();
+        if(min == null && max == null) return cars;
+
+        return cars.stream()
+                .filter(c -> {
+                    var price = c.getPrice();
+                    if(price == null) return false;
+                    if(min != null && price.compareTo(min) < 0) return false;
+                    if(max != null && price.compareTo(max) > 0) return false;
+                    return true;
+                })
+                .collect(Collectors.toList());
+    }
+
     // Method to be used to calculate the total price of the car on the booking
-    public BigDecimal calculateTotalPrice(Car car, DateRange dateRange)
+    public BigDecimal calculateTotalPrice(Integer carId, DateRange dateRange)
         throws ResourceNotFoundException
     {
-        Car managedCar = carRepository.findById(car.getCarId())
-                .orElseThrow(() -> new ResourceNotFoundException("Car with id " + car.getCarId() + " was not found."));
+        Car managedCar = carRepository.findById(carId)
+                .orElseThrow(() -> new ResourceNotFoundException("Car with id " + carId + " was not found."));
 
         var price = managedCar.getPrice();
-        return price == null ? null : price.multiply(BigDecimal.valueOf(this.calculateDayDifference(dateRange)));
+        return price == null ? null : price.multiply(BigDecimal.valueOf(
+                DateUtils.calculateDayDifference(dateRange.getFrom(), dateRange.getTo()))
+        );
     }
 
     public Map<Integer, List<Integer>> linkCarImages(List<Car> cars)
@@ -164,10 +202,11 @@ public class CarMainService implements CarService {
 
     }
 
-    private long calculateDayDifference(DateRange dateRange)
+    private void validatePrice(BigDecimal minPrice, BigDecimal maxPrice)
+            throws BadRequestException
     {
-        // Computes a ceiling - if a days is touched - counts as till the end of the day
-        return DateUtils.calculateDayDifference(dateRange.getFrom(), dateRange.getTo()) + 1;
+        if(minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0)
+            throw new BadRequestException("minPrice cannot be greater than maxPrice");
     }
 
     private List<Integer> searchCarsByFeatures(CarSearchCriteria searchCriteria,
@@ -203,7 +242,7 @@ public class CarMainService implements CarService {
     private List<Integer> searchCarsByAvailability(CarSearchCriteria searchCriteria)
         throws BadRequestException
     {
-        var dateRange = DateUtils.normaliseDates(searchCriteria.getDateRange());
+        var dateRange = DateUtils.validateAndNormalise(searchCriteria.getDateRange());
         var from = dateRange.getFrom();
         var to = dateRange.getTo();
 
@@ -312,7 +351,8 @@ public class CarMainService implements CarService {
         var resolvedList = new ArrayList<CarFeature>();
         for(var feature: requestedCarFeatures) {
             var dictId = feature.getDictionary().getCarFeatureDictionaryId();
-            var resolved = carFeatureRepository.findFeatureBy(dictId, feature.getValue());
+            var mappedName = DisplayNameConverter.fromDisplayName(feature.getValue());
+            var resolved = carFeatureRepository.findFeatureBy(dictId, mappedName);
             resolved.ifPresent(resolvedList::add);
         }
         return resolvedList;
