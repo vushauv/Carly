@@ -87,7 +87,7 @@ export default function RegisterScreen() {
       return;
     }
 
-    // ✅ Password minimum 8 characters
+    // Password minimum 8 characters
     if (!password || password.length < 8) {
       Alert.alert("Invalid password", "Password must be at least 8 characters.");
       return;
@@ -100,8 +100,6 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      // IMPORTANT: this must be POST /users/register
-      // If you still don't see the backend being called, you're not on this screen/route.
       const { userId } = await registerUser({
         firstName: n,
         lastName: s,
@@ -110,8 +108,6 @@ export default function RegisterScreen() {
         contactNumber: pDigits ? Number(pDigits) : undefined,
       });
 
-      // ✅ Verify persistence like login does:
-      // If this fails, backend did NOT store/commit the user.
       const info = await getUserById(userId);
 
       await saveProfile({

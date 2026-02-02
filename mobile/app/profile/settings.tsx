@@ -274,7 +274,7 @@ function prettyApiError(err: unknown): string {
       return;
     }
 
-    // ✅ Validation: block deletion if there are active bookings
+    //  Validation: block deletion if there are active bookings
     const check = await checkHasActiveBookings();
     if (!check.ok) {
       Alert.alert("Delete account blocked", check.message);

@@ -1,4 +1,10 @@
 //mobile/app/index.tsx
+
+//required pacakges to run locally:
+//npm i react-native-calendars
+//npx expo install @react-native-async-storage/async-storage
+//npx expo install @react-navigation/native
+
 import {
   View,
   Text,
