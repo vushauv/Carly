@@ -1,29 +1,21 @@
 //  mobile/lib/api/apiClient.ts
 import { Platform } from "react-native";
 
-// THIS HSA TO BE YOUR LOCAL IP WHEN RUNNING EXPO ON PC!!!!!!!!!!!!!!!!!!!!!!
-const DEV_MACHINE_IP = "http://192.168.1.29:8080";
-//const DEV_MACHINE_IP = "https://carlyapi.azurewebsites.net";
+//const CARLY_API_URL = "http://192.168.1.29:8080";
+const CARLY_API_URL = "https://carlyapi.azurewebsites.net";
 
 function pickBaseUrl(): string {
-  // If you're on iOS SIMULATOR, localhost works.
-  // If you're on a PHYSICAL iPhone, localhost does NOT work.
   if (__DEV__) {
     if (Platform.OS === "ios") {
-      // If you are using a physical iPhone with Expo Go, use your PC IP:
-      return DEV_MACHINE_IP;
-
-      // If you are using iOS simulator, you can use:
-      // return "http://localhost:8080";
+      return CARLY_API_URL;
     }
 
-    // Android emulator special-case:
-    //return "https://carlyapi.azurewebsites.net";
-    return "http://10.0.2.2:8080";
+    return CARLY_API_URL;
+    //return "http://10.0.2.2:8080";
   }
 
   // production fallback (adjust later)
-  return DEV_MACHINE_IP;
+  return CARLY_API_URL;
 }
 
 export const API_BASE_URL = pickBaseUrl();
